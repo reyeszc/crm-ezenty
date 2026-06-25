@@ -1,0 +1,283 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+  engineType      = "wasm"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id                   String    @id @default(cuid())
+  nombre               String
+  correo               String    @unique
+  passwordHash         String
+  rol                  String    @default("VENDEDOR")
+  activo               Boolean   @default(true)
+  foto                 String?
+  metaMensual          Float     @default(0)
+  comision             Float?
+  tema                 String    @default("AUTOMATICO")
+  vistaDensa           Boolean   @default(false)
+  onboardingCompletado Boolean   @default(false)
+  intentosFallidos     Int       @default(0)
+  bloqueadoHasta       DateTime?
+  creadoEn             DateTime  @default(now())
+  actualizadoEn        DateTime  @updatedAt
+  clientes        Cliente[]
+  citasVendedor   Cita[]            @relation("CitaVendedor")
+  citasCreadas    Cita[]            @relation("CitaCreador")
+  pagos           Pago[]
+  notas           Nota[]
+  tareas          Tarea[]
+  recordatorios   Recordatorio[]
+  archivos        Archivo[]
+  auditoria       RegistroAuditoria[]
+  favoritos       Favorito[]
+  vistasGuardadas VistaGuardada[]
+  plantillas      Plantilla[]
+  @@index([correo])
+}
+model Empresa {
+  id            String   @id @default(cuid())
+  nombre        String
+  giro          String?
+  sitioWeb      String?
+  rfc           String?
+  direccion     String?
+  empleados     String?
+  notas         String?
+  creadoEn      DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
+  clientes      Cliente[]
+  @@index([nombre])
+}
+model Cliente {
+  id                  String   @id @default(cuid())
+  nombre              String
+  telefono            String?
+  correo              String?
+  origen              String?
+  utmCanal            String?
+  etapa               String   @default("PROSPECTO")
+  estado              String   @default("ACTIVO")
+  temperatura         String   @default("TIBIO")
+  objecion            String?
+  notas               String?
+  valorEstimado       Float?
+  proximaAccion       String?
+  proximaAccionFecha  DateTime?
+  ultimoContacto      DateTime?
+  motivoPerdida       String?
+  titulo              String?
+  propiedad           String?
+  management          String?
+  zona                String?
+  puesto              String?
+  ganado              Boolean  @default(false)
+  perdido             Boolean  @default(false)
+  archivado           Boolean  @default(false)
+  eliminadoEn         DateTime?
+  creadoEn            DateTime @default(now())
+  actualizadoEn       DateTime @updatedAt
+  duplicadoDeId       String?
+  vendedorId          String
+  vendedor            Usuario  @relation(fields: [vendedorId], references: [id])
+  empresaId           String?
+  empresa             Empresa? @relation(fields: [empresaId], references: [id])
+  notas_rel           Nota[]
+  citas               Cita[]
+  pagos               Pago[]
+  archivos            Archivo[]
+  tareas              Tarea[]
+  recordatorios       Recordatorio[]
+  etiquetas           ClienteEtiqueta[]
+  favoritos           Favorito[]
+  @@index([nombre])
+  @@index([telefono])
+  @@index([correo])
+  @@index([etapa])
+  @@index([estado])
+  @@index([vendedorId])
+  @@index([eliminadoEn])
+  @@index([temperatura])
+}
+model Nota {
+  id          String   @id @default(cuid())
+  contenido   String
+  tipo        String   @default("NOTA")
+  fecha       DateTime @default(now())
+  eliminadoEn DateTime?
+  creadoEn    DateTime @default(now())
+  clienteId   String
+  cliente     Cliente  @relation(fields: [clienteId], references: [id])
+  autorId     String
+  autor       Usuario  @relation(fields: [autorId], references: [id])
+  @@index([clienteId])
+  @@index([contenido])
+}
+model Cita {
+  id            String   @id @default(cuid())
+  titulo        String
+  inicio        DateTime
+  fin           DateTime
+  googleEventId String?
+  googleMeetUrl String?
+  estado        String   @default("PENDIENTE")
+  notas         String?
+  eliminadoEn   DateTime?
+  creadoEn      DateTime @default(now())
+  actualizadoEn DateTime @updatedAt
+  clienteId     String?
+  cliente       Cliente? @relation(fields: [clienteId], references: [id])
+  vendedorId    String
+  vendedor      Usuario  @relation("CitaVendedor", fields: [vendedorId], references: [id])
+  creadoPorId   String?
+  creadoPor     Usuario? @relation("CitaCreador", fields: [creadoPorId], references: [id])
+  @@index([inicio])
+  @@index([vendedorId])
+  @@index([clienteId])
+  @@index([eliminadoEn])
+}
+model Pago {
+  id               String   @id @default(cuid())
+  monto            Float
+  metodo           String
+  estatus          String   @default("PENDIENTE")
+  concepto         String?
+  folio            String?
+  fechaPago        DateTime?
+  fechaVencimiento DateTime?
+  eliminadoEn      DateTime?
+  creadoEn         DateTime @default(now())
+  actualizadoEn    DateTime @updatedAt
+  clienteId        String
+  cliente          Cliente  @relation(fields: [clienteId], references: [id])
+  vendedorId       String
+  vendedor         Usuario  @relation(fields: [vendedorId], references: [id])
+  @@index([clienteId])
+  @@index([estatus])
+  @@index([vendedorId])
+  @@index([eliminadoEn])
+}
+model Archivo {
+  id          String   @id @default(cuid())
+  nombre      String
+  etiqueta    String   @default("OTRO")
+  tipo        String
+  tamano      Int
+  datos       Bytes?
+  url         String?
+  eliminadoEn DateTime?
+  creadoEn    DateTime @default(now())
+  clienteId   String
+  cliente     Cliente  @relation(fields: [clienteId], references: [id])
+  subidoPorId String
+  subidoPor   Usuario  @relation(fields: [subidoPorId], references: [id])
+  @@index([clienteId])
+}
+model Tarea {
+  id          String   @id @default(cuid())
+  descripcion String
+  fechaVence  DateTime
+  completada  Boolean  @default(false)
+  creadoEn    DateTime @default(now())
+  clienteId   String
+  cliente     Cliente  @relation(fields: [clienteId], references: [id])
+  asignadoAId String
+  asignadoA   Usuario  @relation(fields: [asignadoAId], references: [id])
+  @@index([asignadoAId])
+  @@index([fechaVence])
+  @@index([clienteId])
+}
+model Recordatorio {
+  id         String   @id @default(cuid())
+  texto      String
+  fecha      DateTime
+  hora       String?
+  completado Boolean  @default(false)
+  pospuesto  Boolean  @default(false)
+  creadoEn   DateTime @default(now())
+  clienteId  String?
+  cliente    Cliente? @relation(fields: [clienteId], references: [id])
+  usuarioId  String
+  usuario    Usuario  @relation(fields: [usuarioId], references: [id])
+  @@index([usuarioId])
+  @@index([fecha])
+}
+model Etiqueta {
+  id       String            @id @default(cuid())
+  nombre   String            @unique
+  color    String            @default("#7cc2e8")
+  clientes ClienteEtiqueta[]
+}
+model ClienteEtiqueta {
+  clienteId  String
+  etiquetaId String
+  cliente    Cliente  @relation(fields: [clienteId], references: [id])
+  etiqueta   Etiqueta @relation(fields: [etiquetaId], references: [id])
+  @@id([clienteId, etiquetaId])
+}
+model Plantilla {
+  id       String   @id @default(cuid())
+  nombre   String
+  tipo     String
+  etapa    String?
+  objecion String?
+  asunto   String?
+  cuerpo   String
+  favorita Boolean  @default(false)
+  esGlobal Boolean  @default(true)
+  creadoEn DateTime @default(now())
+  autorId  String?
+  autor    Usuario? @relation(fields: [autorId], references: [id])
+}
+model Favorito {
+  usuarioId String
+  clienteId String
+  usuario   Usuario @relation(fields: [usuarioId], references: [id])
+  cliente   Cliente @relation(fields: [clienteId], references: [id])
+  @@id([usuarioId, clienteId])
+}
+model VistaGuardada {
+  id        String   @id @default(cuid())
+  nombre    String
+  filtros   String
+  creadoEn  DateTime @default(now())
+  usuarioId String
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id])
+}
+model ConfigNegocio {
+  id                String   @id @default("singleton")
+  nombreNegocio     String   @default("Ezenty ProCare")
+  logoUrl           String?
+  colorMarca        String   @default("#7cc2e8")
+  moneda            String   @default("USD")
+  husoHorario       String   @default("America/New_York")
+  horarioInicio     String   @default("09:00")
+  horarioFin        String   @default("18:00")
+  duracionCita      Int      @default(45)
+  mensajeWhatsapp   String   @default("Hi {nombre}, thanks for your interest!")
+  metaMensual       Float    @default(10000)
+  umbralEstancado   Int      @default(7)
+  comisionGlobal    Float?
+  motivosPerdida    String   @default("[\"Price\",\"Has another provider\",\"Needs to think about it\",\"Needs to consult\",\"Not qualified\",\"Other\"]")
+  whatsappNegocio   String   @default("14075551234")
+  actualizadoEn     DateTime @updatedAt
+}
+model RegistroAuditoria {
+  id        String   @id @default(cuid())
+  accion    String
+  entidad   String
+  entidadId String?
+  detalle   String?
+  ip        String?
+  creadoEn  DateTime @default(now())
+  usuarioId String
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id])
+  @@index([usuarioId])
+  @@index([creadoEn])
+  @@index([entidad])
+}
