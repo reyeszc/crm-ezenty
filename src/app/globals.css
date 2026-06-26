@@ -1,0 +1,227 @@
+@import "tailwindcss";
+
+@theme {
+  --color-marca-50: #f0f8fd;
+  --color-marca-100: #ddf0fb;
+  --color-marca-200: #b3e0f6;
+  --color-marca-300: #7cc2e8;
+  --color-marca-400: #4dacd9;
+  --color-marca-500: #2b93c5;
+  --color-marca-600: #1d78a7;
+  --color-marca-700: #195f87;
+  --color-marca-800: #19506f;
+  --color-marca-900: #1a435d;
+
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --radius-4xl: 2rem;
+}
+
+@layer base {
+  :root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8fafc;
+    --bg-tertiary: #f1f5f9;
+    --bg-glass: rgba(255,255,255,0.7);
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --border: #e2e8f0;
+    --border-strong: #cbd5e1;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.10);
+    --radius: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+  }
+
+  .dark {
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-tertiary: #273549;
+    --bg-glass: rgba(15,23,42,0.75);
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --border: #1e293b;
+    --border-strong: #334155;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.3);
+    --shadow-lg: 0 8px 24px rgba(0,0,0,0.4);
+  }
+
+  * { box-sizing: border-box; }
+
+  html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+
+  body {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 1rem;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  :focus-visible {
+    outline: 2px solid #7cc2e8;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 99px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1rem;
+    border-radius: 0.5rem;
+    background-color: #7cc2e8;
+    color: white;
+    font-weight: 500;
+    font-size: 0.875rem;
+    border: none;
+    cursor: pointer;
+    transition: background-color 150ms ease, opacity 150ms ease;
+    min-height: 44px;
+    text-decoration: none;
+  }
+  .btn-primary:hover { background-color: #4dacd9; }
+  .btn-primary:active { background-color: #2b93c5; }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1rem;
+    border-radius: 0.5rem;
+    background-color: transparent;
+    border: 1px solid var(--border-strong);
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: background-color 150ms ease;
+    min-height: 44px;
+    text-decoration: none;
+  }
+  .btn-secondary:hover { background-color: var(--bg-tertiary); }
+  .btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .btn-danger {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1rem;
+    border-radius: 0.5rem;
+    background-color: #ef4444;
+    color: white;
+    font-weight: 500;
+    font-size: 0.875rem;
+    border: none;
+    cursor: pointer;
+    transition: background-color 150ms ease;
+    min-height: 44px;
+  }
+  .btn-danger:hover { background-color: #dc2626; }
+
+  .card {
+    border-radius: 0.75rem;
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .card-glass {
+    border-radius: 0.75rem;
+    border: 1px solid rgba(255,255,255,0.2);
+    backdrop-filter: blur(8px);
+    background: var(--bg-glass);
+  }
+
+  .input {
+    width: 100%;
+    padding: 0.625rem 0.75rem;
+    border-radius: 0.5rem;
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-strong);
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    min-height: 44px;
+    transition: border-color 150ms, box-shadow 150ms;
+    outline: none;
+    font-family: inherit;
+  }
+  .input::placeholder { color: var(--text-muted); }
+  .input:focus { border-color: #7cc2e8; box-shadow: 0 0 0 3px rgba(124,194,232,0.2); }
+  .input:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  .label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  .skeleton {
+    background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--bg-secondary) 50%, var(--bg-tertiary) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 0.5rem;
+  }
+
+  .temp-caliente { background: #fee2e2; color: #b91c1c; }
+  .temp-tibio { background: #fef9c3; color: #92400e; }
+  .temp-frio { background: #dbeafe; color: #1d4ed8; }
+  .dark .temp-caliente { background: rgba(185,28,28,0.2); color: #fca5a5; }
+  .dark .temp-tibio { background: rgba(146,64,14,0.2); color: #fde68a; }
+  .dark .temp-frio { background: rgba(29,78,216,0.2); color: #93c5fd; }
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-slide-in-right { animation: slideInRight 0.3s ease-out; }
+.animate-slide-up { animation: slideUp 0.2s ease-out; }
+.animate-fade-in { animation: fadeIn 0.2s ease-out; }
