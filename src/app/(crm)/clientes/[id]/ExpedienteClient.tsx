@@ -737,19 +737,19 @@ function ObjecionEditor({ valor, onGuardar }: { valor: string; onGuardar: (v: st
       <button onClick={() => setEditando(true)} className="w-full text-left group" title="Clic para editar">
         {valor
           ? <span className="text-sm text-amber-600 dark:text-amber-400 group-hover:underline">{valor}</span>
-          : <span className="text-xs text-[var(--text-muted)] italic group-hover:text-marca-500">+ Registrar objeción</span>}
+          : <span className="text-xs text-[var(--text-muted)] italic group-hover:text-marca-500">+ Registrar objeción principal</span>}
       </button>
     );
   }
   return (
     <div className="space-y-2">
       <select value={val} onChange={e => setVal(e.target.value)} className="input text-sm">
-        <option value="">Sin objeción registrada</option>
+        <option value="">Sin objeción principal</option>
         {OBJECIONES_COMUNES.map(o => <option key={o} value={o}>{o}</option>)}
       </select>
       <input className="input text-sm" value={val} onChange={e => setVal(e.target.value)} placeholder="O escribe una personalizada…" />
       <div className="flex gap-2">
-        <button onClick={guardar} className="btn-primary !py-1 !px-3 text-xs">Guardar</button>
+        <button onClick={guardar} className="btn-primary !py-1 !px-3 text-xs">Guardar como principal</button>
         <button onClick={() => { setVal(valor); setEditando(false); }} className="btn-secondary !py-1 !px-3 text-xs">Cancelar</button>
       </div>
     </div>
