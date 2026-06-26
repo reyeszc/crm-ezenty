@@ -639,15 +639,26 @@ export function ExpedienteClient({ clienteInicial, config, etiquetasDisponibles,
               </div>
             ) : null)}
 
-            {/* Objeción */}
+            {/* Objeción — editable inline */}
             <div>
-              <p className="text-xs text-[var(--text-muted)] flex items-center">
+              <p className="text-xs text-[var(--text-muted)] flex items-center mb-1">
                 Objeción principal
                 <InfoTooltip texto="La razón por la que NO te ha comprado. Anótala apenas la oigas: es lo que vas a vencer para cerrar." />
               </p>
-              <p className="text-sm text-amber-600 dark:text-amber-400">
-                {cliente.objecion || <span className="text-[var(--text-muted)] italic">No registrada</span>}
-              </p>
+              <ObjecionEditor
+                valor={cliente.objecion || ""}
+                onGuardar={async (val) => {
+                  const res = await fetch(`/api/clientes/${cliente.id}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ objecion: val }),
+                  });
+                  if (res.ok) {
+                    setCliente((p: any) => ({ ...p, objecion: val }));
+                    success("Objeción guardada ✓");
+                  }
+                }}
+              />
             </div>
 
             {/* Próxima acción */}
@@ -710,6 +721,41 @@ export function ExpedienteClient({ clienteInicial, config, etiquetasDisponibles,
     </div>
   );
 }
+
+const OBJECIONES_COMUNES = [
+  "Price", "Has another provider", "Needs to think about it",
+  "Needs to consult with management", "No budget right now",
+  "Happy with current provider", "Not interested", "Other",
+];
+
+function ObjecionEditor({ valor, onGuardar }: { valor: string; onGuardar: (v: string) => void }) {
+  const [editando, setEditando] = useState(false);
+  const [val, setVal] = useState(valor);
+  function guardar() { onGuardar(val); setEditando(false); }
+  if (!editando) {
+    return (
+      <button onClick={() => setEditando(true)} className="w-full text-left group" title="Clic para editar">
+        {valor
+          ? <span className="text-sm text-amber-600 dark:text-amber-400 group-hover:underline">{valor}</span>
+          : <span className="text-xs text-[var(--text-muted)] italic group-hover:text-marca-500">+ Registrar objeción</span>}
+      </button>
+    );
+  }
+  return (
+    <div className="space-y-2">
+      <select value={val} onChange={e => setVal(e.target.value)} className="input text-sm">
+        <option value="">Sin objeción registrada</option>
+        {OBJECIONES_COMUNES.map(o => <option key={o} value={o}>{o}</option>)}
+      </select>
+      <input className="input text-sm" value={val} onChange={e => setVal(e.target.value)} placeholder="O escribe una personalizada…" />
+      <div className="flex gap-2">
+        <button onClick={guardar} className="btn-primary !py-1 !px-3 text-xs">Guardar</button>
+        <button onClick={() => { setVal(valor); setEditando(false); }} className="btn-secondary !py-1 !px-3 text-xs">Cancelar</button>
+      </div>
+    </div>
+  );
+}
+
 
 // Mini form de pago
 function PagoForm({ clienteId, onGuardado }: { clienteId: string; onGuardado: (p: any) => void }) {
