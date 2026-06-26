@@ -661,28 +661,27 @@ export function ExpedienteClient({ clienteInicial, config, etiquetasDisponibles,
               />
             </div>
 
-            {/* Próxima acción */}
+            {/* Próxima acción — editable */}
             <div>
-              <p className="text-xs text-[var(--text-muted)] flex items-center">
+              <p className="text-xs text-[var(--text-muted)] flex items-center mb-1">
                 Próxima acción
                 <InfoTooltip texto="El siguiente paso con este cliente y cuándo. Si lo dejas vacío, el cliente se te enfría. Siempre déjale una." />
               </p>
-              {cliente.proximaAccion ? (
-                <p className={`text-sm ${
-                  cliente.proximaAccionFecha && new Date(cliente.proximaAccionFecha) < new Date()
-                    ? "text-red-600 dark:text-red-400 font-medium"
-                    : "text-[var(--text-primary)]"
-                }`}>
-                  {cliente.proximaAccion}
-                  {cliente.proximaAccionFecha && (
-                    <span className="block text-xs text-[var(--text-muted)]">
-                      {new Date(cliente.proximaAccionFecha).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
-                    </span>
-                  )}
-                </p>
-              ) : (
-                <span className="text-xs text-red-500">🟠 Sin seguimiento — defínele una acción</span>
-              )}
+              <ProximaAccionEditor
+                accion={cliente.proximaAccion || ""}
+                fecha={cliente.proximaAccionFecha || ""}
+                onGuardar={async (accion, fecha) => {
+                  const res = await fetch(`/api/clientes/${cliente.id}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ proximaAccion: accion, proximaAccionFecha: fecha || null }),
+                  });
+                  if (res.ok) {
+                    setCliente((p: any) => ({ ...p, proximaAccion: accion, proximaAccionFecha: fecha }));
+                    success("Próxima acción guardada ✓");
+                  }
+                }}
+              />
             </div>
           </div>
 
@@ -721,6 +720,71 @@ export function ExpedienteClient({ clienteInicial, config, etiquetasDisponibles,
     </div>
   );
 }
+
+const ACCIONES_RAPIDAS = [
+  "Schedule site visit", "Follow up on proposal", "Send quote",
+  "Call to confirm demo", "Send contract", "Confirm signature",
+  "Re-engage — send case study", "Request referral",
+];
+
+function ProximaAccionEditor({ accion, fecha, onGuardar }: {
+  accion: string; fecha: string; onGuardar: (a: string, f: string) => void;
+}) {
+  const [editando, setEditando] = useState(false);
+  const [valAccion, setValAccion] = useState(accion);
+  const [valFecha, setValFecha] = useState(fecha ? new Date(fecha).toISOString().split("T")[0] : "");
+  const vencido = fecha && new Date(fecha) < new Date();
+
+  function guardar() { onGuardar(valAccion, valFecha); setEditando(false); }
+
+  if (!editando) {
+    return (
+      <button onClick={() => setEditando(true)} className="w-full text-left group" title="Clic para editar">
+        {accion ? (
+          <div>
+            <span className={`text-sm group-hover:underline ${vencido ? "text-red-600 dark:text-red-400 font-medium" : "text-[var(--text-primary)]"}`}>
+              {accion}
+            </span>
+            {fecha && (
+              <span className="block text-xs text-[var(--text-muted)] mt-0.5">
+                📅 {new Date(fecha).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}
+                {vencido && <span className="text-red-500 ml-1">— Vencida</span>}
+              </span>
+            )}
+          </div>
+        ) : (
+          <span className="text-xs text-red-500">🟠 Sin próxima acción — define una ahora</span>
+        )}
+      </button>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap gap-1 mb-1">
+        {ACCIONES_RAPIDAS.map(a => (
+          <button key={a} type="button" onClick={() => setValAccion(a)}
+            className="text-xs px-2 py-1 rounded-full bg-marca-50 dark:bg-marca-900/20 text-marca-600 dark:text-marca-400 hover:bg-marca-100 transition-colors">
+            {a}
+          </button>
+        ))}
+      </div>
+      <input className="input text-sm" value={valAccion} onChange={e => setValAccion(e.target.value)}
+        placeholder="Describe la próxima acción…" />
+      <div>
+        <label className="label text-xs">Fecha</label>
+        <input type="date" className="input text-sm" value={valFecha} onChange={e => setValFecha(e.target.value)}
+          min={new Date().toISOString().split("T")[0]} />
+      </div>
+      <div className="flex gap-2">
+        <button onClick={guardar} className="btn-primary !py-1 !px-3 text-xs">Guardar</button>
+        <button onClick={() => { setValAccion(accion); setValFecha(fecha ? new Date(fecha).toISOString().split("T")[0] : ""); setEditando(false); }}
+          className="btn-secondary !py-1 !px-3 text-xs">Cancelar</button>
+      </div>
+    </div>
+  );
+}
+
 
 const OBJECIONES_COMUNES = [
   "Price", "Has another provider", "Needs to think about it",
