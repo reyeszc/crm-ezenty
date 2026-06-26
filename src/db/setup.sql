@@ -176,3 +176,95 @@ CREATE TABLE IF NOT EXISTS registro_auditoria (
 );
 CREATE INDEX IF NOT EXISTS idx_auditoria_usuario ON registro_auditoria(usuario_id);
 CREATE INDEX IF NOT EXISTS idx_auditoria_fecha ON registro_auditoria(creado_en);
+
+-- ─── NUEVAS TABLAS v2 ────────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS contactos (
+  id TEXT PRIMARY KEY,
+  nombre TEXT NOT NULL,
+  cargo TEXT,
+  telefono TEXT,
+  correo TEXT,
+  notas TEXT,
+  principal BOOLEAN NOT NULL DEFAULT false,
+  creado_en TIMESTAMP NOT NULL DEFAULT NOW(),
+  cliente_id TEXT NOT NULL REFERENCES clientes(id)
+);
+CREATE INDEX IF NOT EXISTS idx_contactos_cliente ON contactos(cliente_id);
+
+CREATE TABLE IF NOT EXISTS dias_visitados (
+  id TEXT PRIMARY KEY,
+  fecha TIMESTAMP NOT NULL,
+  notas TEXT,
+  resultado TEXT,
+  creado_en TIMESTAMP NOT NULL DEFAULT NOW(),
+  cliente_id TEXT NOT NULL REFERENCES clientes(id),
+  usuario_id TEXT NOT NULL REFERENCES usuarios(id)
+);
+CREATE INDEX IF NOT EXISTS idx_dias_cliente ON dias_visitados(cliente_id);
+
+CREATE TABLE IF NOT EXISTS demos (
+  id TEXT PRIMARY KEY,
+  fecha TIMESTAMP NOT NULL,
+  duracion INTEGER DEFAULT 60,
+  estado TEXT NOT NULL DEFAULT 'PROGRAMADA',
+  notas TEXT,
+  servicios_ofrecidos TEXT,
+  creado_en TIMESTAMP NOT NULL DEFAULT NOW(),
+  cliente_id TEXT NOT NULL REFERENCES clientes(id),
+  usuario_id TEXT NOT NULL REFERENCES usuarios(id)
+);
+CREATE INDEX IF NOT EXISTS idx_demos_fecha ON demos(fecha);
+CREATE INDEX IF NOT EXISTS idx_demos_cliente ON demos(cliente_id);
+
+CREATE TABLE IF NOT EXISTS servicios (
+  id TEXT PRIMARY KEY,
+  fecha TIMESTAMP NOT NULL,
+  tipo TEXT NOT NULL,
+  areas TEXT,
+  sq_ft_total REAL,
+  notas TEXT,
+  monto REAL,
+  tecnico TEXT,
+  estado TEXT NOT NULL DEFAULT 'COMPLETADO',
+  creado_en TIMESTAMP NOT NULL DEFAULT NOW(),
+  cliente_id TEXT NOT NULL REFERENCES clientes(id),
+  usuario_id TEXT NOT NULL REFERENCES usuarios(id)
+);
+CREATE INDEX IF NOT EXISTS idx_servicios_fecha ON servicios(fecha);
+CREATE INDEX IF NOT EXISTS idx_servicios_cliente ON servicios(cliente_id);
+
+CREATE TABLE IF NOT EXISTS medidas_propiedad (
+  id TEXT PRIMARY KEY,
+  fecha TIMESTAMP NOT NULL DEFAULT NOW(),
+  notas TEXT,
+  sq_ft_total REAL DEFAULT 0,
+  creado_en TIMESTAMP NOT NULL DEFAULT NOW(),
+  cliente_id TEXT NOT NULL REFERENCES clientes(id),
+  usuario_id TEXT NOT NULL REFERENCES usuarios(id)
+);
+
+CREATE TABLE IF NOT EXISTS medidas_areas (
+  id TEXT PRIMARY KEY,
+  area TEXT NOT NULL,
+  orden INTEGER NOT NULL DEFAULT 0,
+  subtotal_sq_ft REAL DEFAULT 0,
+  creado_en TIMESTAMP NOT NULL DEFAULT NOW(),
+  medida_id TEXT NOT NULL REFERENCES medidas_propiedad(id)
+);
+
+CREATE TABLE IF NOT EXISTS medidas_lineas (
+  id TEXT PRIMARY KEY,
+  descripcion TEXT,
+  ancho REAL NOT NULL,
+  largo REAL NOT NULL,
+  sq_ft REAL NOT NULL,
+  orden INTEGER NOT NULL DEFAULT 0,
+  area_id TEXT NOT NULL REFERENCES medidas_areas(id)
+);
+
+-- Nuevos campos en clientes
+ALTER TABLE clientes ADD COLUMN IF NOT EXISTS ciudad_cluster TEXT;
+ALTER TABLE clientes ADD COLUMN IF NOT EXISTS cantidad_habitaciones INTEGER;
+ALTER TABLE clientes ADD COLUMN IF NOT EXISTS direccion_propiedad TEXT;
+ALTER TABLE clientes ADD COLUMN IF NOT EXISTS tipo_propiedad TEXT DEFAULT 'Hotel';

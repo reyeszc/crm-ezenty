@@ -212,3 +212,86 @@ export const registroAuditoria = pgTable("registro_auditoria", {
   creadoEn: timestamp("creado_en").notNull().defaultNow(),
   usuarioId: text("usuario_id").notNull().references(() => usuarios.id),
 });
+
+// ─── CONTACTOS POR PROPIEDAD ──────────────────────────────────────────────
+export const contactos = pgTable("contactos", {
+  id: text("id").primaryKey(),
+  nombre: text("nombre").notNull(),
+  cargo: text("cargo"),
+  telefono: text("telefono"),
+  correo: text("correo"),
+  notas: text("notas"),
+  principal: boolean("principal").notNull().default(false),
+  creadoEn: timestamp("creado_en").notNull().defaultNow(),
+  clienteId: text("cliente_id").notNull().references(() => clientes.id),
+});
+
+// ─── DÍAS VISITADOS ───────────────────────────────────────────────────────
+export const diasVisitados = pgTable("dias_visitados", {
+  id: text("id").primaryKey(),
+  fecha: timestamp("fecha").notNull(),
+  notas: text("notas"),
+  resultado: text("resultado"), // Positivo, Neutro, Sin acceso
+  creadoEn: timestamp("creado_en").notNull().defaultNow(),
+  clienteId: text("cliente_id").notNull().references(() => clientes.id),
+  usuarioId: text("usuario_id").notNull().references(() => usuarios.id),
+});
+
+// ─── DEMOS PROGRAMADAS ────────────────────────────────────────────────────
+export const demos = pgTable("demos", {
+  id: text("id").primaryKey(),
+  fecha: timestamp("fecha").notNull(),
+  duracion: integer("duracion").default(60), // minutos
+  estado: text("estado").notNull().default("PROGRAMADA"), // PROGRAMADA, COMPLETADA, CANCELADA
+  notas: text("notas"),
+  serviciosOfrecidos: text("servicios_ofrecidos"), // JSON array
+  creadoEn: timestamp("creado_en").notNull().defaultNow(),
+  clienteId: text("cliente_id").notNull().references(() => clientes.id),
+  usuarioId: text("usuario_id").notNull().references(() => usuarios.id),
+});
+
+// ─── SERVICIOS REALIZADOS ─────────────────────────────────────────────────
+export const servicios = pgTable("servicios", {
+  id: text("id").primaryKey(),
+  fecha: timestamp("fecha").notNull(),
+  tipo: text("tipo").notNull(), // Carpet, Tile & Grout, Upholstery, Odor Control
+  areas: text("areas"), // JSON - areas cleaned
+  sqFtTotal: real("sq_ft_total"),
+  notas: text("notas"),
+  monto: real("monto"),
+  tecnico: text("tecnico"),
+  estado: text("estado").notNull().default("COMPLETADO"),
+  creadoEn: timestamp("creado_en").notNull().defaultNow(),
+  clienteId: text("cliente_id").notNull().references(() => clientes.id),
+  usuarioId: text("usuario_id").notNull().references(() => usuarios.id),
+});
+
+// ─── MEDIDAS POR PROPIEDAD ────────────────────────────────────────────────
+export const medidasPropiedad = pgTable("medidas_propiedad", {
+  id: text("id").primaryKey(),
+  fecha: timestamp("fecha").notNull().defaultNow(),
+  notas: text("notas"),
+  sqFtTotal: real("sq_ft_total").default(0),
+  creadoEn: timestamp("creado_en").notNull().defaultNow(),
+  clienteId: text("cliente_id").notNull().references(() => clientes.id),
+  usuarioId: text("usuario_id").notNull().references(() => usuarios.id),
+});
+
+export const medidasAreas = pgTable("medidas_areas", {
+  id: text("id").primaryKey(),
+  area: text("area").notNull(), // Lobby, Corridor Floor 1, etc.
+  orden: integer("orden").notNull().default(0),
+  subtotalSqFt: real("subtotal_sq_ft").default(0),
+  creadoEn: timestamp("creado_en").notNull().defaultNow(),
+  medidaId: text("medida_id").notNull().references(() => medidasPropiedad.id),
+});
+
+export const medidasLineas = pgTable("medidas_lineas", {
+  id: text("id").primaryKey(),
+  descripcion: text("descripcion"),
+  ancho: real("ancho").notNull(),
+  largo: real("largo").notNull(),
+  sqFt: real("sq_ft").notNull(),
+  orden: integer("orden").notNull().default(0),
+  areaId: text("area_id").notNull().references(() => medidasAreas.id),
+});

@@ -155,3 +155,7 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ id, ...data }, { status: 201 });
 }
+
+// Note: ciudadCluster, cantidadHabitaciones, direccionPropiedad, tipoPropiedad
+// are handled via PATCH after creation or via direct DB insert
+// The contactos are created separately via /api/clientes/[id]/contactos
