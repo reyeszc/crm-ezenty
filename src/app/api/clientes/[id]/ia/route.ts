@@ -100,7 +100,18 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const notasStr = notasList.map((n) => n.contenido).join(" | ") || "none";
   const prompts: Record<string, string> = {
     mensaje: `Write a WhatsApp message (<200 words) for ${cliente.nombre} at ${empresaNombre}. Stage: ${etapaLabel(String(cliente.etapa))}. Objection: ${cliente.objecion || "none"}. Move them to next stage with a clear CTA. Sign as "Ezenty ProCare team".`,
-    temperatura: `Assess temperature (Hot/Warm/Cold) for ${cliente.nombre}. Stage: ${etapaLabel(String(cliente.etapa))}. Objection: ${cliente.objecion}. Notes: ${notasStr}. Give: emoji label, 2-sentence reason, one action today.`,
+    temperatura: `You are a sales assistant for Ezenty ProCare, a hospitality floor care company. In this CRM, temperature has a specific meaning:
+🔥 CALIENTE = Public reviews or site visit confirmed real pain (deteriorated carpet, mold, stains, odors). Top priority.
+🟡 TIBIO = Management verified in portfolio OR partial signal in public reviews. Visit soon.
+🔵 FRÍO = No confirmed signal yet. Needs an in-person visit to evaluate.
+
+Client: ${cliente.nombre} | Stage: ${etapaLabel(String(cliente.etapa))} | Current temp: ${cliente.temperatura} | Objection: ${cliente.objecion || "none"}
+Visit notes and history: ${notasStr || "No notes yet"}
+
+Based on the notes and visit history, should we keep or change the temperature? Respond with:
+1) Recommended temperature (🔥/🟡/🔵) + label
+2) 2-sentence reason based on what the notes say about floor/surface condition
+3) One specific next action`,
     proximaAccion: `Suggest ONE specific next action for ${cliente.nombre} at ${etapaLabel(String(cliente.etapa))} stage. Objection: ${cliente.objecion || "none"}. Be concrete: what, how, when. Under 80 words.`,
     resumen: `Summarize in 3-5 lines: ${cliente.nombre} at ${empresaNombre}, stage ${etapaLabel(String(cliente.etapa))}, value $${cliente.valorEstimado || "TBD"}, objection: ${cliente.objecion || "none"}. Notes: ${notasStr}. Include most important next action.`,
     objecion: `Handle objection "${cliente.objecion}" from ${cliente.nombre}. Write response (<150 words): validate concern, reframe with benefit, end with question that moves sale forward.`,

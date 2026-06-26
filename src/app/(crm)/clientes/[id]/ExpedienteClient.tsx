@@ -84,7 +84,7 @@ function AIPanel({ clienteId, onAccion }: { clienteId: string; onAccion: (texto:
 
   const funciones = [
     { id: "mensaje", label: "✍️ Redactar mensaje", desc: "WhatsApp/correo para cerrar" },
-    { id: "temperatura", label: "🌡️ Clasificar temperatura", desc: "¿Qué tan cerca está?" },
+    { id: "temperatura", label: "🌡️ Clasificar temperatura", desc: "🔥 Pain confirmado · 🟡 Señal parcial · 🔵 Sin señal" },
     { id: "proximaAccion", label: "🎯 Sugerir próxima acción", desc: "Qué hacer y cuándo" },
     { id: "resumen", label: "📋 Resumir expediente", desc: "3-5 líneas del historial" },
     { id: "objecion", label: "🛡️ Manejar objeción", desc: "Cómo vencerla" },
