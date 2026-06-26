@@ -723,7 +723,7 @@ export function ExpedienteClient({ clienteInicial, config, etiquetasDisponibles,
 
 const ACCIONES_RAPIDAS = [
   "Schedule site visit", "Follow up on proposal", "Send quote",
-  "Call to confirm demo", "Send contract", "Confirm signature",
+  "Demo programada", "Send contract", "Confirm signature",
   "Re-engage — send case study", "Request referral",
 ];
 
