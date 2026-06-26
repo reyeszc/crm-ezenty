@@ -30,7 +30,7 @@ const OBJECIONES = [
 
 const TIPO_NOTA_ICONS: Record<string,string> = {
   NOTA:"📝",LLAMADA:"📞",WHATSAPP:"💬",CORREO:"📧",CITA:"📅",
-  PAGO:"💰",CAMBIO_ETAPA:"🔄",CAMBIO_ESTADO:"🏷️",OBJECION:"⚠️",ARCHIVO:"📎",REASIGNACION:"👤",
+  PAGO:"💰",CAMBIO_ETAPA:"🔄",CAMBIO_ESTADO:"🏷️",OBJECION:"⚠️",ARCHIVO:"📎",REASIGNACION:"👤",SMS:"💬",
 };
 
 function InfoTooltip({ texto }: { texto: string }) {
@@ -358,10 +358,10 @@ export function ExpedienteClient({ clienteInicial, config, etiquetasDisponibles,
 
             {/* Contacto */}
             <div className="flex flex-wrap gap-2 mt-2">
-              {waUrl && (
-                <a href={waUrl} target="_blank" rel="noopener noreferrer" className="btn-secondary !py-1.5 !px-3 text-xs">
-                  <MessageCircle className="w-3.5 h-3.5 text-green-500" aria-hidden="true" />
-                  WhatsApp
+              {cliente.telefono && (
+                <a href={`sms:${cliente.telefono}`} className="btn-secondary !py-1.5 !px-3 text-xs">
+                  <MessageCircle className="w-3.5 h-3.5 text-blue-500" aria-hidden="true" />
+                  SMS
                 </a>
               )}
               {emailUrl && (

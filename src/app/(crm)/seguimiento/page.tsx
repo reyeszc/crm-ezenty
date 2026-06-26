@@ -173,10 +173,10 @@ function ClienteRow({ cliente, urgente, sinAccion }: { cliente: any; urgente?: b
 
       {/* Actions */}
       <div className="flex gap-1.5 flex-shrink-0">
-        {waUrl && (
-          <a href={waUrl} target="_blank" rel="noopener noreferrer"
-            className="w-9 h-9 rounded-lg bg-green-50 dark:bg-green-900/20 flex items-center justify-center text-green-600 hover:bg-green-100 transition-colors"
-            aria-label={`WhatsApp a ${cliente.nombre}`}
+        {cliente.telefono && (
+          <a href={`sms:${cliente.telefono}`}
+            className="w-9 h-9 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 hover:bg-blue-100 transition-colors"
+            aria-label={`SMS a ${cliente.nombre}`}
           >
             <MessageCircle className="w-4 h-4" aria-hidden="true" />
           </a>
