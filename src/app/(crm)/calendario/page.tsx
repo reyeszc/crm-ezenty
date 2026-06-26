@@ -213,12 +213,20 @@ export default function CalendarioPage() {
                       {" · "}{fecha.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
                     </p>
                   </div>
-                  {/* Conflict warning if multiple events same day */}
-                  {proximos.filter(x => new Date(x.fecha).toDateString() === fecha.toDateString()).length > 1 && (
-                    <span className="text-xs text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded flex-shrink-0">
-                      ⚠️ Mismo día
-                    </span>
-                  )}
+                  {/* Conflict warning — only citas and demos require YOUR presence */}
+                  {(() => {
+                    const mismoMomento = proximos.filter(x => {
+                      if (x.id === e.id) return false;
+                      if (e.tipo === "servicio" || x.tipo === "servicio") return false; // servicios no requieren tu presencia
+                      const diff = Math.abs(new Date(x.fecha).getTime() - fecha.getTime());
+                      return diff < 60 * 60 * 1000; // dentro de 1 hora
+                    });
+                    return mismoMomento.length > 0 ? (
+                      <span className="text-xs text-red-600 bg-red-50 dark:bg-red-900/20 px-1.5 py-0.5 rounded flex-shrink-0 font-medium">
+                        ⚠️ Conflicto
+                      </span>
+                    ) : null;
+                  })()}
                 </Link>
               );
             })}
