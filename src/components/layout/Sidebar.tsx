@@ -44,9 +44,9 @@ const navPrincipal = [
     bgActive: "bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300",
   },
   {
-    href: "/agenda",
+    href: "/calendario",
     icon: CalendarDays,
-    label: "Agenda",
+    label: "Calendario",
     color: "text-green-500",
     bgActive: "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300",
   },

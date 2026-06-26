@@ -78,7 +78,7 @@ export function MobileNav() {
           />
           <div className="lg:hidden fixed bottom-16 left-0 right-0 z-50 bg-[var(--bg-primary)] border-t border-[var(--border)] rounded-t-2xl p-4 grid grid-cols-3 gap-2">
             {[
-              { href: "/agenda", label: "Agenda" },
+              { href: "/calendario", label: "Calendario" },
               { href: "/pagos", label: "Pagos" },
               { href: "/completados", label: "Completados" },
               { href: "/perdidos", label: "Perdidos" },
