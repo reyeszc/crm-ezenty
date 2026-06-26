@@ -1,32 +1,41 @@
-import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-export default auth((req) => {
-  const { nextUrl, auth: session } = req as NextRequest & { auth: any };
-  const isLoggedIn = !!session?.user;
+export function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl;
 
+  // Public routes — no auth needed
   const isPublic =
-    nextUrl.pathname.startsWith("/login") ||
-    nextUrl.pathname.startsWith("/agenda/") ||
-    nextUrl.pathname.startsWith("/api/auth") ||
-    nextUrl.pathname === "/" ||
-    nextUrl.pathname.startsWith("/_next") ||
-    nextUrl.pathname.startsWith("/manifest") ||
-    nextUrl.pathname.startsWith("/favicon") ||
-    nextUrl.pathname.startsWith("/apple-touch");
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/agenda/") ||
+    pathname.startsWith("/landing") ||
+    pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/api/landing") ||
+    pathname.startsWith("/api/agenda") ||
+    pathname === "/" ||
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/manifest") ||
+    pathname.startsWith("/favicon") ||
+    pathname.startsWith("/public");
 
-  if (!isLoggedIn && !isPublic) {
-    return NextResponse.redirect(new URL("/login", nextUrl));
-  }
+  if (isPublic) return NextResponse.next();
 
-  if (isLoggedIn && nextUrl.pathname === "/login") {
-    return NextResponse.redirect(new URL("/dashboard", nextUrl));
+  // Check for session token (NextAuth JWT)
+  const token =
+    req.cookies.get("authjs.session-token")?.value ||
+    req.cookies.get("__Secure-authjs.session-token")?.value ||
+    req.cookies.get("next-auth.session-token")?.value ||
+    req.cookies.get("__Secure-next-auth.session-token")?.value;
+
+  if (!token) {
+    return NextResponse.redirect(new URL("/login", req.url));
   }
 
   return NextResponse.next();
-});
+}
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.svg$).*)",
+  ],
 };
