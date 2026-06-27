@@ -30,7 +30,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const medidaId = crypto.randomUUID();
   await db.insert(schema.medidasPropiedad).values({
     id: medidaId, clienteId: id, usuarioId: session.user.id,
-    notas: body.notas || null, sqFtTotal: body.sqFtTotal || 0,
+    notas: body.notas || null, sqFtTotal: body.sqFtTotal || 0, flatFeeTotal: body.flatFeeTotal || 0,
   });
 
   for (const area of (body.areas || [])) {

@@ -272,6 +272,7 @@ export const medidasPropiedad = pgTable("medidas_propiedad", {
   fecha: timestamp("fecha").notNull().defaultNow(),
   notas: text("notas"),
   sqFtTotal: real("sq_ft_total").default(0),
+  flatFeeTotal: real("flat_fee_total").default(0),
   creadoEn: timestamp("creado_en").notNull().defaultNow(),
   clienteId: text("cliente_id").notNull().references(() => clientes.id),
   usuarioId: text("usuario_id").notNull().references(() => usuarios.id),
