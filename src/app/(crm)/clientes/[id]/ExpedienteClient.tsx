@@ -29,8 +29,8 @@ const OBJECIONES = [
 ];
 
 const TIPO_NOTA_ICONS: Record<string,string> = {
-  NOTA:"📝",LLAMADA:"📞",WHATSAPP:"💬",CORREO:"📧",CITA:"📅",
-  PAGO:"💰",CAMBIO_ETAPA:"🔄",CAMBIO_ESTADO:"🏷️",OBJECION:"⚠️",ARCHIVO:"📎",REASIGNACION:"👤",SMS:"💬",
+  NOTA:"📝",LLAMADA:"📞",WHATSAPP:"💬",SMS:"💬",CORREO:"📧",CITA:"📅",
+  PAGO:"💰",CAMBIO_ETAPA:"🔄",CAMBIO_ESTADO:"🏷️",OBJECION:"⚠️",ARCHIVO:"📎",REASIGNACION:"👤",
 };
 
 function InfoTooltip({ texto }: { texto: string }) {
@@ -83,7 +83,7 @@ function AIPanel({ clienteId, onAccion }: { clienteId: string; onAccion: (texto:
   }
 
   const funciones = [
-    { id: "mensaje", label: "✍️ Redactar mensaje", desc: "WhatsApp/correo para cerrar" },
+    { id: "mensaje", label: "✍️ Redactar mensaje", desc: "SMS/correo para cerrar" },
     { id: "temperatura", label: "🌡️ Clasificar temperatura", desc: "🔥 Pain confirmado · 🟡 Señal parcial · 🔵 Sin señal" },
     { id: "proximaAccion", label: "🎯 Sugerir próxima acción", desc: "Qué hacer y cuándo" },
     { id: "resumen", label: "📋 Resumir expediente", desc: "3-5 líneas del historial" },
@@ -555,7 +555,7 @@ export function ExpedienteClient({ clienteInicial, config, etiquetasDisponibles,
             {/* Nueva nota */}
             <div className="mb-4">
               <div className="flex gap-2 mb-2">
-                {["NOTA","LLAMADA","WHATSAPP","CORREO"].map((t) => (
+                {["NOTA","LLAMADA","SMS","CORREO"].map((t) => (
                   <button
                     key={t}
                     onClick={() => setTipoNota(t)}
@@ -625,7 +625,7 @@ export function ExpedienteClient({ clienteInicial, config, etiquetasDisponibles,
 
             {[
               { label: "Correo", val: cliente.correo, icon: Mail },
-              { label: "WhatsApp", val: cliente.telefono, icon: Phone },
+              { label: "SMS", val: cliente.telefono, icon: Phone },
               { label: "Origen", val: cliente.origen },
               { label: "Canal UTM", val: cliente.utmCanal },
               { label: "Propiedad", val: cliente.propiedad },
