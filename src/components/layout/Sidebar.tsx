@@ -153,12 +153,8 @@ export function Sidebar() {
     >
       {/* Logo */}
       <div className="flex items-center gap-3 px-4 py-5 border-b border-[var(--border)]">
-        <div
-          className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
-          style={{ background: "#7cc2e8" }}
-          aria-hidden="true"
-        >
-          E
+        <div className="w-9 h-9 rounded-xl overflow-hidden flex-shrink-0 bg-white flex items-center justify-center">
+          <img src="/logo-small.png" alt="Ezenty ProCare" className="w-full h-full object-contain" />
         </div>
         <div className="min-w-0">
           <p className="text-sm font-semibold text-[var(--text-primary)] truncate">
