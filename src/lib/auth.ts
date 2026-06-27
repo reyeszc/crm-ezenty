@@ -71,12 +71,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.rol = (user as any).rol;
         token.onboardingCompletado = (user as any).onboardingCompletado;
         token.tema = (user as any).tema;
+        token.image = user.image;
       }
       // Save Google tokens for Gmail API
       if (account?.provider === "google") {
         token.accessToken = account.access_token;
         token.refreshToken = account.refresh_token;
         token.googleEmail = user?.email;
+        token.image = user.image; // Google profile photo
       }
       return token;
     },
@@ -88,6 +90,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         (session.user as any).tema = token.tema;
         (session.user as any).accessToken = token.accessToken;
         (session.user as any).googleEmail = token.googleEmail;
+        session.user.image = token.image as string;
       }
       return session;
     },
