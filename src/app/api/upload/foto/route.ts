@@ -26,33 +26,40 @@ export async function POST(req: NextRequest) {
 
     const timestamp = Math.round(Date.now() / 1000);
     const folder = "ezenty-crm";
+
+    // Cloudinary requires alphabetical order for signature
     const paramsToSign = `folder=${folder}&timestamp=${timestamp}`;
     const signature = crypto.createHash("sha256")
       .update(paramsToSign + apiSecret)
       .digest("hex");
 
-    const uploadForm = new FormData();
-    uploadForm.append("file", dataUri);
-    uploadForm.append("api_key", apiKey);
-    uploadForm.append("timestamp", String(timestamp));
-    uploadForm.append("signature", signature);
-    uploadForm.append("folder", folder);
-    uploadForm.append("transformation", "q_auto,f_auto,w_1200");
+    // Use URLSearchParams for proper form encoding
+    const params = new URLSearchParams();
+    params.append("file", dataUri);
+    params.append("api_key", apiKey);
+    params.append("timestamp", String(timestamp));
+    params.append("signature", signature);
+    params.append("folder", folder);
 
-    const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-      method: "POST",
-      body: uploadForm,
-    });
-
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error?.message || "Cloudinary upload failed");
-    }
+    const res = await fetch(
+      `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: params.toString(),
+      }
+    );
 
     const data = await res.json();
+
+    if (!res.ok) {
+      console.error("Cloudinary error:", data);
+      throw new Error(data.error?.message || "Upload failed");
+    }
+
     return NextResponse.json({ url: data.secure_url, publicId: data.public_id });
   } catch (err: any) {
-    console.error("Upload error:", err);
+    console.error("Upload error:", err.message);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
