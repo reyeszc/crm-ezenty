@@ -131,6 +131,7 @@ export function TopBar() {
   const [menuAbierto, setMenuAbierto] = useState(false);
   const nombre = session?.user?.name || "Usuario";
   const inicial = nombre[0]?.toUpperCase() || "U";
+  const fotoUrl = session?.user?.image || null;
 
   const temas = [
     { valor: "CLARO" as const, icon: Sun, label: "Claro" },
@@ -215,11 +216,13 @@ export function TopBar() {
         <button
           onClick={() => setMenuAbierto(!menuAbierto)}
           className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-semibold transition-opacity hover:opacity-80"
-          style={{ background: "#7cc2e8" }}
+          style={{ background: fotoUrl ? "transparent" : "#7cc2e8" }}
           aria-label={`Menú de ${nombre}`}
           aria-expanded={menuAbierto}
         >
-          {inicial}
+          {fotoUrl ? (
+            <img src={fotoUrl} alt={nombre} className="w-full h-full rounded-full object-cover" referrerPolicy="no-referrer" />
+          ) : inicial}
         </button>
 
         {menuAbierto && (

@@ -66,7 +66,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account, trigger }) {
       if (user) {
         token.id = user.id;
         token.rol = (user as any).rol;
@@ -79,7 +79,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.accessToken = account.access_token;
         token.refreshToken = account.refresh_token;
         token.googleEmail = user?.email;
-        token.image = user.image; // Google profile photo
+        token.image = user.image;
+      }
+      // When session is updated (e.g. after photo upload), refresh avatarUrl from DB
+      if (trigger === "update" && token.id) {
+        try {
+          const { db, schema } = await import("@/lib/db");
+          const { eq } = await import("drizzle-orm");
+          const [u] = await db.select({ avatarUrl: schema.usuarios.avatarUrl })
+            .from(schema.usuarios).where(eq(schema.usuarios.id, token.id as string)).limit(1);
+          if (u?.avatarUrl) token.image = u.avatarUrl;
+        } catch {}
       }
       return token;
     },
