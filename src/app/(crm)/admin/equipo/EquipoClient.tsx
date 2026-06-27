@@ -83,6 +83,11 @@ function ModalUsuario({ usuario, onClose, onGuardado }: {
             </div>
           </div>
           <div>
+            <label className="label">URL de foto de perfil (opcional)</label>
+            <input type="url" className="input" value={(form as any).avatarUrl || ""} onChange={e => set("avatarUrl", e.target.value)} placeholder="https://..." />
+            <p className="text-xs text-[var(--text-muted)] mt-1">Sube la foto a Google Drive o Dropbox y pega el enlace directo</p>
+          </div>
+          <div>
             <label className="label">{esNuevo ? "Contraseña" : "Nueva contraseña (dejar vacío para no cambiar)"}</label>
             <input type="password" className="input" value={form.password} onChange={e => set("password", e.target.value)}
               placeholder={esNuevo ? "Mínimo 8 caracteres" : "Dejar vacío para no cambiar"} minLength={8} />
@@ -170,9 +175,15 @@ export function EquipoClient({ usuariosIniciales }: { usuariosIniciales: Usuario
         {usuarios.map(u => (
           <div key={u.id} className={`card p-4 flex items-center gap-3 ${!u.activo ? "opacity-60" : ""}`}>
             {/* Avatar */}
-            <div className="w-11 h-11 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 text-sm"
-              style={{ background: u.activo ? "#7cc2e8" : "#94a3b8" }}>
-              {u.nombre[0]?.toUpperCase()}
+            <div className="w-11 h-11 rounded-full overflow-hidden flex-shrink-0">
+              {(u as any).avatarUrl ? (
+                <img src={(u as any).avatarUrl} alt={u.nombre} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-white font-bold text-sm"
+                  style={{ background: u.activo ? "#7cc2e8" : "#94a3b8" }}>
+                  {u.nombre[0]?.toUpperCase()}
+                </div>
+              )}
             </div>
 
             {/* Info */}

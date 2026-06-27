@@ -6,7 +6,7 @@ import {
   ArrowLeft, Phone, Mail, Building2, MapPin, Flame, Thermometer, Tag,
   Calendar, Wallet, FileText, Sparkles, Edit2, Check, X, Plus,
   ChevronDown, MessageCircle, Send, Clock, AlertCircle, Trophy,
-  XCircle, Archive, RotateCcw, Loader2, Info
+  XCircle, Archive, RotateCcw, Loader2, Info, Ruler
 } from "lucide-react";
 import { formatearDinero, fechaRelativa, tempEmoji, etapaLabel, urlWhatsApp, diasSinContacto } from "@/lib/utils";
 import { useToast } from "@/components/providers/ToastProvider";
@@ -376,6 +376,11 @@ export function ExpedienteClient({ clienteInicial, config, etiquetasDisponibles,
                   {cliente.telefono}
                 </a>
               )}
+              <Link href={`/clientes/${cliente.id}/medidas`}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 hover:bg-blue-100 transition-colors">
+                <Ruler className="w-3.5 h-3.5" />
+                📐 Medidas
+              </Link>
             </div>
           </div>
 
