@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
+import crypto from "crypto";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -10,10 +11,7 @@ export async function POST(req: NextRequest) {
   const apiSecret = process.env.CLOUDINARY_API_SECRET;
 
   if (!cloudName || !apiKey || !apiSecret) {
-    return NextResponse.json({
-      error: "cloudinary_no_configurado",
-      mensaje: "Configura CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY y CLOUDINARY_API_SECRET en Vercel para subir fotos.",
-    }, { status: 200 });
+    return NextResponse.json({ error: "Cloudinary no configurado" }, { status: 500 });
   }
 
   try {
@@ -23,34 +21,38 @@ export async function POST(req: NextRequest) {
 
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    const base64 = buffer.toString("base64");
-    const dataUri = `data:${file.type};base64,${base64}`;
+    const base64Data = buffer.toString("base64");
+    const dataUri = `data:${file.type};base64,${base64Data}`;
 
-    // Upload to Cloudinary
     const timestamp = Math.round(Date.now() / 1000);
     const folder = "ezenty-crm";
-
-    const sig = require("crypto")
-      .createHash("sha256")
-      .update(`folder=${folder}&timestamp=${timestamp}${apiSecret}`)
+    const paramsToSign = `folder=${folder}&timestamp=${timestamp}`;
+    const signature = crypto.createHash("sha256")
+      .update(paramsToSign + apiSecret)
       .digest("hex");
 
     const uploadForm = new FormData();
     uploadForm.append("file", dataUri);
     uploadForm.append("api_key", apiKey);
     uploadForm.append("timestamp", String(timestamp));
-    uploadForm.append("signature", sig);
+    uploadForm.append("signature", signature);
     uploadForm.append("folder", folder);
+    uploadForm.append("transformation", "q_auto,f_auto,w_1200");
 
     const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
       method: "POST",
       body: uploadForm,
     });
 
-    if (!res.ok) throw new Error("Cloudinary error");
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error?.message || "Cloudinary upload failed");
+    }
+
     const data = await res.json();
-    return NextResponse.json({ url: data.secure_url });
+    return NextResponse.json({ url: data.secure_url, publicId: data.public_id });
   } catch (err: any) {
+    console.error("Upload error:", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
