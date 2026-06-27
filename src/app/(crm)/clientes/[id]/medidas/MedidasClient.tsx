@@ -324,7 +324,7 @@ export function MedidasClient({ clienteId, clienteNombre }: { clienteId: string;
                   <label className="label text-xs">📸 Foto del área</label>
                   {area.fotoUrl ? (
                     <div className="relative">
-                      <img src={area.fotoUrl} alt={area.nombre} className="w-full h-32 object-cover rounded-lg" />
+                      <img src={area.fotoUrl} alt={area.nombre} className="w-full rounded-lg object-contain max-h-64 bg-black/5" />
                       <button onClick={() => updateArea(area.id, { fotoUrl: undefined })}
                         className="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center text-xs">
                         ✕
