@@ -13,6 +13,7 @@ export const usuarios = pgTable("usuarios", {
   tema: text("tema").notNull().default("AUTOMATICO"),
   vistaDensa: boolean("vista_densa").notNull().default(false),
   onboardingCompletado: boolean("onboarding_completado").notNull().default(false),
+  avatarUrl: text("avatar_url"),
   intentosFallidos: integer("intentos_fallidos").notNull().default(0),
   bloqueadoHasta: timestamp("bloqueado_hasta"),
   creadoEn: timestamp("creado_en").notNull().defaultNow(),
