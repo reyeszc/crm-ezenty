@@ -33,6 +33,8 @@ export default function ClientesPage() {
   const [etapa, setEtapa] = useState("");
   const [orden, setOrden] = useState("reciente");
   const [mostrarFiltros, setMostrarFiltros] = useState(false);
+  const [zona, setZona] = useState("");
+  const [agruparZona, setAgruparZona] = useState(false);
 
   const busquedaDebounced = useDebounce(busqueda, 300);
 
@@ -46,6 +48,7 @@ export default function ClientesPage() {
       ...(estado ? { estado } : {}),
       ...(temperatura ? { temperatura } : {}),
       ...(etapa ? { etapa } : {}),
+      ...(zona ? { zona } : {}),
     });
     try {
       const res = await fetch(`/api/clientes?${params}`);
@@ -146,6 +149,22 @@ export default function ClientesPage() {
             </select>
           </div>
           <div>
+            <label className="label text-xs">Zona</label>
+            <select value={zona} onChange={(e) => setZona(e.target.value)} className="input text-sm">
+              <option value="">Todas las zonas</option>
+              <option value="Nashville, TN">Nashville, TN</option>
+              <option value="Chattanooga, TN">Chattanooga, TN</option>
+              <option value="Knoxville, TN">Knoxville, TN</option>
+              <option value="Smokies, TN">Smokies, TN</option>
+              <option value="Atlanta, GA">Atlanta, GA</option>
+              <option value="Alpharetta, GA">Alpharetta, GA</option>
+              <option value="Marietta, GA">Marietta, GA</option>
+              <option value="Savannah, GA">Savannah, GA</option>
+              <option value="Georgia">Georgia</option>
+              <option value="Tennessee">Tennessee</option>
+            </select>
+          </div>
+          <div>
             <label className="label text-xs">Ordenar</label>
             <select value={orden} onChange={(e) => setOrden(e.target.value)} className="input text-sm">
               <option value="reciente">Más reciente</option>
@@ -154,9 +173,18 @@ export default function ClientesPage() {
               <option value="fecha">Próxima acción</option>
             </select>
           </div>
+          <div className="col-span-2 sm:col-span-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <div onClick={() => setAgruparZona(!agruparZona)}
+                className={`w-10 h-5 rounded-full transition-colors flex items-center px-0.5 ${agruparZona ? "bg-marca-300" : "bg-gray-300 dark:bg-gray-600"}`}>
+                <div className={`w-4 h-4 rounded-full bg-white shadow transition-transform ${agruparZona ? "translate-x-5" : ""}`} />
+              </div>
+              <span className="text-xs text-[var(--text-secondary)]">Agrupar por zona</span>
+            </label>
+          </div>
           {(estado || temperatura || etapa) && (
             <button
-              onClick={() => { setEstado(""); setTemperatura(""); setEtapa(""); }}
+              onClick={() => { setEstado(""); setTemperatura(""); setEtapa(""); setZona(""); }}
               className="text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] underline col-span-2 sm:col-span-4 text-left"
             >
               Limpiar filtros
@@ -184,7 +212,54 @@ export default function ClientesPage() {
             </Link>
           </div>
         ) : (
-          clientes.map((c) => {
+          agruparZona ? (
+            (() => {
+              const grupos: Record<string, any[]> = {};
+              clientes.forEach((c: any) => {
+                const z = c.zona || "Sin zona";
+                if (!grupos[z]) grupos[z] = [];
+                grupos[z].push(c);
+              });
+              return (<div className="space-y-4">{Object.entries(grupos).sort(([a],[b]) => a.localeCompare(b)).map(([zonaGrupo, lista]) => (
+                <div key={zonaGrupo}>
+                  <div className="flex items-center gap-2 py-1.5 px-1 sticky top-0 bg-[var(--bg-primary)] z-10">
+                    <span className="text-xs font-bold text-marca-500 uppercase tracking-wider">{zonaGrupo}</span>
+                    <span className="text-xs text-[var(--text-muted)]">· {lista.length} propiedades</span>
+                    <div className="flex-1 h-px bg-[var(--border)]" />
+                  </div>
+                  <div className="space-y-2">
+                    {lista.map((c: any) => {
+                      const tc2 = tempConfig[c.temperatura] || tempConfig.TIBIO;
+                      const vencido2 = c.proximaAccionFecha && new Date(c.proximaAccionFecha) < new Date();
+                      return (
+                        <div key={c.id} className="card hover:shadow-md transition-shadow">
+                          <div className="p-4 flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0 text-sm" style={{ background: "#7cc2e8" }}>
+                              {c.nombre[0]?.toUpperCase()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <Link href={`/clientes/${c.id}`} className="font-medium text-[var(--text-primary)] hover:text-marca-500 hover:underline transition-colors">{c.nombre}</Link>
+                                <span className={`badge text-xs ${tc2.cls}`}>{tc2.label}</span>
+                                {vencido2 && <span className="badge text-xs bg-red-100 text-red-600">⏰ Vencido</span>}
+                              </div>
+                              <p className="text-sm text-[var(--text-secondary)] truncate mt-0.5">{c.cantidadHabitaciones ? `${c.cantidadHabitaciones} rooms · ` : ""}{c.ciudadCluster || c.propiedad || ""}</p>
+                              {c.proximaAccion && <p className={`text-xs mt-0.5 truncate ${vencido2 ? "text-red-500" : "text-[var(--text-muted)]"}`}>→ {c.proximaAccion}</p>}
+                            </div>
+                            <div className="text-right flex-shrink-0 ml-2">
+                              {c.valorEstimado && <p className="text-sm font-semibold text-[var(--text-primary)]">{formatearDinero(c.valorEstimado)}</p>}
+                              <p className="text-xs text-[var(--text-muted)]">{etapaLabel(c.etapa)}</p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}</div>);
+            })()
+          ) :
+          clientes.map((c: any) => {
             const tc = tempConfig[c.temperatura] || tempConfig.TIBIO;
             const vencido = c.proximaAccionFecha && new Date(c.proximaAccionFecha) < new Date();
             return (
