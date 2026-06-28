@@ -79,10 +79,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.accessToken = account.access_token;
         token.refreshToken = account.refresh_token;
         token.googleEmail = user?.email;
-        token.image = user.image;
       }
-      // When session is updated (e.g. after photo upload), refresh avatarUrl from DB
-      if (trigger === "update" && token.id) {
+      // Always check DB for avatarUrl — overrides Google photo
+      if (token.id) {
         try {
           const { db, schema } = await import("@/lib/db");
           const { eq } = await import("drizzle-orm");
