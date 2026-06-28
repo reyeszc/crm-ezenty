@@ -1,36 +1,33 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, FileText, Plus, Trash2, Save, Loader2, ChevronDown, ChevronUp, Send, DollarSign } from "lucide-react";
+import { ArrowLeft, FileText, Plus, Trash2, Save, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { useToast } from "@/components/providers/ToastProvider";
 
-// ── Default prices ──────────────────────────────────────────────────────────
+// ── Default prices ────────────────────────────────────────────────────────
 const PRECIOS_DEFAULT: Record<string, { precio: number; unidad: string; label: string }> = {
-  "Carpet - Flat Fee/Room":    { precio: 22.00,  unidad: "flat_fee", label: "Carpet (Flat Fee/hab)" },
-  "Carpet - Sq Ft":            { precio: 0.20,   unidad: "sqft",     label: "Carpet ($/sq ft)" },
-  "Tile & Grout - Flat Fee/Bath": { precio: 20.00, unidad: "flat_fee", label: "Tile & Grout (Flat Fee/baño)" },
-  "Tile & Grout - Sq Ft":      { precio: 0.55,   unidad: "sqft",     label: "Tile & Grout ($/sq ft)" },
-  "LVT - Sq Ft":               { precio: 0.55,   unidad: "sqft",     label: "LVT ($/sq ft)" },
-  "Concrete - Sq Ft":          { precio: 0.55,   unidad: "sqft",     label: "Concrete ($/sq ft)" },
-  "Upholstery":                { precio: 45.00,  unidad: "pieza",    label: "Upholstery ($/pieza)" },
-  "Odor Control":              { precio: 300.00, unidad: "flat_fee", label: "Odor Control" },
+  "Carpet - Flat Fee/Room":       { precio: 22.00,  unidad: "flat_fee", label: "Carpet (Flat Fee/hab)" },
+  "Carpet - Sq Ft":               { precio: 0.20,   unidad: "sqft",     label: "Carpet ($/sq ft)" },
+  "Tile & Grout - Flat Fee/Bath": { precio: 20.00,  unidad: "flat_fee", label: "Tile & Grout (Flat Fee/baño)" },
+  "Tile & Grout - Sq Ft":         { precio: 0.55,   unidad: "sqft",     label: "Tile & Grout ($/sq ft)" },
+  "LVT - Sq Ft":                  { precio: 0.55,   unidad: "sqft",     label: "LVT ($/sq ft)" },
+  "Concrete - Sq Ft":             { precio: 0.55,   unidad: "sqft",     label: "Concrete ($/sq ft)" },
+  "Upholstery":                   { precio: 45.00,  unidad: "pieza",    label: "Upholstery ($/pieza)" },
+  "Odor Control":                 { precio: 300.00, unidad: "flat_fee", label: "Odor Control" },
+  "Guest Rooms":                  { precio: 22.00,  unidad: "habitacion", label: "Guest Rooms ($/habitación)" },
+  "Guest Bathrooms":              { precio: 20.00,  unidad: "bano",     label: "Guest Bathrooms ($/baño)" },
 };
 
 interface Linea {
-  id: string;
-  descripcion: string;
-  tipo: string;
-  unidad: string;
-  cantidad: string;
-  precioUnitario: string;
-  precioFinal: string;
-  area: string;
+  id: string; descripcion: string; tipo: string; unidad: string;
+  cantidad: string; precioUnitario: string; precioFinal: string; area: string;
 }
 
 function calcSubtotal(l: Linea): number {
-  const precioFinal = parseFloat(l.precioFinal) || 0;
-  if (l.unidad === "flat_fee" || l.unidad === "pieza") return precioFinal;
-  return precioFinal * (parseFloat(l.cantidad) || 0);
+  const pf = parseFloat(l.precioFinal) || 0;
+  const qty = parseFloat(l.cantidad) || 0;
+  if (l.unidad === "flat_fee") return pf;
+  return pf * qty;
 }
 
 function newLinea(tipo?: string, area?: string, cantidad?: number): Linea {
@@ -50,16 +47,21 @@ function newLinea(tipo?: string, area?: string, cantidad?: number): Linea {
 const ESTADO_CONFIG: Record<string, { label: string; cls: string }> = {
   BORRADOR:  { label: "Borrador",  cls: "bg-gray-100 text-gray-600" },
   ENVIADA:   { label: "Enviada",   cls: "bg-blue-100 text-blue-700" },
-  APROBADA:  { label: "Aprobada", cls: "bg-green-100 text-green-700" },
+  APROBADA:  { label: "Aprobada",  cls: "bg-green-100 text-green-700" },
   RECHAZADA: { label: "Rechazada", cls: "bg-red-100 text-red-600" },
 };
 
-export function CotizacionClient({ cliente, medidas, cotizacionesPrevias, vendedorId }: {
+export function CotizacionClient({ cliente, medidas, cotizacionesPrevias }: {
   cliente: any; medidas: any[]; cotizacionesPrevias: any[]; vendedorId: string;
 }) {
   const { success, error } = useToast();
-  const [lineas, setLineas] = useState<Linea[]>([newLinea()]);
-  const [medidaSeleccionada, setMedidaSeleccionada] = useState<string>("");
+  const [lineas, setLineas] = useState<Linea[]>([
+    newLinea("Guest Rooms"),
+    newLinea("Guest Bathrooms"),
+  ]);
+  const [medidaSeleccionada, setMedidaSeleccionada] = useState("");
+  const [areasSeleccionadas, setAreasSeleccionadas] = useState<Set<string>>(new Set());
+  const [mostrarAreas, setMostrarAreas] = useState(false);
   const [descuento, setDescuento] = useState("0");
   const [notas, setNotas] = useState("");
   const [validez, setValidez] = useState("30");
@@ -74,7 +76,6 @@ export function CotizacionClient({ cliente, medidas, cotizacionesPrevias, vended
   const descuentoVal = parseFloat(descuento) || 0;
   const total = subtotal - descuentoVal;
 
-  // ── Mutations ──
   const addLinea = () => setLineas(p => [...p, newLinea()]);
   const removeLinea = (id: string) => setLineas(p => p.filter(l => l.id !== id));
   const updateLinea = (id: string, patch: Partial<Linea>) =>
@@ -84,60 +85,67 @@ export function CotizacionClient({ cliente, medidas, cotizacionesPrevias, vended
     const preset = PRECIOS_DEFAULT[tipo];
     const precioActual = precios[tipo] || String(preset?.precio || 0);
     updateLinea(id, {
-      tipo,
-      descripcion: preset?.label || tipo,
+      tipo, descripcion: preset?.label || tipo,
       unidad: preset?.unidad || "flat_fee",
-      precioUnitario: precioActual,
-      precioFinal: precioActual,
+      precioUnitario: precioActual, precioFinal: precioActual,
     });
   }
 
-  // ── Load from medidas ──
-  function cargarDesdeMedidas() {
-    const medida = medidas.find(m => m.id === medidaSeleccionada);
-    if (!medida) return;
-    const nuevasLineas: Linea[] = [];
-    medida.areas.forEach((area: any) => {
+  // When medida changes, show its areas for selection
+  const medidaActual = medidas.find(m => m.id === medidaSeleccionada);
+
+  function toggleArea(areaId: string) {
+    setAreasSeleccionadas(prev => {
+      const next = new Set(prev);
+      if (next.has(areaId)) next.delete(areaId);
+      else next.add(areaId);
+      return next;
+    });
+  }
+
+  function cargarAreasSeleccionadas() {
+    if (!medidaActual) return;
+    const areas = medidaActual.areas.filter((a: any) =>
+      areasSeleccionadas.size === 0 || areasSeleccionadas.has(a.id)
+    );
+    const nuevas: Linea[] = [];
+    areas.forEach((area: any) => {
       if (area.flatFee > 0) {
-        // Use flat fee
         const tipo = area.esTipoBano ? "Tile & Grout - Flat Fee/Bath" : "Carpet - Flat Fee/Room";
-        const preset = PRECIOS_DEFAULT[tipo];
-        nuevasLineas.push({
+        nuevas.push({
           id: crypto.randomUUID(),
-          descripcion: `${area.area} — ${preset?.label || tipo}`,
-          tipo,
-          unidad: "flat_fee",
-          cantidad: "1",
-          precioUnitario: precios[tipo] || String(preset?.precio || 0),
-          precioFinal: precios[tipo] || String(preset?.precio || 0),
+          descripcion: `${area.area} — ${PRECIOS_DEFAULT[tipo]?.label || tipo}`,
+          tipo, unidad: "flat_fee", cantidad: "1",
+          precioUnitario: precios[tipo] || String(PRECIOS_DEFAULT[tipo]?.precio || 0),
+          precioFinal: precios[tipo] || String(PRECIOS_DEFAULT[tipo]?.precio || 0),
           area: area.area,
         });
       }
       if (area.subtotalSqFt > 0) {
-        // Determine service type from floor type
         const floorType = area.tipoPiso || "Carpet";
         let tipo = "Carpet - Sq Ft";
         if (floorType === "Tile") tipo = "Tile & Grout - Sq Ft";
         else if (floorType === "LVT") tipo = "LVT - Sq Ft";
         else if (floorType === "Concrete") tipo = "Concrete - Sq Ft";
-        const preset = PRECIOS_DEFAULT[tipo];
-        nuevasLineas.push({
+        nuevas.push({
           id: crypto.randomUUID(),
           descripcion: `${area.area} — ${floorType} (${area.subtotalSqFt.toFixed(0)} sq ft)`,
-          tipo,
-          unidad: "sqft",
+          tipo, unidad: "sqft",
           cantidad: String(area.subtotalSqFt.toFixed(0)),
-          precioUnitario: precios[tipo] || String(preset?.precio || 0),
-          precioFinal: precios[tipo] || String(preset?.precio || 0),
+          precioUnitario: precios[tipo] || String(PRECIOS_DEFAULT[tipo]?.precio || 0),
+          precioFinal: precios[tipo] || String(PRECIOS_DEFAULT[tipo]?.precio || 0),
           area: area.area,
         });
       }
     });
-    if (nuevasLineas.length > 0) {
-      setLineas(nuevasLineas);
-      success(`${nuevasLineas.length} líneas cargadas desde medidas ✓`);
+    if (nuevas.length > 0) {
+      // Keep the Guest Rooms/Bathrooms lines and add area lines
+      const guestLines = lineas.filter(l => l.tipo === "Guest Rooms" || l.tipo === "Guest Bathrooms");
+      setLineas([...guestLines, ...nuevas]);
+      setMostrarAreas(false);
+      success(`${nuevas.length} líneas cargadas ✓`);
     } else {
-      error("Esta medida no tiene áreas con datos suficientes");
+      error("Las áreas seleccionadas no tienen datos suficientes");
     }
   }
 
@@ -165,7 +173,7 @@ export function CotizacionClient({ cliente, medidas, cotizacionesPrevias, vended
       const data = await res.json();
       success(`Cotización ${data.numero} creada ✓`);
       window.location.reload();
-    } catch { error("No se pudo guardar la cotización"); } finally { setSaving(false); }
+    } catch { error("No se pudo guardar"); } finally { setSaving(false); }
   }
 
   return (
@@ -198,12 +206,12 @@ export function CotizacionClient({ cliente, medidas, cotizacionesPrevias, vended
                 const cfg = ESTADO_CONFIG[q.estado] || ESTADO_CONFIG.BORRADOR;
                 return (
                   <div key={q.id} className="flex items-center gap-3 p-3">
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1">
                       <p className="text-sm font-medium text-[var(--text-primary)]">{q.numero}</p>
                       <p className="text-xs text-[var(--text-muted)]">{new Date(q.creadoEn).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>
                     </div>
                     <span className={`badge text-xs ${cfg.cls}`}>{cfg.label}</span>
-                    <p className="text-sm font-bold text-[var(--text-primary)]">${(q.total || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}</p>
+                    <p className="text-sm font-bold">${(q.total || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}</p>
                   </div>
                 );
               })}
@@ -212,12 +220,13 @@ export function CotizacionClient({ cliente, medidas, cotizacionesPrevias, vended
         </div>
       )}
 
-      {/* Load from medidas */}
+      {/* Load from medidas with area selection */}
       {medidas.length > 0 && (
         <div className="card p-4 mb-4">
           <p className="text-sm font-semibold text-[var(--text-primary)] mb-3">📐 Cargar desde medidas</p>
-          <div className="flex gap-2">
-            <select className="input text-sm flex-1" value={medidaSeleccionada} onChange={e => setMedidaSeleccionada(e.target.value)}>
+          <div className="flex gap-2 mb-3">
+            <select className="input text-sm flex-1" value={medidaSeleccionada}
+              onChange={e => { setMedidaSeleccionada(e.target.value); setAreasSeleccionadas(new Set()); setMostrarAreas(true); }}>
               <option value="">Seleccionar medida…</option>
               {medidas.map((m: any) => (
                 <option key={m.id} value={m.id}>
@@ -225,11 +234,45 @@ export function CotizacionClient({ cliente, medidas, cotizacionesPrevias, vended
                 </option>
               ))}
             </select>
-            <button onClick={cargarDesdeMedidas} disabled={!medidaSeleccionada}
-              className="btn-primary !py-2 !px-4 text-sm disabled:opacity-40">
-              Cargar
-            </button>
           </div>
+
+          {/* Area selector */}
+          {medidaActual && mostrarAreas && (
+            <div className="bg-[var(--bg-secondary)] rounded-lg p-3 mb-3">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-semibold text-[var(--text-primary)]">Selecciona las áreas a cotizar:</p>
+                <button onClick={() => {
+                  if (areasSeleccionadas.size === medidaActual.areas.length) setAreasSeleccionadas(new Set());
+                  else setAreasSeleccionadas(new Set(medidaActual.areas.map((a: any) => a.id)));
+                }} className="text-xs text-marca-500 hover:underline">
+                  {areasSeleccionadas.size === medidaActual.areas.length ? "Deseleccionar todas" : "Seleccionar todas"}
+                </button>
+              </div>
+              <div className="space-y-1.5">
+                {medidaActual.areas.map((area: any) => (
+                  <label key={area.id} className="flex items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition-colors">
+                    <input type="checkbox"
+                      checked={areasSeleccionadas.has(area.id)}
+                      onChange={() => toggleArea(area.id)}
+                      className="rounded" />
+                    <div className="flex-1 min-w-0">
+                      <span className="text-sm text-[var(--text-primary)] font-medium">{area.area}</span>
+                      <span className="text-xs text-[var(--text-muted)] ml-2">
+                        {area.tipoPiso}
+                        {area.subtotalSqFt > 0 ? ` · ${area.subtotalSqFt.toFixed(0)} sq ft` : ""}
+                        {area.flatFee > 0 ? ` · $${area.flatFee} flat` : ""}
+                        {area.esTipoHabitacion ? " 🛏️" : area.esTipoBano ? " 🚿" : ""}
+                      </span>
+                    </div>
+                  </label>
+                ))}
+              </div>
+              <button onClick={cargarAreasSeleccionadas} disabled={areasSeleccionadas.size === 0 && medidaActual.areas.length > 0}
+                className="btn-primary w-full justify-center mt-3 text-sm disabled:opacity-40">
+                Cargar {areasSeleccionadas.size > 0 ? `${areasSeleccionadas.size} área(s) seleccionada(s)` : "todas las áreas"}
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -266,12 +309,11 @@ export function CotizacionClient({ cliente, medidas, cotizacionesPrevias, vended
           </button>
         </div>
 
-        {/* Header */}
         <div className="hidden sm:grid grid-cols-12 gap-1 px-4 py-2 bg-[var(--bg-secondary)] text-xs font-medium text-[var(--text-muted)] border-b border-[var(--border)]">
           <div className="col-span-4">Descripción / Servicio</div>
           <div className="col-span-2 text-center">Cantidad</div>
           <div className="col-span-2 text-center">Precio base</div>
-          <div className="col-span-2 text-center">Precio final</div>
+          <div className="col-span-2 text-center">Precio final ✏️</div>
           <div className="col-span-1 text-right">Subtotal</div>
           <div className="col-span-1" />
         </div>
@@ -279,9 +321,9 @@ export function CotizacionClient({ cliente, medidas, cotizacionesPrevias, vended
         <div className="divide-y divide-[var(--border)]">
           {lineas.map((l) => {
             const sub = calcSubtotal(l);
+            const editado = parseFloat(l.precioFinal) !== parseFloat(l.precioUnitario);
             return (
-              <div key={l.id} className="p-3 grid grid-cols-12 gap-2 items-center">
-                {/* Descripcion + tipo */}
+              <div key={l.id} className="p-3 grid grid-cols-12 gap-2 items-start">
                 <div className="col-span-12 sm:col-span-4 space-y-1">
                   <select className="input text-xs !py-1" value={l.tipo}
                     onChange={e => handleTipoChange(l.id, e.target.value)}>
@@ -294,20 +336,19 @@ export function CotizacionClient({ cliente, medidas, cotizacionesPrevias, vended
                   {l.area && <p className="text-xs text-[var(--text-muted)]">📐 {l.area}</p>}
                 </div>
 
-                {/* Cantidad */}
                 <div className="col-span-4 sm:col-span-2">
                   <label className="label text-xs sm:hidden">Cantidad</label>
                   <div className="flex items-center gap-1">
                     <input type="number" className="input text-sm !py-1.5 text-center" value={l.cantidad}
                       onChange={e => updateLinea(l.id, { cantidad: e.target.value })}
-                      min="0" step="1" disabled={l.unidad === "flat_fee"} />
+                      min="0" step="1"
+                      disabled={l.unidad === "flat_fee"} />
                     <span className="text-xs text-[var(--text-muted)] flex-shrink-0">
-                      {l.unidad === "sqft" ? "ft²" : l.unidad === "pieza" ? "pza" : "—"}
+                      {l.unidad === "sqft" ? "ft²" : l.unidad === "pieza" ? "pza" : l.unidad === "habitacion" ? "hab" : l.unidad === "bano" ? "baño" : "—"}
                     </span>
                   </div>
                 </div>
 
-                {/* Precio base */}
                 <div className="col-span-4 sm:col-span-2">
                   <label className="label text-xs sm:hidden">Precio base</label>
                   <div className="relative">
@@ -318,36 +359,29 @@ export function CotizacionClient({ cliente, medidas, cotizacionesPrevias, vended
                   </div>
                 </div>
 
-                {/* Precio final — editable override */}
                 <div className="col-span-4 sm:col-span-2">
                   <label className="label text-xs sm:hidden">Precio final ✏️</label>
                   <div className="relative">
-                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-emerald-500">$</span>
+                    <span className={`absolute left-2 top-1/2 -translate-y-1/2 text-xs ${editado ? "text-emerald-500" : "text-[var(--text-muted)]"}`}>$</span>
                     <input type="number"
-                      className={`input text-sm !py-1.5 pl-5 text-center font-semibold ${parseFloat(l.precioFinal) !== parseFloat(l.precioUnitario) ? "border-emerald-400 text-emerald-600" : ""}`}
+                      className={`input text-sm !py-1.5 pl-5 text-center font-semibold ${editado ? "border-emerald-400 text-emerald-600 dark:text-emerald-400" : ""}`}
                       value={l.precioFinal}
                       onChange={e => updateLinea(l.id, { precioFinal: e.target.value })}
                       min="0" step="0.01" />
                   </div>
-                  {parseFloat(l.precioFinal) !== parseFloat(l.precioUnitario) && (
-                    <p className="text-xs text-emerald-500 text-center">Precio editado</p>
-                  )}
+                  {editado && <p className="text-xs text-emerald-500 text-center">Editado</p>}
                 </div>
 
-                {/* Subtotal */}
-                <div className="col-span-11 sm:col-span-1 text-right">
+                <div className="col-span-11 sm:col-span-1 text-right pt-1">
                   <p className="text-sm font-bold text-[var(--text-primary)]">
-                    ${sub.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    ${sub.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                   </p>
                 </div>
 
-                {/* Delete */}
-                <div className="col-span-1 flex justify-end">
-                  {lineas.length > 1 && (
-                    <button onClick={() => removeLinea(l.id)} className="text-red-400 hover:text-red-500">
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  )}
+                <div className="col-span-1 flex justify-end pt-1">
+                  <button onClick={() => removeLinea(l.id)} className="text-red-400 hover:text-red-500">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               </div>
             );
@@ -355,10 +389,10 @@ export function CotizacionClient({ cliente, medidas, cotizacionesPrevias, vended
         </div>
 
         {/* Totals */}
-        <div className="border-t border-[var(--border)] p-4 space-y-2">
+        <div className="border-t border-[var(--border)] p-4 space-y-2 bg-[var(--bg-secondary)]">
           <div className="flex justify-between text-sm">
             <span className="text-[var(--text-secondary)]">Subtotal</span>
-            <span className="font-medium text-[var(--text-primary)]">${subtotal.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+            <span className="font-medium">${subtotal.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="text-[var(--text-secondary)]">Descuento ($)</span>
@@ -369,7 +403,7 @@ export function CotizacionClient({ cliente, medidas, cotizacionesPrevias, vended
             </div>
           </div>
           <div className="flex justify-between text-lg font-bold border-t border-[var(--border)] pt-2">
-            <span className="text-[var(--text-primary)]">TOTAL</span>
+            <span>TOTAL</span>
             <span className="text-emerald-600">${total.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
           </div>
         </div>
@@ -384,11 +418,10 @@ export function CotizacionClient({ cliente, medidas, cotizacionesPrevias, vended
         <div className="col-span-2">
           <label className="label text-sm">Notas / condiciones</label>
           <textarea className="input resize-none" rows={3} value={notas} onChange={e => setNotas(e.target.value)}
-            placeholder="Incluye: materiales, tiempos de entrega, condiciones de pago…" />
+            placeholder="Materiales, tiempos de entrega, condiciones de pago…" />
         </div>
       </div>
 
-      {/* Save */}
       <button onClick={guardar} disabled={saving} className="btn-primary w-full justify-center text-base py-4">
         {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
         {saving ? "Guardando…" : `Guardar cotización — $${total.toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
