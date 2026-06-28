@@ -301,3 +301,35 @@ export const medidasLineas = pgTable("medidas_lineas", {
   orden: integer("orden").notNull().default(0),
   areaId: text("area_id").notNull().references(() => medidasAreas.id),
 });
+
+// ─── COTIZACIONES ─────────────────────────────────────────────────────────────
+export const cotizaciones = pgTable("cotizaciones", {
+  id: text("id").primaryKey(),
+  numero: text("numero").notNull(), // EZPC-Q-XXXXX
+  estado: text("estado").notNull().default("BORRADOR"), // BORRADOR, ENVIADA, APROBADA, RECHAZADA
+  validezDias: integer("validez_dias").default(30),
+  notas: text("notas"),
+  subtotal: real("subtotal").default(0),
+  descuento: real("descuento").default(0),
+  total: real("total").default(0),
+  medidaId: text("medida_id").references(() => medidasPropiedad.id),
+  clienteId: text("cliente_id").notNull().references(() => clientes.id),
+  vendedorId: text("vendedor_id").notNull().references(() => usuarios.id),
+  creadoEn: timestamp("creado_en").notNull().defaultNow(),
+  actualizadoEn: timestamp("actualizado_en").notNull().defaultNow(),
+  eliminadoEn: timestamp("eliminado_en"),
+});
+
+export const cotizacionLineas = pgTable("cotizacion_lineas", {
+  id: text("id").primaryKey(),
+  descripcion: text("descripcion").notNull(),
+  tipo: text("tipo").notNull(), // Carpet, Tile, LVT, etc.
+  unidad: text("unidad").notNull().default("sqft"), // sqft, flat_fee, pieza
+  cantidad: real("cantidad").default(0),
+  precioUnitario: real("precio_unitario").notNull(),
+  precioFinal: real("precio_final").notNull(), // editable override
+  subtotal: real("subtotal").notNull().default(0),
+  area: text("area"), // nombre del área de donde vino
+  orden: integer("orden").default(0),
+  cotizacionId: text("cotizacion_id").notNull().references(() => cotizaciones.id),
+});
