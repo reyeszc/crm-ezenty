@@ -150,7 +150,7 @@ export default function ClientesPage() {
   }, [pagina, busquedaDebounced, estado, temperatura, etapa, orden]);
 
   useEffect(() => { cargar(); }, [cargar]);
-  useEffect(() => { setPagina(1); }, [busquedaDebounced, estado, temperatura, etapa]);
+  useEffect(() => { setPagina(1); }, [busquedaDebounced, estado, temperatura, etapa, zona]);
 
   const tempConfig: Record<string, { cls: string; label: string }> = {
     CALIENTE: { cls: "temp-caliente", label: "🔥" },
