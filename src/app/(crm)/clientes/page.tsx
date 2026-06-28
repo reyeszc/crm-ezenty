@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import { Users, Plus, Search, Filter, SlidersHorizontal, Star, Flame } from "lucide-react";
+import { Users, Plus, Search, Filter, SlidersHorizontal, Star, Flame, ChevronDown, ChevronUp } from "lucide-react";
 import { formatearDinero, etapaLabel, tempEmoji, fechaRelativa } from "@/lib/utils";
 import { useDebounce } from "@/lib/hooks";
 
@@ -17,6 +17,94 @@ function Skeleton() {
         </div>
         <div className="skeleton h-6 w-16 rounded-full" />
       </div>
+    </div>
+  );
+}
+
+
+function GruposZona({ grupos, tempConfig }: { grupos: Record<string, any[]>; tempConfig: any }) {
+  const [colapsados, setColapsados] = useState<Record<string, boolean>>({});
+  const toggle = (z: string) => setColapsados(p => ({ ...p, [z]: !p[z] }));
+  const ZONA_EMOJI: Record<string, string> = {
+    "Nashville, TN": "🎵",
+    "Chattanooga, TN": "🌉",
+    "Knoxville, TN": "🏔️",
+    "Smokies, TN": "🌲",
+    "Atlanta, GA": "🏙️",
+    "Alpharetta, GA": "🏘️",
+    "Marietta, GA": "🏘️",
+    "Savannah, GA": "🌿",
+    "Georgia": "🍑",
+    "Tennessee": "🎸",
+  };
+
+  return (
+    <div className="space-y-2">
+      {Object.entries(grupos).sort(([a],[b]) => a.localeCompare(b)).map(([zonaGrupo, lista]) => {
+        const colapsado = colapsados[zonaGrupo] ?? false;
+        const calientes = lista.filter((c: any) => c.temperatura === "CALIENTE").length;
+        const tibios = lista.filter((c: any) => c.temperatura === "TIBIO").length;
+        return (
+          <div key={zonaGrupo} className="card overflow-hidden">
+            {/* Header — clickable to collapse */}
+            <button
+              onClick={() => toggle(zonaGrupo)}
+              className="w-full flex items-center gap-3 p-3 hover:bg-[var(--bg-secondary)] transition-colors"
+            >
+              <span className="text-lg">{ZONA_EMOJI[zonaGrupo] || "📍"}</span>
+              <div className="flex-1 text-left min-w-0">
+                <span className="text-sm font-bold text-[var(--text-primary)]">{zonaGrupo}</span>
+                <span className="text-xs text-[var(--text-muted)] ml-2">{lista.length} propiedades</span>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {calientes > 0 && <span className="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">🔥 {calientes}</span>}
+                {tibios > 0 && <span className="text-xs bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded-full">🟡 {tibios}</span>}
+                {colapsado
+                  ? <ChevronDown className="w-4 h-4 text-[var(--text-muted)]" />
+                  : <ChevronUp className="w-4 h-4 text-[var(--text-muted)]" />}
+              </div>
+            </button>
+
+            {/* Content — collapsible */}
+            {!colapsado && (
+              <div className="border-t border-[var(--border)] divide-y divide-[var(--border)]">
+                {lista.map((c: any) => {
+                  const tc = tempConfig[c.temperatura] || tempConfig.TIBIO;
+                  const vencido = c.proximaAccionFecha && new Date(c.proximaAccionFecha) < new Date();
+                  return (
+                    <div key={c.id} className="p-3 flex items-center gap-3 hover:bg-[var(--bg-secondary)] transition-colors">
+                      <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0 text-sm" style={{ background: "#7cc2e8" }}>
+                        {c.nombre[0]?.toUpperCase()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Link href={`/clientes/${c.id}`} className="font-medium text-sm text-[var(--text-primary)] hover:text-marca-500 hover:underline transition-colors">
+                            {c.nombre}
+                          </Link>
+                          <span className={`badge text-xs ${tc.cls}`}>{tc.label}</span>
+                          {vencido && <span className="badge text-xs bg-red-100 text-red-600">⏰</span>}
+                        </div>
+                        <p className="text-xs text-[var(--text-secondary)] truncate mt-0.5">
+                          {c.cantidadHabitaciones ? `${c.cantidadHabitaciones} rooms · ` : ""}{c.ciudadCluster || c.propiedad || ""}
+                        </p>
+                        {c.proximaAccion && (
+                          <p className={`text-xs truncate ${vencido ? "text-red-500" : "text-[var(--text-muted)]"}`}>
+                            → {c.proximaAccion}
+                          </p>
+                        )}
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        {c.valorEstimado && <p className="text-xs font-semibold text-[var(--text-primary)]">{formatearDinero(c.valorEstimado)}</p>}
+                        <p className="text-xs text-[var(--text-muted)]">{etapaLabel(c.etapa)}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -220,43 +308,7 @@ export default function ClientesPage() {
                 if (!grupos[z]) grupos[z] = [];
                 grupos[z].push(c);
               });
-              return (<div className="space-y-4">{Object.entries(grupos).sort(([a],[b]) => a.localeCompare(b)).map(([zonaGrupo, lista]) => (
-                <div key={zonaGrupo}>
-                  <div className="flex items-center gap-2 py-1.5 px-1 sticky top-0 bg-[var(--bg-primary)] z-10">
-                    <span className="text-xs font-bold text-marca-500 uppercase tracking-wider">{zonaGrupo}</span>
-                    <span className="text-xs text-[var(--text-muted)]">· {lista.length} propiedades</span>
-                    <div className="flex-1 h-px bg-[var(--border)]" />
-                  </div>
-                  <div className="space-y-2">
-                    {lista.map((c: any) => {
-                      const tc2 = tempConfig[c.temperatura] || tempConfig.TIBIO;
-                      const vencido2 = c.proximaAccionFecha && new Date(c.proximaAccionFecha) < new Date();
-                      return (
-                        <div key={c.id} className="card hover:shadow-md transition-shadow">
-                          <div className="p-4 flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0 text-sm" style={{ background: "#7cc2e8" }}>
-                              {c.nombre[0]?.toUpperCase()}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <Link href={`/clientes/${c.id}`} className="font-medium text-[var(--text-primary)] hover:text-marca-500 hover:underline transition-colors">{c.nombre}</Link>
-                                <span className={`badge text-xs ${tc2.cls}`}>{tc2.label}</span>
-                                {vencido2 && <span className="badge text-xs bg-red-100 text-red-600">⏰ Vencido</span>}
-                              </div>
-                              <p className="text-sm text-[var(--text-secondary)] truncate mt-0.5">{c.cantidadHabitaciones ? `${c.cantidadHabitaciones} rooms · ` : ""}{c.ciudadCluster || c.propiedad || ""}</p>
-                              {c.proximaAccion && <p className={`text-xs mt-0.5 truncate ${vencido2 ? "text-red-500" : "text-[var(--text-muted)]"}`}>→ {c.proximaAccion}</p>}
-                            </div>
-                            <div className="text-right flex-shrink-0 ml-2">
-                              {c.valorEstimado && <p className="text-sm font-semibold text-[var(--text-primary)]">{formatearDinero(c.valorEstimado)}</p>}
-                              <p className="text-xs text-[var(--text-muted)]">{etapaLabel(c.etapa)}</p>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}</div>);
+              return (<GruposZona grupos={grupos} tempConfig={tempConfig} />);
             })()
           ) :
           clientes.map((c: any) => {
