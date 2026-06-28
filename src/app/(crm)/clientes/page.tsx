@@ -205,10 +205,10 @@ export default function ClientesPage() {
 
       {/* Filters panel */}
       {mostrarFiltros && (
-        <div className="card p-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div>
+        <div className="card p-3 flex flex-wrap items-end gap-2">
+          <div className="min-w-[120px] flex-1">
             <label className="label text-xs">Estado</label>
-            <select value={estado} onChange={(e) => setEstado(e.target.value)} className="input text-sm">
+            <select value={estado} onChange={(e) => setEstado(e.target.value)} className="input text-sm !py-1.5">
               <option value="">Todos</option>
               <option value="ACTIVO">Activo</option>
               <option value="GANADO">Ganado</option>
@@ -216,18 +216,18 @@ export default function ClientesPage() {
               <option value="ARCHIVADO">Archivado</option>
             </select>
           </div>
-          <div>
+          <div className="min-w-[110px] flex-1">
             <label className="label text-xs">Temperatura</label>
-            <select value={temperatura} onChange={(e) => setTemperatura(e.target.value)} className="input text-sm">
+            <select value={temperatura} onChange={(e) => setTemperatura(e.target.value)} className="input text-sm !py-1.5">
               <option value="">Todas</option>
               <option value="CALIENTE">🔥 Caliente</option>
               <option value="TIBIO">🟡 Tibio</option>
               <option value="FRIO">🔵 Frío</option>
             </select>
           </div>
-          <div>
+          <div className="min-w-[130px] flex-1">
             <label className="label text-xs">Etapa</label>
-            <select value={etapa} onChange={(e) => setEtapa(e.target.value)} className="input text-sm">
+            <select value={etapa} onChange={(e) => setEtapa(e.target.value)} className="input text-sm !py-1.5">
               <option value="">Todas</option>
               <option value="PROSPECTO">Prospecto</option>
               <option value="PRIMER_CONTACTO">Primer Contacto</option>
@@ -236,9 +236,9 @@ export default function ClientesPage() {
               <option value="CONTRATO_ENVIADO">Contrato Enviado</option>
             </select>
           </div>
-          <div>
+          <div className="min-w-[130px] flex-1">
             <label className="label text-xs">Zona</label>
-            <select value={zona} onChange={(e) => setZona(e.target.value)} className="input text-sm">
+            <select value={zona} onChange={(e) => setZona(e.target.value)} className="input text-sm !py-1.5">
               <option value="">Todas las zonas</option>
               <option value="Nashville, TN">Nashville, TN</option>
               <option value="Chattanooga, TN">Chattanooga, TN</option>
@@ -252,23 +252,21 @@ export default function ClientesPage() {
               <option value="Tennessee">Tennessee</option>
             </select>
           </div>
-          <div>
+          <div className="min-w-[120px] flex-1">
             <label className="label text-xs">Ordenar</label>
-            <select value={orden} onChange={(e) => setOrden(e.target.value)} className="input text-sm">
+            <select value={orden} onChange={(e) => setOrden(e.target.value)} className="input text-sm !py-1.5">
               <option value="reciente">Más reciente</option>
               <option value="nombre">Nombre A-Z</option>
               <option value="valor">Mayor valor</option>
               <option value="fecha">Próxima acción</option>
             </select>
           </div>
-          <div className="col-span-2 sm:col-span-4">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <div onClick={() => setAgruparZona(!agruparZona)}
-                className={`w-10 h-5 rounded-full transition-colors flex items-center px-0.5 ${agruparZona ? "bg-marca-300" : "bg-gray-300 dark:bg-gray-600"}`}>
-                <div className={`w-4 h-4 rounded-full bg-white shadow transition-transform ${agruparZona ? "translate-x-5" : ""}`} />
-              </div>
-              <span className="text-xs text-[var(--text-secondary)]">Agrupar por zona</span>
-            </label>
+          <div className="flex items-center gap-2 pb-1">
+            <button onClick={() => setAgruparZona(!agruparZona)}
+              className={`w-9 h-5 rounded-full transition-colors flex items-center px-0.5 flex-shrink-0 ${agruparZona ? "bg-marca-300" : "bg-gray-300 dark:bg-gray-600"}`}>
+              <div className={`w-4 h-4 rounded-full bg-white shadow transition-transform ${agruparZona ? "translate-x-4" : ""}`} />
+            </button>
+            <span className="text-xs text-[var(--text-secondary)] whitespace-nowrap">Por zona</span>
           </div>
           {(estado || temperatura || etapa) && (
             <button
