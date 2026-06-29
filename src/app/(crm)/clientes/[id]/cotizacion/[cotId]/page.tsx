@@ -30,9 +30,19 @@ export default async function CotizacionDetallePage({ params }: Props) {
   const [vendedor] = await db.select({ nombre: schema.usuarios.nombre, correo: schema.usuarios.correo })
     .from(schema.usuarios).where(eq(schema.usuarios.id, cot.vendedorId)).limit(1);
 
+  // Get primary contact
+  const contactos = await db.select().from(schema.contactos)
+    .where(eq(schema.contactos.clienteId, id))
+    .orderBy(schema.contactos.principal)
+    .limit(5);
+  const contactoPrincipal = contactos.find(c => c.principal) || contactos[0] || null;
+
+  const cotObj = JSON.parse(JSON.stringify(cot));
+  if (contactoPrincipal) cotObj.contactoPrincipal = JSON.parse(JSON.stringify(contactoPrincipal));
+
   return (
     <CotizacionDetalleClient
-      cotizacion={JSON.parse(JSON.stringify(cot))}
+      cotizacion={cotObj}
       cliente={JSON.parse(JSON.stringify(cliente))}
       lineas={JSON.parse(JSON.stringify(lineas))}
       vendedor={JSON.parse(JSON.stringify(vendedor || {}))}

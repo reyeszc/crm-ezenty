@@ -63,8 +63,9 @@ function ModalUsuario({ usuario, onClose, onGuardado }: {
         </div>
         <div className="space-y-3">
           <div>
-            <label className="label">Nombre completo</label>
-            <input className="input" value={form.nombre} onChange={e => set("nombre", e.target.value)} placeholder="Maria Rodriguez" />
+            <label className="label">Nombre completo (como aparecerá en cotizaciones)</label>
+            <input className="input" value={form.nombre} onChange={e => set("nombre", e.target.value)} placeholder="Zugheily Reyes" />
+            <p className="text-xs text-[var(--text-muted)] mt-1">Usa nombre y apellido — aparece en Prepared By de las cotizaciones</p>
           </div>
           <div>
             <label className="label">Correo</label>

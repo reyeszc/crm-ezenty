@@ -26,6 +26,8 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
   const [generatingPdf, setGeneratingPdf] = useState(false);
 
   const cfg = ESTADO_CONFIG[estado] || ESTADO_CONFIG.BORRADOR;
+  // Get primary contact from cliente contacts (passed as prop)
+  const contactoPrincipal = (cotizacion as any).contactoPrincipal || null;
   const fechaCreacion = new Date(cotizacion.creadoEn);
   const fechaValidez = new Date(fechaCreacion.getTime() + (cotizacion.validezDias || 30) * 86400000);
 
@@ -146,12 +148,13 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
           <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
             <div><span className="font-semibold text-[#1B2A4A]">Company: </span><span>{cliente.management || "—"}</span></div>
             <div><span className="font-semibold text-[#1B2A4A]">Property Name: </span><span>{cliente.nombre}</span></div>
-            <div><span className="font-semibold text-[#1B2A4A]">Decision Maker: </span><span>{cliente.management || "—"}</span></div>
+            <div><span className="font-semibold text-[#1B2A4A]">Contact Name: </span><span>{contactoPrincipal?.nombre || "—"}</span></div>
             <div><span className="font-semibold text-[#1B2A4A]">Property Address: </span><span>{cliente.direccionPropiedad || "—"}</span></div>
-            <div><span className="font-semibold text-[#1B2A4A]">Email: </span><span>{cliente.correo || "—"}</span></div>
+            <div><span className="font-semibold text-[#1B2A4A]">Contact Title: </span><span>{contactoPrincipal?.cargo || "—"}</span></div>
             <div><span className="font-semibold text-[#1B2A4A]">City / State: </span><span>{cliente.zona || "—"}</span></div>
-            <div><span className="font-semibold text-[#1B2A4A]">Phone: </span><span>{cliente.telefono || "—"}</span></div>
+            <div><span className="font-semibold text-[#1B2A4A]">Email: </span><span>{contactoPrincipal?.correo || cliente.correo || "—"}</span></div>
             <div><span className="font-semibold text-[#1B2A4A]">Property Type: </span><span>{cliente.tipoPropiedad || "Hotel"}</span></div>
+            <div><span className="font-semibold text-[#1B2A4A]">Phone: </span><span>{contactoPrincipal?.telefono || cliente.telefono || "—"}</span></div>
           </div>
         </div>
 
@@ -361,16 +364,19 @@ function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fe
           <td style="padding:3px 0"><span style="font-weight:700;color:#1B2A4A">Property Name: </span>${cliente.nombre}</td>
         </tr>
         <tr>
-          <td style="padding:3px 0"><span style="font-weight:700;color:#1B2A4A">Decision Maker: </span>${cliente.management||"—"}</td>
+          <td style="padding:3px 0"><span style="font-weight:700;color:#1B2A4A">Contact Name: </span>${(cotizacion as any).contactoPrincipal?.nombre||"—"}</td>
           <td style="padding:3px 0"><span style="font-weight:700;color:#1B2A4A">Property Address: </span>${cliente.direccionPropiedad||"—"}</td>
         </tr>
         <tr>
-          <td style="padding:3px 0"><span style="font-weight:700;color:#1B2A4A">Email: </span>${cliente.correo||"—"}</td>
+          <td style="padding:3px 0"><span style="font-weight:700;color:#1B2A4A">Contact Title: </span>${(cotizacion as any).contactoPrincipal?.cargo||"—"}</td>
           <td style="padding:3px 0"><span style="font-weight:700;color:#1B2A4A">City / State / ZIP: </span>${cliente.zona||"—"}</td>
         </tr>
         <tr>
-          <td style="padding:3px 0"><span style="font-weight:700;color:#1B2A4A">Phone: </span>${cliente.telefono||"—"}</td>
+          <td style="padding:3px 0"><span style="font-weight:700;color:#1B2A4A">Email: </span>${(cotizacion as any).contactoPrincipal?.correo||cliente.correo||"—"}</td>
           <td style="padding:3px 0"><span style="font-weight:700;color:#1B2A4A">Property Type: </span>${cliente.tipoPropiedad||"Hotel"}</td>
+        </tr>
+        <tr>
+          <td style="padding:3px 0"><span style="font-weight:700;color:#1B2A4A">Phone: </span>${(cotizacion as any).contactoPrincipal?.telefono||cliente.telefono||"—"}</td>
         </tr>
       </tbody></table>
     </div>
@@ -408,8 +414,8 @@ function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fe
         </td>
         <td style="width:50%;vertical-align:top">
           <div style="font-size:11px;font-weight:900;color:#1B2A4A;margin-bottom:10px">PREPARED BY: EZENTY ProCare LLC</div>
-          <div style="margin-bottom:8px"><span style="font-weight:700;color:#1B2A4A">Email: </span>zreyes@ezentyprocare.com</div>
-          <div style="margin-bottom:8px"><span style="font-weight:700;color:#1B2A4A">Printed Name &amp; Title: </span>Zugheily Reyes · Floor &amp; Surface Protection Advisor</div>
+          <div style="margin-bottom:8px"><span style="font-weight:700;color:#1B2A4A">Email: </span>${vendedor?.correo||"zreyes@ezentyprocare.com"}</div>
+          <div style="margin-bottom:8px"><span style="font-weight:700;color:#1B2A4A">Printed Name &amp; Title: </span>${vendedor?.nombre||"Zugheily Reyes"} · Floor &amp; Surface Protection Advisor</div>
           <div><span style="font-weight:700;color:#1B2A4A">Phone: </span>407-844-7019</div>
         </td>
       </tr></tbody></table>
