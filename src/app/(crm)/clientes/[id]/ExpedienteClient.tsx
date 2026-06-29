@@ -384,7 +384,7 @@ export function ExpedienteClient({ clienteInicial, config, etiquetasDisponibles,
               <Link href={`/clientes/${cliente.id}/cotizacion`}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 transition-colors">
                 <FileText className="w-3.5 h-3.5" />
-                💰 Cotización
+                💰 Nueva cotización
               </Link>
             </div>
           </div>
