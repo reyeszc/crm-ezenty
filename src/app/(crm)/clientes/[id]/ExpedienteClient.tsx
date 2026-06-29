@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import {
   ArrowLeft, Phone, Mail, Building2, MapPin, Flame, Thermometer, Tag,
@@ -141,6 +141,13 @@ export function ExpedienteClient({ clienteInicial, config, etiquetasDisponibles,
   const [contactos, setContactos] = useState<any[]>([]);
   const [nuevoContacto, setNuevoContacto] = useState(false);
   const [formContacto, setFormContacto] = useState({ nombre: "", cargo: "", telefono: "", correo: "", notas: "" });
+
+  useEffect(() => {
+    fetch(`/api/clientes/${clienteInicial.id}/contactos`)
+      .then(r => r.json())
+      .then(d => setContactos(d.contactos || []))
+      .catch(() => {});
+  }, [clienteInicial.id]);
   const [nuevaNota, setNuevaNota] = useState("");
   const [tipoNota, setTipoNota] = useState("NOTA");
   const [guardandoNota, setGuardandoNota] = useState(false);
