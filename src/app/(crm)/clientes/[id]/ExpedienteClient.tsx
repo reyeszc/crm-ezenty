@@ -374,8 +374,13 @@ export function ExpedienteClient({ clienteInicial, config, etiquetasDisponibles,
                   SMS
                 </a>
               )}
-              {emailUrl && (
-                <a href={emailUrl} className="btn-secondary !py-1.5 !px-3 text-xs">
+              {cliente.correo && (
+                <a
+                  href={`https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(cliente.correo)}&su=${encodeURIComponent(`Ezenty ProCare — ${cliente.nombre}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-secondary !py-1.5 !px-3 text-xs"
+                >
                   <Mail className="w-3.5 h-3.5 text-marca-500" aria-hidden="true" />
                   Correo
                 </a>
@@ -671,7 +676,7 @@ export function ExpedienteClient({ clienteInicial, config, etiquetasDisponibles,
                       </a>
                     )}
                     {c.correo && (
-                      <a href={`mailto:${c.correo}`} className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)] hover:text-marca-500 transition-colors">
+                      <a href={`https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(c.correo)}&su=${encodeURIComponent(`Ezenty ProCare — ${cliente.nombre}`)}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)] hover:text-marca-500 transition-colors">
                         <Mail className="w-3 h-3 flex-shrink-0" />
                         <span className="truncate">{c.correo}</span>
                       </a>
