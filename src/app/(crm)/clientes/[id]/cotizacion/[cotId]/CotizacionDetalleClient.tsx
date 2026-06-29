@@ -326,7 +326,11 @@ function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fe
   <title>${cotizacion.numero} — Ezenty ProCare</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 0; padding: 0; color: #333; font-size: 13px; }
-    @media print { body { margin: 0; } .no-print { display: none; } }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+    @media print { 
+      body { margin: 0; } 
+      .no-print { display: none; }
+    }
     table { width: 100%; border-collapse: collapse; }
   </style></head><body>
   <div style="max-width:800px;margin:0 auto;padding:0">
