@@ -138,6 +138,9 @@ function AIPanel({ clienteId, onAccion }: { clienteId: string; onAccion: (texto:
 
 export function ExpedienteClient({ clienteInicial, config, etiquetasDisponibles, plantillas, usuarioActualId, rolActual }: any) {
   const [cliente, setCliente] = useState(clienteInicial);
+  const [contactos, setContactos] = useState<any[]>([]);
+  const [nuevoContacto, setNuevoContacto] = useState(false);
+  const [formContacto, setFormContacto] = useState({ nombre: "", cargo: "", telefono: "", correo: "", notas: "" });
   const [nuevaNota, setNuevaNota] = useState("");
   const [tipoNota, setTipoNota] = useState("NOTA");
   const [guardandoNota, setGuardandoNota] = useState(false);
@@ -628,6 +631,88 @@ export function ExpedienteClient({ clienteInicial, config, etiquetasDisponibles,
           {mostrarIA && (
             <AIPanel clienteId={cliente.id} onAccion={(texto) => setNuevaNota(texto)} />
           )}
+
+          {/* Contactos de la propiedad */}
+          <div className="card p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-semibold text-[var(--text-primary)]">👥 Contactos</h2>
+              <button onClick={() => setNuevoContacto(!nuevoContacto)}
+                className="text-xs text-marca-500 hover:underline">
+                {nuevoContacto ? "Cancelar" : "+ Agregar"}
+              </button>
+            </div>
+
+            {contactos.length === 0 && !nuevoContacto && (
+              <p className="text-xs text-[var(--text-muted)] italic">No hay contactos registrados aún.</p>
+            )}
+
+            <div className="space-y-3">
+              {contactos.map((c: any) => (
+                <div key={c.id} className="bg-[var(--bg-secondary)] rounded-lg p-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-[var(--text-primary)] truncate">{c.nombre}</p>
+                      {c.cargo && <p className="text-xs text-marca-500">{c.cargo}</p>}
+                    </div>
+                    {c.principal && <span className="badge text-xs bg-marca-100 text-marca-700 flex-shrink-0">Principal</span>}
+                  </div>
+                  <div className="mt-2 space-y-1">
+                    {c.telefono && (
+                      <a href={`sms:${c.telefono}`} className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)] hover:text-marca-500 transition-colors">
+                        <Phone className="w-3 h-3 flex-shrink-0" />
+                        {c.telefono}
+                      </a>
+                    )}
+                    {c.correo && (
+                      <a href={`mailto:${c.correo}`} className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)] hover:text-marca-500 transition-colors">
+                        <Mail className="w-3 h-3 flex-shrink-0" />
+                        <span className="truncate">{c.correo}</span>
+                      </a>
+                    )}
+                    {c.notas && <p className="text-xs text-[var(--text-muted)] mt-1 italic">{c.notas}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Nuevo contacto form */}
+            {nuevoContacto && (
+              <div className="mt-3 bg-[var(--bg-secondary)] rounded-lg p-3 space-y-2">
+                <p className="text-xs font-semibold text-[var(--text-primary)] mb-2">Nuevo contacto</p>
+                {[
+                  { key: "nombre", placeholder: "Nombre completo *" },
+                  { key: "cargo", placeholder: "Cargo / Título (ej: General Manager)" },
+                  { key: "telefono", placeholder: "Teléfono / SMS" },
+                  { key: "correo", placeholder: "Email" },
+                  { key: "notas", placeholder: "Nota (ej: mejor llamar por las mañanas)" },
+                ].map(({ key, placeholder }) => (
+                  <input key={key} className="input text-sm !py-1.5"
+                    placeholder={placeholder}
+                    value={(formContacto as any)[key]}
+                    onChange={e => setFormContacto(p => ({ ...p, [key]: e.target.value }))} />
+                ))}
+                <button
+                  onClick={async () => {
+                    if (!formContacto.nombre.trim()) return;
+                    const res = await fetch(`/api/clientes/${cliente.id}/contactos`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ ...formContacto, principal: contactos.length === 0 }),
+                    });
+                    if (res.ok) {
+                      const data = await res.json();
+                      setContactos(p => [...p, { id: data.id, ...formContacto, principal: contactos.length === 0 }]);
+                      setFormContacto({ nombre: "", cargo: "", telefono: "", correo: "", notas: "" });
+                      setNuevoContacto(false);
+                      success("Contacto agregado ✓");
+                    }
+                  }}
+                  className="btn-primary w-full justify-center text-sm !py-1.5">
+                  Guardar contacto
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* Datos del cliente */}
           <div className="card p-4 space-y-3">
