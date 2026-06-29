@@ -135,7 +135,7 @@ export function CotizacionClient({ cliente, medidas, cotizacionesPrevias }: {
         const totalArea = precioPorSqFt * area.subtotalSqFt;
         nuevas.push({
           id: crypto.randomUUID(),
-          descripcion: `${area.area} (${area.subtotalSqFt.toFixed(0)} sq ft)`,
+          descripcion: area.area,
           tipo, unidad: "flat_fee",
           cantidad: "1",
           precioUnitario: totalArea.toFixed(2),

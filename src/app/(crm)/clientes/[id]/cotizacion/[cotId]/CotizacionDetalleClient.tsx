@@ -121,11 +121,15 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
         {/* Header navy bar */}
         <div className="px-6 py-4" style={{ background: "#1B2A4A" }}>
           <div className="flex items-center justify-between">
-            <div>
-              <img src="/logo-small.png" alt="Ezenty" className="h-10 object-contain mb-1 brightness-200" />
-              <p className="text-white font-bold text-lg">SERVICE QUOTATION</p>
-              <p className="text-blue-200 text-xs">Floor, Surface & Odor Care · IICRC Certified</p>
-              <p className="text-blue-300 text-xs italic">We Protect the Surfaces That Protect Your Brand™</p>
+            <div className="flex items-start gap-4">
+              <div className="w-16 h-16 rounded-lg bg-white flex items-center justify-center flex-shrink-0 p-1">
+                <img src="/logo.png" alt="Ezenty" className="w-full h-full object-contain" />
+              </div>
+              <div>
+                <p className="text-white font-bold text-lg">SERVICE QUOTATION</p>
+                <p className="text-blue-200 text-xs">Floor, Surface & Odor Care · IICRC Certified</p>
+                <p className="text-blue-300 text-xs italic">We Protect the Surfaces That Protect Your Brand™</p>
+              </div>
             </div>
             <div className="text-right text-white text-sm">
               <p className="font-bold text-lg">{cotizacion.numero}</p>
@@ -151,42 +155,63 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
           </div>
         </div>
 
-        {/* Services table */}
+        {/* Services table — grouped by floor type */}
         <div className="px-6 py-3">
           <p className="text-xs font-bold text-[#1B2A4A] mb-2 uppercase tracking-wide">Section 1 — Quoted Services & Pricing</p>
           <table className="w-full text-sm border-collapse">
             <thead>
               <tr style={{ background: "#1B2A4A" }}>
-                <th className="text-white text-left py-2 px-3 w-8 rounded-tl-lg">#</th>
+                <th className="text-white text-left py-2 px-3 w-8">#</th>
                 <th className="text-white text-left py-2 px-3">Service Description</th>
-                <th className="text-white text-right py-2 px-3 rounded-tr-lg">Unit Price ($)</th>
+                <th className="text-white text-right py-2 px-3">Unit Price ($)</th>
               </tr>
             </thead>
             <tbody>
-              {lineas.map((l: any, i: number) => {
-                const isEven = i % 2 === 0;
-                const unitLabel = l.unidad !== "flat_fee" ? ` ${UNIDAD_LABEL[l.unidad] || l.unidad}` : "";
-                const cantLabel = l.cantidad > 1 && l.unidad !== "flat_fee" ? `${l.cantidad} × ` : "";
-                return (
-                  <tr key={l.id} style={{ background: isEven ? "#FFFFFF" : "#F8F9FA" }}>
-                    <td className="py-2 px-3 text-center text-[var(--text-muted)] font-mono text-xs">
-                      {String(i + 1).padStart(2, "0")}
-                    </td>
-                    <td className="py-2 px-3 text-[var(--text-primary)]">{l.descripcion}</td>
-                    <td className="py-2 px-3 text-right font-semibold text-[#1B2A4A]">
-                      {(l.unidad === "habitacion" || l.unidad === "bano" || l.unidad === "pieza") && l.cantidad > 1 ? (
-                        <>
-                          <span className="text-xs font-normal text-[var(--text-muted)]">{l.cantidad} × ${(l.precioFinal || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })} = </span>
-                          ${((l.precioFinal || 0) * (l.cantidad || 1)).toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                          <span className="text-xs font-normal text-[var(--text-muted)] ml-1">Each</span>
-                        </>
-                      ) : (
-                        <>${(l.precioFinal || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}</>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
+              {(() => {
+                const grupos: Record<string, any[]> = {};
+                lineas.forEach(l => {
+                  const g = l.tipo?.includes("Guest") ? "Guest Services" :
+                            l.tipo?.includes("Carpet") ? "Carpet" :
+                            l.tipo?.includes("Tile") ? "Tile & Grout" :
+                            l.tipo?.includes("LVT") ? "LVT" :
+                            l.tipo?.includes("Concrete") ? "Concrete" :
+                            l.tipo?.includes("Upholstery") ? "Upholstery" :
+                            l.tipo?.includes("Odor") ? "Odor Control" : "Other";
+                  if (!grupos[g]) grupos[g] = [];
+                  grupos[g].push(l);
+                });
+                let num = 0;
+                return Object.entries(grupos).map(([grupo, items]) => (
+                  <>
+                    <tr key={`g-${grupo}`} style={{ background: "#E8EEF5" }}>
+                      <td colSpan={3} className="py-1.5 px-3 text-xs font-bold uppercase tracking-wide" style={{ color: "#1B2A4A" }}>{grupo}</td>
+                    </tr>
+                    {items.map((l: any) => {
+                      num++;
+                      const subtotal = (l.unidad === "habitacion" || l.unidad === "bano" || l.unidad === "pieza")
+                        ? (l.precioFinal || 0) * (l.cantidad || 1)
+                        : (l.precioFinal || 0);
+                      return (
+                        <tr key={l.id} style={{ background: num % 2 === 0 ? "#FFFFFF" : "#F8F9FA" }}>
+                          <td className="py-2 pl-5 pr-3 text-center text-[var(--text-muted)] font-mono text-xs">{String(num).padStart(2,"0")}</td>
+                          <td className="py-2 px-3 text-[var(--text-primary)]">{l.descripcion}</td>
+                          <td className="py-2 px-3 text-right font-semibold" style={{ color: "#1B2A4A" }}>
+                            {(l.unidad === "habitacion" || l.unidad === "bano" || l.unidad === "pieza") && (l.cantidad || 1) > 1 ? (
+                              <span>
+                                <span className="text-xs font-normal text-[var(--text-muted)]">{l.cantidad} × ${(l.precioFinal||0).toLocaleString("en-US",{minimumFractionDigits:2})} = </span>
+                                ${subtotal.toLocaleString("en-US",{minimumFractionDigits:2})}
+                                <span className="text-xs font-normal text-[var(--text-muted)] ml-1">Each</span>
+                              </span>
+                            ) : (
+                              <>${subtotal.toLocaleString("en-US",{minimumFractionDigits:2})}</>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </>
+                ));
+              })()}
             </tbody>
           </table>
 
@@ -245,7 +270,14 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
         {/* Footer */}
         <div className="px-6 py-3 border-t border-[var(--border)] flex items-center justify-between" style={{ background: "#F8F9FA" }}>
           <p className="text-xs text-[var(--text-muted)]">EZENTY ProCare LLC · Atlanta, GA · IICRC Certified · ezentyprocare.com</p>
-          <p className="text-xs text-[var(--text-muted)]">{cotizacion.numero} · Confidential · Valid {cotizacion.validezDias || 30} Days</p>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full border-2 flex flex-col items-center justify-center text-center flex-shrink-0" style={{ borderColor: "#1B2A4A" }}>
+              <span className="text-[7px] font-black leading-tight" style={{ color: "#1B2A4A" }}>IICRC</span>
+              <span className="text-[5px] text-gray-500 leading-tight">CERTIFIED</span>
+              <span className="text-[7px] font-black leading-tight" style={{ color: "#1B2A4A" }}>FIRM</span>
+            </div>
+            <p className="text-xs text-[var(--text-muted)]">{cotizacion.numero} · Confidential · Valid {cotizacion.validezDias || 30} Days</p>
+          </div>
         </div>
       </div>
     </div>
@@ -254,16 +286,39 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
 
 // ── PDF HTML Generator ────────────────────────────────────────────────────────
 function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fechaValidez, estado }: any) {
-  const rows = lineas.map((l: any, i: number) => `
-    <tr style="background:${i % 2 === 0 ? "#ffffff" : "#f8f9fa"}">
-      <td style="padding:8px 12px;text-align:center;color:#666;font-family:monospace;font-size:12px">${String(i+1).padStart(2,"0")}</td>
-      <td style="padding:8px 12px;color:#333">${l.descripcion}</td>
-      <td style="padding:8px 12px;text-align:right;font-weight:600;color:#1B2A4A">
-        $${(l.precioFinal || 0).toLocaleString("en-US",{minimumFractionDigits:2})}
-        ${l.cantidad > 1 && l.unidad !== "flat_fee" ? `<span style="font-size:11px;color:#999">× ${l.cantidad}</span>` : ""}
-        ${l.unidad !== "flat_fee" && l.unidad !== "pieza" && l.cantidad > 1 ? `<span style="font-size:11px;color:#999;margin-left:4px">Each</span>` : ""}
-      </td>
-    </tr>`).join("");
+  // Group lines by tipo (floor type)
+  const grupos: Record<string, any[]> = {};
+  lineas.forEach((l: any) => {
+    const grupo = l.tipo?.includes("Guest") ? "Guest Services" : 
+                  l.tipo?.includes("Carpet") ? "Carpet" :
+                  l.tipo?.includes("Tile") ? "Tile & Grout" :
+                  l.tipo?.includes("LVT") ? "LVT" :
+                  l.tipo?.includes("Concrete") ? "Concrete" :
+                  l.tipo?.includes("Upholstery") ? "Upholstery" :
+                  l.tipo?.includes("Odor") ? "Odor Control" : "Other Services";
+    if (!grupos[grupo]) grupos[grupo] = [];
+    grupos[grupo].push(l);
+  });
+
+  let rowNum = 0;
+  const rows = Object.entries(grupos).map(([grupo, items]) => {
+    const groupHeader = `<tr style="background:#e8eef5"><td colspan="3" style="padding:6px 12px;font-weight:700;font-size:11px;color:#1B2A4A;text-transform:uppercase;letter-spacing:0.5px">${grupo}</td></tr>`;
+    const itemRows = (items as any[]).map((l: any) => {
+      rowNum++;
+      const subtotal = (l.unidad === "habitacion" || l.unidad === "bano" || l.unidad === "pieza")
+        ? (l.precioFinal || 0) * (l.cantidad || 1)
+        : (l.precioFinal || 0);
+      const qtyLabel = (l.unidad === "habitacion" || l.unidad === "bano" || l.unidad === "pieza") && l.cantidad > 1
+        ? `<span style="font-size:11px;color:#999;margin-left:4px">${l.cantidad} × $${(l.precioFinal||0).toLocaleString("en-US",{minimumFractionDigits:2})} Each</span>`
+        : "";
+      return `<tr style="background:${rowNum % 2 === 0 ? "#ffffff" : "#f8f9fa"}">
+        <td style="padding:7px 12px 7px 20px;text-align:center;color:#666;font-family:monospace;font-size:11px">${String(rowNum).padStart(2,"0")}</td>
+        <td style="padding:7px 12px">${l.descripcion}</td>
+        <td style="padding:7px 12px;text-align:right;font-weight:600;color:#1B2A4A">$${subtotal.toLocaleString("en-US",{minimumFractionDigits:2})}${qtyLabel}</td>
+      </tr>`;
+    }).join("");
+    return groupHeader + itemRows;
+  }).join("");
 
   const totalHTML = cotizacion.descuento > 0 ? `
     <tr><td colspan="2" style="text-align:right;padding:4px 12px;color:#666">Subtotal:</td>
@@ -281,12 +336,13 @@ function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fe
   <div style="max-width:800px;margin:0 auto;padding:0">
     <!-- Header -->
     <div style="background:#1B2A4A;padding:24px 32px;display:flex;justify-content:space-between;align-items:flex-start">
-      <div>
-        <div style="color:white;font-size:22px;font-weight:900;letter-spacing:1px">EZENTY</div>
-        <div style="color:#7cc2e8;font-size:11px">— PROCARE —</div>
-        <div style="color:white;font-size:18px;font-weight:700;margin-top:8px">SERVICE QUOTATION</div>
-        <div style="color:#90c4e8;font-size:11px">Floor, Surface &amp; Odor Care · IICRC Certified</div>
-        <div style="color:#a8d0ec;font-size:10px;font-style:italic">We Protect the Surfaces That Protect Your Brand™</div>
+      <div style="display:flex;align-items:flex-start;gap:16px">
+        <img src="https://crm-ezenty.vercel.app/logo.png" alt="Ezenty" style="height:70px;width:70px;object-fit:contain;background:white;border-radius:8px;padding:4px" onerror="this.style.display='none'" />
+        <div>
+          <div style="color:white;font-size:20px;font-weight:900;letter-spacing:1px;margin-bottom:2px">SERVICE QUOTATION</div>
+          <div style="color:#90c4e8;font-size:11px">Floor, Surface &amp; Odor Care · IICRC Certified</div>
+          <div style="color:#a8d0ec;font-size:10px;font-style:italic;margin-top:2px">We Protect the Surfaces That Protect Your Brand™</div>
+        </div>
       </div>
       <div style="text-align:right;color:white">
         <div style="font-size:16px;font-weight:bold">${cotizacion.numero}</div>
@@ -364,7 +420,14 @@ function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fe
     <!-- Footer -->
     <div style="background:#f8f9fa;padding:12px 32px;border-top:1px solid #ddd;display:flex;justify-content:space-between;align-items:center">
       <span style="font-size:11px;color:#888">EZENTY ProCare LLC · Atlanta, GA · IICRC Certified · ezentyprocare.com</span>
-      <span style="font-size:11px;color:#888">${cotizacion.numero} · Confidential. For Client Use Only · Valid ${cotizacion.validezDias||30} Days</span>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="text-align:center">
+          <div style="width:44px;height:44px;border-radius:50%;border:3px solid #1B2A4A;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:7px;font-weight:900;color:#1B2A4A;line-height:1.1">
+            <div>IICRC</div><div style="font-size:5px;color:#666">CERTIFIED</div><div>FIRM</div>
+          </div>
+        </div>
+        <span style="font-size:11px;color:#888">${cotizacion.numero} · Confidential. For Client Use Only · Valid ${cotizacion.validezDias||30} Days</span>
+      </div>
     </div>
   </div>
   <script>window.focus();</script>
