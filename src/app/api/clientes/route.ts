@@ -154,6 +154,22 @@ export async function POST(req: NextRequest) {
 
   await registrarAuditoria({ usuarioId, accion: "Creó", entidad: "Cliente", entidadId: id, detalle: `Creó al cliente ${data.nombre}` });
 
+  // Save contactos if provided
+  const contactos = body.contactos || [];
+  for (const c of contactos) {
+    if (!c.nombre?.trim()) continue;
+    await db.insert(schema.contactos).values({
+      id: crypto.randomUUID(),
+      clienteId: id,
+      nombre: c.nombre.trim(),
+      cargo: c.cargo || null,
+      telefono: c.telefono || null,
+      correo: c.correo || null,
+      notas: c.notas || null,
+      principal: c.principal || false,
+    });
+  }
+
   return NextResponse.json({ id, ...data }, { status: 201 });
 }
 
