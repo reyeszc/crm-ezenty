@@ -1,7 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { FileText, Search } from "lucide-react";
+import { FileText, Search, Trash2 } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { useToast } from "@/components/providers/ToastProvider";
 
 const ESTADO_CONFIG: Record<string, { label: string; cls: string }> = {
   BORRADOR:  { label: "Borrador",  cls: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400" },
@@ -11,10 +13,15 @@ const ESTADO_CONFIG: Record<string, { label: string; cls: string }> = {
 };
 
 export default function CotizacionesPage() {
+  const { data: session } = useSession();
+  const { success, error } = useToast();
+  const esAdmin = (session?.user as any)?.rol === "ADMIN";
   const [cotizaciones, setCotizaciones] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filtroEstado, setFiltroEstado] = useState("");
   const [busqueda, setBusqueda] = useState("");
+  const [eliminando, setEliminando] = useState<string | null>(null);
+  const [confirmar, setConfirmar] = useState<any | null>(null);
 
   useEffect(() => {
     fetch("/api/cotizaciones")
@@ -32,6 +39,19 @@ export default function CotizacionesPage() {
 
   const totalAprobadas = cotizaciones.filter(c => c.estado === "APROBADA").reduce((s, c) => s + (c.total || 0), 0);
   const totalEnviadas = cotizaciones.filter(c => c.estado === "ENVIADA").reduce((s, c) => s + (c.total || 0), 0);
+
+  async function eliminar(c: any) {
+    setEliminando(c.id);
+    try {
+      const res = await fetch(`/api/cotizaciones/${c.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error();
+      setCotizaciones(p => p.filter(x => x.id !== c.id));
+      success(`${c.numero} eliminada ✓`);
+    } catch { error("No se pudo eliminar"); } finally {
+      setEliminando(null);
+      setConfirmar(null);
+    }
+  }
 
   return (
     <div className="space-y-4 pb-20 lg:pb-0">
@@ -80,8 +100,8 @@ export default function CotizacionesPage() {
           const cfg = ESTADO_CONFIG[c.estado] || ESTADO_CONFIG.BORRADOR;
           const vencida = c.estado !== "APROBADA" && c.fechaVencimiento && new Date(c.fechaVencimiento) < new Date();
           return (
-            <Link key={c.id} href={`/clientes/${c.clienteId}/cotizacion/${c.id}`}
-              className="card p-4 flex items-center gap-3 hover:shadow-md transition-shadow">
+            <div key={c.id} className="card p-4 flex items-center gap-3 hover:shadow-md transition-shadow relative">
+            <Link href={`/clientes/${c.clienteId}/cotizacion/${c.id}`} className="flex items-center gap-3 flex-1 min-w-0">
               <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center flex-shrink-0">
                 <FileText className="w-5 h-5 text-emerald-500" />
               </div>
@@ -102,9 +122,38 @@ export default function CotizacionesPage() {
                 {c.descuento > 0 && <p className="text-xs text-[var(--text-muted)]">-${c.descuento.toFixed(2)} desc.</p>}
               </div>
             </Link>
+            {esAdmin && (
+              <button
+                onClick={() => setConfirmar(c)}
+                className="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:bg-red-50 hover:text-red-500 transition-colors flex-shrink-0"
+                title="Eliminar cotización">
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
+          </div>
           );
         })}
       </div>
+      {/* Confirm delete modal */}
+      {confirmar && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40" onClick={() => setConfirmar(null)}>
+          <div className="card w-full max-w-sm p-6 text-center" onClick={e => e.stopPropagation()}>
+            <Trash2 className="w-10 h-10 text-red-400 mx-auto mb-3" />
+            <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-1">¿Eliminar cotización?</h3>
+            <p className="text-sm text-[var(--text-secondary)] mb-1">{confirmar.numero}</p>
+            <p className="text-sm text-[var(--text-muted)] mb-5">Esta acción no se puede deshacer.</p>
+            <div className="flex gap-2">
+              <button onClick={() => eliminar(confirmar)} disabled={eliminando === confirmar.id}
+                className="flex-1 py-2.5 rounded-xl bg-red-500 text-white font-semibold text-sm hover:bg-red-600 transition-colors">
+                {eliminando === confirmar.id ? "Eliminando…" : "Sí, eliminar"}
+              </button>
+              <button onClick={() => setConfirmar(null)} className="flex-1 btn-secondary justify-center">
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
