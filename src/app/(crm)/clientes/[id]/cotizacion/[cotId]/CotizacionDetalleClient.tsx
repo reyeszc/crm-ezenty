@@ -271,11 +271,7 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
         <div className="px-6 py-3 border-t border-[var(--border)] flex items-center justify-between" style={{ background: "#F8F9FA" }}>
           <p className="text-xs text-[var(--text-muted)]">EZENTY ProCare LLC · Atlanta, GA · IICRC Certified · ezentyprocare.com</p>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full border-2 flex flex-col items-center justify-center text-center flex-shrink-0" style={{ borderColor: "#1B2A4A" }}>
-              <span className="text-[7px] font-black leading-tight" style={{ color: "#1B2A4A" }}>IICRC</span>
-              <span className="text-[5px] text-gray-500 leading-tight">CERTIFIED</span>
-              <span className="text-[7px] font-black leading-tight" style={{ color: "#1B2A4A" }}>FIRM</span>
-            </div>
+            <img src="/iicrc.png" alt="IICRC Certified Firm" className="w-10 h-10 object-contain flex-shrink-0" />
             <p className="text-xs text-[var(--text-muted)]">{cotizacion.numero} · Confidential · Valid {cotizacion.validezDias || 30} Days</p>
           </div>
         </div>
@@ -408,8 +404,8 @@ function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fe
         </td>
         <td style="width:50%;vertical-align:top">
           <div style="font-size:11px;font-weight:900;color:#1B2A4A;margin-bottom:10px">PREPARED BY: EZENTY ProCare LLC</div>
-          <div style="margin-bottom:8px"><span style="font-weight:700;color:#1B2A4A">Email: </span>${vendedor?.correo||"zreyes@ezentyprocare.com"}</div>
-          <div style="margin-bottom:8px"><span style="font-weight:700;color:#1B2A4A">Printed Name &amp; Title: </span>${vendedor?.nombre||"Zugheily Reyes"}</div>
+          <div style="margin-bottom:8px"><span style="font-weight:700;color:#1B2A4A">Email: </span>zreyes@ezentyprocare.com</div>
+          <div style="margin-bottom:8px"><span style="font-weight:700;color:#1B2A4A">Printed Name &amp; Title: </span>Zugheily Reyes · Floor &amp; Surface Protection Advisor</div>
           <div><span style="font-weight:700;color:#1B2A4A">Phone: </span>407-844-7019</div>
         </td>
       </tr></tbody></table>
