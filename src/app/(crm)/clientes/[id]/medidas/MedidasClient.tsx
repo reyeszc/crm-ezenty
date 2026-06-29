@@ -196,6 +196,17 @@ export function MedidasClient({ clienteId, clienteNombre }: { clienteId: string;
 
             {area.abierta && (
               <div className="p-3 space-y-3">
+                {/* Area name */}
+                <div>
+                  <label className="label text-xs">Nombre del área *</label>
+                  <input
+                    className="input text-sm font-medium"
+                    value={area.nombre}
+                    onChange={e => updateArea(area.id, { nombre: e.target.value })}
+                    placeholder={area.esTipoHabitacion ? "ej: Room 101, Suite 205…" : area.esTipoBano ? "ej: Bathroom Floor 1, Master Bath…" : "ej: Lobby, Corredor Piso 1, Sala de Eventos…"}
+                    autoFocus={!area.nombre}
+                  />
+                </div>
                 {/* Floor type + Flat Fee */}
                 <div className="grid grid-cols-2 gap-2">
                   <div>
