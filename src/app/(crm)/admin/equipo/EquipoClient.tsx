@@ -22,6 +22,7 @@ function ModalUsuario({ usuario, onClose, onGuardado }: {
     correo: usuario?.correo || "",
     rol: usuario?.rol || "VENDEDOR",
     metaMensual: String(usuario?.metaMensual || 0),
+    titulo: (usuario as any)?.titulo || "",
     password: "",
   });
   const [loading, setLoading] = useState(false);
@@ -39,6 +40,7 @@ function ModalUsuario({ usuario, onClose, onGuardado }: {
         body: JSON.stringify({
           nombre: form.nombre, correo: form.correo,
           rol: form.rol, metaMensual: parseFloat(form.metaMensual) || 0,
+          titulo: (form as any).titulo || null,
           ...(form.password ? { password: form.password } : {}),
         }),
       });
@@ -63,9 +65,14 @@ function ModalUsuario({ usuario, onClose, onGuardado }: {
         </div>
         <div className="space-y-3">
           <div>
-            <label className="label">Nombre completo (como aparecerá en cotizaciones)</label>
+            <label className="label">Nombre completo</label>
             <input className="input" value={form.nombre} onChange={e => set("nombre", e.target.value)} placeholder="Zugheily Reyes" />
-            <p className="text-xs text-[var(--text-muted)] mt-1">Usa nombre y apellido — aparece en Prepared By de las cotizaciones</p>
+            <p className="text-xs text-[var(--text-muted)] mt-1">Usa nombre y apellido — aparece en cotizaciones</p>
+          </div>
+          <div>
+            <label className="label">Título / Cargo</label>
+            <input className="input" value={(form as any).titulo} onChange={e => set("titulo", e.target.value)} placeholder="Floor & Surface Protection Advisor" />
+            <p className="text-xs text-[var(--text-muted)] mt-1">Aparece en Prepared By de las cotizaciones</p>
           </div>
           <div>
             <label className="label">Correo</label>

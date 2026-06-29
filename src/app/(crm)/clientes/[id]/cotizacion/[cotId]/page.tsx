@@ -27,7 +27,7 @@ export default async function CotizacionDetallePage({ params }: Props) {
     .where(eq(schema.cotizacionLineas.cotizacionId, cotId))
     .orderBy(schema.cotizacionLineas.orden);
 
-  const [vendedor] = await db.select({ nombre: schema.usuarios.nombre, correo: schema.usuarios.correo })
+  const [vendedor] = await db.select({ nombre: schema.usuarios.nombre, correo: schema.usuarios.correo, titulo: schema.usuarios.titulo })
     .from(schema.usuarios).where(eq(schema.usuarios.id, cot.vendedorId)).limit(1);
 
   // Get primary contact

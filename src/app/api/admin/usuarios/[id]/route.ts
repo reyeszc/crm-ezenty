@@ -13,6 +13,7 @@ const PatchSchema = z.object({
   metaMensual: z.coerce.number().min(0).optional(),
   activo: z.boolean().optional(),
   password: z.string().min(8).optional(),
+  titulo: z.string().optional().nullable(),
 });
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

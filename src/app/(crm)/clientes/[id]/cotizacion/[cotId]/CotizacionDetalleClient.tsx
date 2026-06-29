@@ -415,7 +415,7 @@ function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fe
         <td style="width:50%;vertical-align:top">
           <div style="font-size:11px;font-weight:900;color:#1B2A4A;margin-bottom:10px">PREPARED BY: EZENTY ProCare LLC</div>
           <div style="margin-bottom:8px"><span style="font-weight:700;color:#1B2A4A">Email: </span>${vendedor?.correo||"zreyes@ezentyprocare.com"}</div>
-          <div style="margin-bottom:8px"><span style="font-weight:700;color:#1B2A4A">Printed Name &amp; Title: </span>${vendedor?.nombre||"Zugheily Reyes"} · Floor &amp; Surface Protection Advisor</div>
+          <div style="margin-bottom:8px"><span style="font-weight:700;color:#1B2A4A">Printed Name &amp; Title: </span>${vendedor?.nombre||"Zugheily Reyes"}${(vendedor as any)?.titulo ? ` · ${(vendedor as any).titulo}` : " · Floor & Surface Protection Advisor"}</div>
           <div><span style="font-weight:700;color:#1B2A4A">Phone: </span>407-844-7019</div>
         </td>
       </tr></tbody></table>
