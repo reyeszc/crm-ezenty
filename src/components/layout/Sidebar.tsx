@@ -58,6 +58,13 @@ const navPrincipal = [
     bgActive: "bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300",
   },
   {
+    href: "/cotizaciones",
+    icon: FileText,
+    label: "Cotizaciones",
+    color: "text-emerald-500",
+    bgActive: "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300",
+  },
+  {
     href: "/seguimiento",
     icon: ListChecks,
     label: "Seguimiento",
