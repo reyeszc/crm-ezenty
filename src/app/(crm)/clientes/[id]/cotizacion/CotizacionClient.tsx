@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowLeft, FileText, Plus, Trash2, Save, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { useToast } from "@/components/providers/ToastProvider";
@@ -71,6 +71,9 @@ export function CotizacionClient({ cliente, medidas, cotizacionesPrevias }: {
   const [validez, setValidez] = useState("30");
   const [saving, setSaving] = useState(false);
   const [mostrarPrevias, setMostrarPrevias] = useState(true);
+  const [cotizacionViendo, setCotizacionViendo] = useState<string | null>(null);
+  const [detalleCot, setDetalleCot] = useState<{cot: any, lineas: any[]} | null>(null);
+  const [loadingDetalle, setLoadingDetalle] = useState(false);
   const [mostrarPrecios, setMostrarPrecios] = useState(false);
   const [precios, setPrecios] = useState(
     Object.fromEntries(Object.entries(PRECIOS_DEFAULT).map(([k, v]) => [k, String(v.precio)]))
@@ -94,6 +97,17 @@ export function CotizacionClient({ cliente, medidas, cotizacionesPrevias }: {
       precioUnitario: precioActual, precioFinal: precioActual,
     });
   }
+
+  // Load cotizacion detail when selected
+  useEffect(() => {
+    if (!cotizacionViendo) { setDetalleCot(null); return; }
+    setLoadingDetalle(true);
+    fetch(`/api/clientes/${cliente.id}/cotizaciones/${cotizacionViendo}`)
+      .then(r => r.json())
+      .then(d => setDetalleCot({ cot: d.cotizacion, lineas: d.lineas || [] }))
+      .catch(() => setDetalleCot(null))
+      .finally(() => setLoadingDetalle(false));
+  }, [cotizacionViendo, cliente.id]);
 
   // When medida changes, show its areas for selection
   const medidaActual = medidas.find(m => m.id === medidaSeleccionada);
@@ -211,14 +225,16 @@ export function CotizacionClient({ cliente, medidas, cotizacionesPrevias }: {
               {cotizacionesPrevias.map((q: any) => {
                 const cfg = ESTADO_CONFIG[q.estado] || ESTADO_CONFIG.BORRADOR;
                 return (
-                  <div key={q.id} className="flex items-center gap-3 p-3">
-                    <div className="flex-1">
+                  <button key={q.id} onClick={() => setCotizacionViendo(q.id)}
+                    className="w-full flex items-center gap-3 p-3 hover:bg-[var(--bg-secondary)] transition-colors text-left">
+                    <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-[var(--text-primary)]">{q.numero}</p>
                       <p className="text-xs text-[var(--text-muted)]">{new Date(q.creadoEn).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>
                     </div>
                     <span className={`badge text-xs ${cfg.cls}`}>{cfg.label}</span>
-                    <p className="text-sm font-bold">${(q.total || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}</p>
-                  </div>
+                    <p className="text-sm font-bold text-[var(--text-primary)]">${(q.total || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}</p>
+                    <span className="text-xs text-marca-500">Ver →</span>
+                  </button>
                 );
               })}
             </div>
@@ -427,6 +443,90 @@ export function CotizacionClient({ cliente, medidas, cotizacionesPrevias }: {
             placeholder="Materiales, tiempos de entrega, condiciones de pago…" />
         </div>
       </div>
+
+      {/* Cotizacion detail modal */}
+      {cotizacionViendo && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-start justify-center p-4 overflow-y-auto" onClick={() => setCotizacionViendo(null)}>
+          <div className="w-full max-w-2xl my-4" onClick={e => e.stopPropagation()}>
+            <div className="card overflow-hidden">
+              <div className="flex items-center justify-between p-4 border-b border-[var(--border)]">
+                <h3 className="font-semibold text-[var(--text-primary)]">
+                  {detalleCot?.cot?.numero || cotizacionViendo}
+                </h3>
+                <button onClick={() => setCotizacionViendo(null)} className="text-[var(--text-muted)] hover:text-[var(--text-primary)] text-lg">✕</button>
+              </div>
+              {loadingDetalle ? (
+                <div className="p-8 text-center text-sm text-[var(--text-muted)]">Cargando…</div>
+              ) : detalleCot ? (
+                <div>
+                  {/* Summary */}
+                  <div className="px-5 py-3 bg-[var(--bg-secondary)] flex items-center justify-between">
+                    <span className="text-xs text-[var(--text-muted)]">
+                      {new Date(detalleCot.cot.creadoEn).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                      {detalleCot.cot.validezDias ? ` · Válida ${detalleCot.cot.validezDias} días` : ""}
+                    </span>
+                    <span className={`badge text-xs ${ESTADO_CONFIG[detalleCot.cot.estado]?.cls || ""}`}>
+                      {ESTADO_CONFIG[detalleCot.cot.estado]?.label}
+                    </span>
+                  </div>
+                  {/* Lines */}
+                  <div className="px-5 py-3">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-[var(--border)]">
+                          <th className="text-left pb-2 text-xs text-[var(--text-muted)] font-medium">#</th>
+                          <th className="text-left pb-2 text-xs text-[var(--text-muted)] font-medium">Descripción</th>
+                          <th className="text-right pb-2 text-xs text-[var(--text-muted)] font-medium">Precio</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[var(--border)]">
+                        {detalleCot.lineas.map((l: any, i: number) => {
+                          const sub = (l.unidad === "habitacion" || l.unidad === "bano" || l.unidad === "pieza")
+                            ? (l.precioFinal || 0) * (l.cantidad || 1)
+                            : (l.precioFinal || 0);
+                          return (
+                            <tr key={l.id}>
+                              <td className="py-2 text-xs text-[var(--text-muted)] font-mono">{String(i+1).padStart(2,"0")}</td>
+                              <td className="py-2 text-[var(--text-primary)]">{l.descripcion}</td>
+                              <td className="py-2 text-right font-semibold text-[var(--text-primary)]">
+                                ${sub.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                  {/* Total */}
+                  <div className="px-5 py-3 border-t border-[var(--border)] bg-[var(--bg-secondary)] flex justify-between items-center">
+                    <span className="text-sm font-semibold text-[var(--text-primary)]">TOTAL</span>
+                    <span className="text-lg font-bold text-emerald-600">
+                      ${(detalleCot.cot.total || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                  {detalleCot.cot.notas && (
+                    <div className="px-5 py-2 border-t border-[var(--border)]">
+                      <p className="text-xs text-[var(--text-muted)] italic">{detalleCot.cot.notas}</p>
+                    </div>
+                  )}
+                  {/* Actions */}
+                  <div className="px-5 py-3 border-t border-[var(--border)] flex gap-2">
+                    <Link href={`/clientes/${cliente.id}/cotizacion/${cotizacionViendo}`}
+                      className="btn-primary !py-2 text-sm flex-1 justify-center">
+                      Ver detalle completo / PDF
+                    </Link>
+                    <button onClick={() => setCotizacionViendo(null)} className="btn-secondary !py-2 !px-4">
+                      Cerrar
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-8 text-center text-sm text-[var(--text-muted)]">No se pudo cargar la cotización</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <button onClick={guardar} disabled={saving} className="btn-primary w-full justify-center text-base py-4">
         {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
