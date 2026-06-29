@@ -14,8 +14,8 @@ const PRECIOS_DEFAULT: Record<string, { precio: number; unidad: string; label: s
   "Concrete - Sq Ft":             { precio: 0.55,   unidad: "sqft",     label: "Concrete ($/sq ft)" },
   "Upholstery":                   { precio: 45.00,  unidad: "pieza",    label: "Upholstery ($/pieza)" },
   "Odor Control":                 { precio: 300.00, unidad: "flat_fee", label: "Odor Control" },
-  "Guest Rooms":                  { precio: 22.00,  unidad: "habitacion", label: "Guest Rooms ($/habitación)" },
-  "Guest Bathrooms":              { precio: 20.00,  unidad: "bano",     label: "Guest Bathrooms ($/baño)" },
+  "Guest Rooms":                  { precio: 22.00,  unidad: "habitacion", label: "Guest Rooms" },
+  "Guest Bathrooms":              { precio: 20.00,  unidad: "bano",     label: "Guest Bathrooms" },
 };
 
 interface Linea {
@@ -26,7 +26,11 @@ interface Linea {
 function calcSubtotal(l: Linea): number {
   const pf = parseFloat(l.precioFinal) || 0;
   const qty = parseFloat(l.cantidad) || 0;
+  // flat_fee and sqft areas: precio already includes total, qty=1
   if (l.unidad === "flat_fee") return pf;
+  // Guest rooms/bathrooms: cantidad × precio unitario
+  if (l.unidad === "habitacion" || l.unidad === "bano" || l.unidad === "pieza") return pf * qty;
+  // sqft: already calculated as total
   return pf * qty;
 }
 
@@ -127,13 +131,15 @@ export function CotizacionClient({ cliente, medidas, cotizacionesPrevias }: {
         if (floorType === "Tile") tipo = "Tile & Grout - Sq Ft";
         else if (floorType === "LVT") tipo = "LVT - Sq Ft";
         else if (floorType === "Concrete") tipo = "Concrete - Sq Ft";
+        const precioPorSqFt = parseFloat(precios[tipo] || String(PRECIOS_DEFAULT[tipo]?.precio || 0));
+        const totalArea = precioPorSqFt * area.subtotalSqFt;
         nuevas.push({
           id: crypto.randomUUID(),
-          descripcion: `${area.area} — ${floorType} (${area.subtotalSqFt.toFixed(0)} sq ft)`,
-          tipo, unidad: "sqft",
-          cantidad: String(area.subtotalSqFt.toFixed(0)),
-          precioUnitario: precios[tipo] || String(PRECIOS_DEFAULT[tipo]?.precio || 0),
-          precioFinal: precios[tipo] || String(PRECIOS_DEFAULT[tipo]?.precio || 0),
+          descripcion: `${area.area} (${area.subtotalSqFt.toFixed(0)} sq ft)`,
+          tipo, unidad: "flat_fee",
+          cantidad: "1",
+          precioUnitario: totalArea.toFixed(2),
+          precioFinal: totalArea.toFixed(2),
           area: area.area,
         });
       }
@@ -344,7 +350,7 @@ export function CotizacionClient({ cliente, medidas, cotizacionesPrevias }: {
                       min="0" step="1"
                       disabled={l.unidad === "flat_fee"} />
                     <span className="text-xs text-[var(--text-muted)] flex-shrink-0">
-                      {l.unidad === "sqft" ? "ft²" : l.unidad === "pieza" ? "pza" : l.unidad === "habitacion" ? "hab" : l.unidad === "bano" ? "baño" : "—"}
+                      {l.unidad === "sqft" ? "ft²" : l.unidad === "pieza" ? "pza" : l.unidad === "habitacion" ? "hab" : l.unidad === "bano" ? "baños" : l.unidad === "flat_fee" ? "" : "—"}
                     </span>
                   </div>
                 </div>

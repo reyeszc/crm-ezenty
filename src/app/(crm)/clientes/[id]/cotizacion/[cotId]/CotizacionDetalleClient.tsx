@@ -174,12 +174,14 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
                     </td>
                     <td className="py-2 px-3 text-[var(--text-primary)]">{l.descripcion}</td>
                     <td className="py-2 px-3 text-right font-semibold text-[#1B2A4A]">
-                      ${(l.precioFinal * (l.unidad === "flat_fee" ? 1 : 1)).toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                      {l.cantidad > 1 && l.unidad !== "flat_fee" && (
-                        <span className="text-xs text-[var(--text-muted)] ml-1">× {l.cantidad}</span>
-                      )}
-                      {l.unidad !== "flat_fee" && l.unidad !== "pieza" && (
-                        <span className="text-xs font-normal text-[var(--text-muted)] ml-1">Each</span>
+                      {(l.unidad === "habitacion" || l.unidad === "bano" || l.unidad === "pieza") && l.cantidad > 1 ? (
+                        <>
+                          <span className="text-xs font-normal text-[var(--text-muted)]">{l.cantidad} × ${(l.precioFinal || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })} = </span>
+                          ${((l.precioFinal || 0) * (l.cantidad || 1)).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                          <span className="text-xs font-normal text-[var(--text-muted)] ml-1">Each</span>
+                        </>
+                      ) : (
+                        <>${(l.precioFinal || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}</>
                       )}
                     </td>
                   </tr>
