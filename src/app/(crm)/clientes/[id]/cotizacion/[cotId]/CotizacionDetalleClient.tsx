@@ -257,11 +257,10 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
               <p className="text-xs font-bold text-[#1B2A4A] mb-2">PREPARED BY: EZENTY ProCare LLC</p>
               <div className="space-y-2 text-sm">
                 <div><span className="text-[var(--text-muted)] text-xs">Email: </span><span>{vendedor?.correo || "zreyes@ezentyprocare.com"}</span></div>
-                <div>
-                  <span className="text-[var(--text-muted)] text-xs block">Printed Name & Title:</span>
-                  <span className="font-medium">{vendedor?.nombre || "Zugheily Reyes"}</span>
-                  {(vendedor as any)?.titulo && <span className="block text-sm">{(vendedor as any).titulo}</span>}
-                </div>
+                <div><span className="text-[var(--text-muted)] text-xs">Printed Name: </span><span>{vendedor?.nombre || "Zugheily Reyes"}</span></div>
+                {(vendedor as any)?.titulo && (
+                  <div><span className="text-[var(--text-muted)] text-xs">Title: </span><span>{(vendedor as any).titulo}</span></div>
+                )}
                 <div><span className="text-[var(--text-muted)] text-xs">Phone: </span><span>407-844-7019</span></div>
               </div>
             </div>
@@ -424,11 +423,8 @@ function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fe
         <td style="width:50%;vertical-align:top">
           <div style="font-size:11px;font-weight:900;color:#1B2A4A;margin-bottom:10px">PREPARED BY: EZENTY ProCare LLC</div>
           <div style="margin-bottom:8px"><span style="font-weight:700;color:#1B2A4A">Email: </span>${vendedor?.correo||"zreyes@ezentyprocare.com"}</div>
-          <div style="margin-bottom:8px">
-            <span style="font-weight:700;color:#1B2A4A;display:block;font-size:11px">Printed Name &amp; Title:</span>
-            <span>${vendedor?.nombre||"Zugheily Reyes"}</span>
-            ${(vendedor as any)?.titulo ? `<span style="display:block">${(vendedor as any).titulo}</span>` : ""}
-          </div>
+          <div style="margin-bottom:8px"><span style="font-weight:700;color:#1B2A4A">Printed Name: </span>${vendedor?.nombre||"Zugheily Reyes"}</div>
+          ${(vendedor as any)?.titulo ? `<div style="margin-bottom:8px"><span style="font-weight:700;color:#1B2A4A">Title: </span>${(vendedor as any).titulo}</div>` : ""}
           <div><span style="font-weight:700;color:#1B2A4A">Phone: </span>407-844-7019</div>
         </td>
       </tr></tbody></table>
