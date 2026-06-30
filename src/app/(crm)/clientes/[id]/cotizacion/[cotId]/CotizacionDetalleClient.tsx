@@ -246,7 +246,7 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
         <div className="px-6 py-3 border-t border-[var(--border)]">
           <div className="grid grid-cols-2 gap-6">
             <div>
-              <p className="text-xs font-bold text-[#1B2A4A] mb-2">AUTHORIZED BY — CLIENT</p>
+              <p className="text-xs font-bold text-[#1B2A4A] mb-2">AUTHORIZED BY CLIENT</p>
               <div className="space-y-2 text-sm">
                 <div className="border-b border-gray-300 pb-1"><span className="text-[var(--text-muted)] text-xs">Signature:</span></div>
                 <div className="border-b border-gray-300 pb-1"><span className="text-[var(--text-muted)] text-xs">Printed Name & Title:</span></div>
@@ -413,7 +413,7 @@ function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fe
     <div style="padding:16px 32px;border-top:1px solid #ddd">
       <table><tbody><tr>
         <td style="width:50%;vertical-align:top;padding-right:24px">
-          <div style="font-size:11px;font-weight:900;color:#1B2A4A;margin-bottom:10px">AUTHORIZED BY — CLIENT</div>
+          <div style="font-size:11px;font-weight:900;color:#1B2A4A;margin-bottom:10px">AUTHORIZED BY CLIENT</div>
           <div style="margin-bottom:12px"><span style="font-weight:700;color:#1B2A4A">Signature: </span><span style="border-bottom:1px solid #999;display:inline-block;width:180px">&nbsp;</span></div>
           <div style="margin-bottom:12px"><span style="font-weight:700;color:#1B2A4A">Printed Name &amp; Title: </span><span style="border-bottom:1px solid #999;display:inline-block;width:140px">&nbsp;</span></div>
           <div><span style="font-weight:700;color:#1B2A4A">Date: </span><span style="border-bottom:1px solid #999;display:inline-block;width:180px">&nbsp;</span></div>
