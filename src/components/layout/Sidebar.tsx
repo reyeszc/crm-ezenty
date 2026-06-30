@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
-  LayoutDashboard, FileText,
+  LayoutDashboard, FileText, Route as RouteIcon,
   Users,
   KanbanSquare,
   CalendarDays,
@@ -49,6 +49,13 @@ const navPrincipal = [
     label: "Calendario",
     color: "text-green-500",
     bgActive: "bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300",
+  },
+  {
+    href: "/ruta",
+    icon: RouteIcon,
+    label: "Planear Ruta",
+    color: "text-purple-500",
+    bgActive: "bg-purple-50 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300",
   },
   {
     href: "/pagos",

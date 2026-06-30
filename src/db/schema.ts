@@ -58,6 +58,8 @@ export const clientes = pgTable("clientes", {
   cantidadHabitaciones: integer("cantidad_habitaciones"),
   direccionPropiedad: text("direccion_propiedad"),
   tipoPropiedad: text("tipo_propiedad"),
+  latitud: real("latitud"),
+  longitud: real("longitud"),
   zona: text("zona"),
   puesto: text("puesto"),
   ganado: boolean("ganado").notNull().default(false),
