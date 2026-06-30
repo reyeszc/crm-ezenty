@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { ArrowLeft, Plus, Trash2, Ruler, Save, Loader2, ChevronDown, ChevronUp, Camera, DollarSign } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Ruler, Save, Loader2, ChevronDown, ChevronUp, Camera, DollarSign, ChevronRight } from "lucide-react";
 import { useToast } from "@/components/providers/ToastProvider";
 
 const TIPOS_PISO = ["Carpet", "Tile", "LVT", "Concrete", "Pavers", "Hardwood", "Other"];
@@ -408,22 +408,26 @@ export function MedidasClient({ clienteId, clienteNombre }: { clienteId: string;
           <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-3">Historial de medidas</h2>
           <div className="space-y-2">
             {historial.map((m: any) => (
-              <div key={m.id} className="flex items-center justify-between py-2 border-b border-[var(--border)] last:border-0">
+              <Link key={m.id} href={`/clientes/${clienteId}/medidas/${m.id}`}
+                className="flex items-center justify-between py-2.5 px-2 -mx-2 rounded-lg border-b border-[var(--border)] last:border-0 hover:bg-[var(--bg-secondary)] transition-colors">
                 <div>
                   <p className="text-sm font-medium text-[var(--text-primary)]">
                     {new Date(m.fecha).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                   </p>
                   {m.notas && <p className="text-xs text-[var(--text-muted)]">{m.notas}</p>}
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-bold text-marca-500">
-                    {(m.sqFtTotal || 0).toFixed(0)} sq ft
-                  </p>
-                  {m.flatFeeTotal > 0 && (
-                    <p className="text-xs font-semibold text-green-600">${(m.flatFeeTotal || 0).toFixed(2)}</p>
-                  )}
+                <div className="text-right flex items-center gap-2">
+                  <div>
+                    <p className="text-sm font-bold text-marca-500">
+                      {(m.sqFtTotal || 0).toFixed(0)} sq ft
+                    </p>
+                    {m.flatFeeTotal > 0 && (
+                      <p className="text-xs font-semibold text-green-600">${(m.flatFeeTotal || 0).toFixed(2)}</p>
+                    )}
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-[var(--text-muted)] flex-shrink-0" />
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>

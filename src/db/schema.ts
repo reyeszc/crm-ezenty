@@ -1,4 +1,4 @@
-import { pgTable, text, boolean, real, timestamp, integer, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, text, boolean, real, timestamp, integer, primaryKey, jsonb } from "drizzle-orm/pg-core";
 
 export const usuarios = pgTable("usuarios", {
   id: text("id").primaryKey(),
@@ -287,6 +287,12 @@ export const medidasPropiedad = pgTable("medidas_propiedad", {
 export const medidasAreas = pgTable("medidas_areas", {
   id: text("id").primaryKey(),
   area: text("area").notNull(), // Lobby, Corridor Floor 1, etc.
+  tipoPiso: text("tipo_piso"),
+  flatFee: real("flat_fee").default(0),
+  fotoUrl: text("foto_url"),
+  esTipoHabitacion: boolean("es_tipo_habitacion").default(false),
+  esTipoBano: boolean("es_tipo_bano").default(false),
+  extras: jsonb("extras"),
   orden: integer("orden").notNull().default(0),
   subtotalSqFt: real("subtotal_sq_ft").default(0),
   creadoEn: timestamp("creado_en").notNull().defaultNow(),

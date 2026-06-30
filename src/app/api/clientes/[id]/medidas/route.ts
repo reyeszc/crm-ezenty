@@ -33,22 +33,28 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     notas: body.notas || null, sqFtTotal: body.sqFtTotal || 0, flatFeeTotal: body.flatFeeTotal || 0,
   });
 
-  for (const area of (body.areas || [])) {
+  for (const [i, area] of (body.areas || []).entries()) {
     const areaId = crypto.randomUUID();
     await db.insert(schema.medidasAreas).values({
       id: areaId, medidaId, area: area.area,
-      subtotalSqFt: area.subtotalSqFt || 0, orden: 0,
+      tipoPiso: area.tipoPiso || null,
+      flatFee: area.flatFee || 0,
+      fotoUrl: area.fotoUrl || null,
+      esTipoHabitacion: area.esTipoHabitacion || false,
+      esTipoBano: area.esTipoBano || false,
+      extras: area.extras || null,
+      subtotalSqFt: area.subtotalSqFt || 0,
+      orden: i,
     });
-    for (const linea of (area.lineas || [])) {
+    for (const [j, linea] of (area.lineas || []).entries()) {
       await db.insert(schema.medidasLineas).values({
         id: crypto.randomUUID(), areaId,
         descripcion: linea.descripcion || null,
-        ancho: linea.ancho, largo: linea.largo, sqFt: linea.sqFt, orden: 0,
+        ancho: linea.ancho, largo: linea.largo, sqFt: linea.sqFt, orden: j,
       });
     }
   }
 
-  // Log en línea de tiempo
   await db.insert(schema.notas).values({
     id: crypto.randomUUID(), clienteId: id, autorId: session.user.id,
     contenido: `Measurements recorded: ${(body.sqFtTotal || 0).toLocaleString("en-US", { maximumFractionDigits: 0 })} sq ft total across ${(body.areas || []).length} area(s)`,
