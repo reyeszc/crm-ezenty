@@ -123,8 +123,13 @@ export default function ClientesPage() {
   const [mostrarFiltros, setMostrarFiltros] = useState(false);
   const [zona, setZona] = useState("");
   const [agruparZona, setAgruparZona] = useState(false);
+  const [zonasDisponibles, setZonasDisponibles] = useState<string[]>([]);
 
   const busquedaDebounced = useDebounce(busqueda, 300);
+
+  useEffect(() => {
+    fetch("/api/clientes/zonas").then(r => r.json()).then(d => setZonasDisponibles(d.zonas || [])).catch(() => {});
+  }, []);
 
   const cargar = useCallback(async () => {
     setLoading(true);
@@ -240,16 +245,7 @@ export default function ClientesPage() {
             <label className="label text-xs">Zona</label>
             <select value={zona} onChange={(e) => setZona(e.target.value)} className="input text-sm !py-1.5">
               <option value="">Todas las zonas</option>
-              <option value="Nashville, TN">Nashville, TN</option>
-              <option value="Chattanooga, TN">Chattanooga, TN</option>
-              <option value="Knoxville, TN">Knoxville, TN</option>
-              <option value="Smokies, TN">Smokies, TN</option>
-              <option value="Atlanta, GA">Atlanta, GA</option>
-              <option value="Alpharetta, GA">Alpharetta, GA</option>
-              <option value="Marietta, GA">Marietta, GA</option>
-              <option value="Savannah, GA">Savannah, GA</option>
-              <option value="Georgia">Georgia</option>
-              <option value="Tennessee">Tennessee</option>
+              {zonasDisponibles.map(z => <option key={z} value={z}>{z}</option>)}
             </select>
           </div>
           <div className="min-w-[120px] flex-1">
