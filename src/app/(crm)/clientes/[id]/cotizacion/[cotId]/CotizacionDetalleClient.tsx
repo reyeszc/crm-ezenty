@@ -256,7 +256,7 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
               <p className="text-xs font-bold text-[#1B2A4A] mb-2">PREPARED BY: EZENTY ProCare LLC</p>
               <div className="space-y-2 text-sm">
                 <div><span className="text-[var(--text-muted)] text-xs">Email: </span><span>{vendedor?.correo || "zreyes@ezentyprocare.com"}</span></div>
-                <div><span className="text-[var(--text-muted)] text-xs">Printed Name & Title: </span><span>{vendedor?.nombre || "Zugheily Reyes"}</span></div>
+                <div><span className="text-[var(--text-muted)] text-xs">Printed Name & Title: </span><span>{vendedor?.nombre || "Zugheily Reyes"}{(vendedor as any)?.titulo ? ` · ${(vendedor as any).titulo}` : ""}</span></div>
                 <div><span className="text-[var(--text-muted)] text-xs">Phone: </span><span>407-844-7019</span></div>
               </div>
             </div>
