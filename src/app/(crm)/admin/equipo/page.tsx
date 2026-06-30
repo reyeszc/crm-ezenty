@@ -15,6 +15,7 @@ export default async function EquipoPage() {
     rol: schema.usuarios.rol,
     activo: schema.usuarios.activo,
     metaMensual: schema.usuarios.metaMensual,
+    titulo: schema.usuarios.titulo,
     creadoEn: schema.usuarios.creadoEn,
   }).from(schema.usuarios).orderBy(schema.usuarios.creadoEn);
 

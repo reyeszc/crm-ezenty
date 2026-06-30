@@ -43,6 +43,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     id: schema.usuarios.id, nombre: schema.usuarios.nombre,
     correo: schema.usuarios.correo, rol: schema.usuarios.rol,
     activo: schema.usuarios.activo, metaMensual: schema.usuarios.metaMensual,
+    titulo: schema.usuarios.titulo,
     creadoEn: schema.usuarios.creadoEn,
   }).from(schema.usuarios).where(eq(schema.usuarios.id, id)).limit(1);
 
