@@ -166,7 +166,8 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
               <tr style={{ background: "#1B2A4A" }}>
                 <th className="text-white text-left py-2 px-3 w-8">#</th>
                 <th className="text-white text-left py-2 px-3">Service Description</th>
-                <th className="text-white text-right py-2 px-3">Unit Price ($)</th>
+                <th className="text-white text-center py-2 px-3 w-16">Qty</th>
+                <th className="text-white text-right py-2 px-3">Total ($)</th>
               </tr>
             </thead>
             <tbody>
@@ -187,7 +188,7 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
                 return Object.entries(grupos).map(([grupo, items]) => (
                   <>
                     <tr key={`g-${grupo}`} style={{ background: "#E8EEF5" }}>
-                      <td colSpan={3} className="py-1.5 px-3 text-xs font-bold uppercase tracking-wide" style={{ color: "#1B2A4A" }}>{grupo}</td>
+                      <td colSpan={4} className="py-1.5 px-3 text-xs font-bold uppercase tracking-wide" style={{ color: "#1B2A4A" }}>{grupo}</td>
                     </tr>
                     {items.map((l: any) => {
                       num++;
@@ -197,17 +198,17 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
                       return (
                         <tr key={l.id} style={{ background: num % 2 === 0 ? "#FFFFFF" : "#F8F9FA" }}>
                           <td className="py-2 pl-5 pr-3 text-center text-[var(--text-muted)] font-mono text-xs">{String(num).padStart(2,"0")}</td>
-                          <td className="py-2 px-3 text-[var(--text-primary)]">{l.descripcion}</td>
-                          <td className="py-2 px-3 text-right font-semibold" style={{ color: "#1B2A4A" }}>
-                            {(l.unidad === "habitacion" || l.unidad === "bano" || l.unidad === "pieza") && (l.cantidad || 1) > 1 ? (
-                              <span>
-                                <span className="text-xs font-normal text-[var(--text-muted)]">{l.cantidad} × ${(l.precioFinal||0).toLocaleString("en-US",{minimumFractionDigits:2})} = </span>
-                                ${subtotal.toLocaleString("en-US",{minimumFractionDigits:2})}
-                                <span className="text-xs font-normal text-[var(--text-muted)] ml-1">Each</span>
-                              </span>
-                            ) : (
-                              <>${subtotal.toLocaleString("en-US",{minimumFractionDigits:2})}</>
+                          <td className="py-2 px-3 text-[var(--text-primary)]">
+                            {l.descripcion}
+                            {(l.unidad === "habitacion" || l.unidad === "bano" || l.unidad === "pieza") && (l.cantidad || 1) > 1 && (
+                              <span className="text-xs text-[var(--text-muted)] ml-1">(${(l.precioFinal||0).toLocaleString("en-US",{minimumFractionDigits:2})} each)</span>
                             )}
+                          </td>
+                          <td className="py-2 px-3 text-center text-[var(--text-secondary)]">
+                            {(l.unidad === "habitacion" || l.unidad === "bano" || l.unidad === "pieza") ? (l.cantidad || 1) : 1}
+                          </td>
+                          <td className="py-2 px-3 text-right font-semibold" style={{ color: "#1B2A4A" }}>
+                            ${subtotal.toLocaleString("en-US",{minimumFractionDigits:2})}
                           </td>
                         </tr>
                       );
@@ -301,28 +302,31 @@ function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fe
 
   let rowNum = 0;
   const rows = Object.entries(grupos).map(([grupo, items]) => {
-    const groupHeader = `<tr style="background:#e8eef5"><td colspan="3" style="padding:6px 12px;font-weight:700;font-size:11px;color:#1B2A4A;text-transform:uppercase;letter-spacing:0.5px">${grupo}</td></tr>`;
+    const groupHeader = `<tr style="background:#e8eef5"><td colspan="4" style="padding:6px 12px;font-weight:700;font-size:11px;color:#1B2A4A;text-transform:uppercase;letter-spacing:0.5px">${grupo}</td></tr>`;
     const itemRows = (items as any[]).map((l: any) => {
       rowNum++;
       const subtotal = (l.unidad === "habitacion" || l.unidad === "bano" || l.unidad === "pieza")
         ? (l.precioFinal || 0) * (l.cantidad || 1)
         : (l.precioFinal || 0);
-      const qtyLabel = (l.unidad === "habitacion" || l.unidad === "bano" || l.unidad === "pieza") && l.cantidad > 1
-        ? `<span style="font-size:11px;color:#999;margin-left:4px">${l.cantidad} × $${(l.precioFinal||0).toLocaleString("en-US",{minimumFractionDigits:2})} Each</span>`
+      const isQtyItem = l.unidad === "habitacion" || l.unidad === "bano" || l.unidad === "pieza";
+      const qty = isQtyItem ? (l.cantidad || 1) : 1;
+      const eachLabel = isQtyItem && qty > 1
+        ? `<span style="font-size:11px;color:#999;margin-left:4px">($${(l.precioFinal||0).toLocaleString("en-US",{minimumFractionDigits:2})} each)</span>`
         : "";
       return `<tr style="background:${rowNum % 2 === 0 ? "#ffffff" : "#f8f9fa"}">
         <td style="padding:7px 12px 7px 20px;text-align:center;color:#666;font-family:monospace;font-size:11px">${String(rowNum).padStart(2,"0")}</td>
-        <td style="padding:7px 12px">${l.descripcion}</td>
-        <td style="padding:7px 12px;text-align:right;font-weight:600;color:#1B2A4A">$${subtotal.toLocaleString("en-US",{minimumFractionDigits:2})}${qtyLabel}</td>
+        <td style="padding:7px 12px">${l.descripcion}${eachLabel}</td>
+        <td style="padding:7px 12px;text-align:center;color:#555">${qty}</td>
+        <td style="padding:7px 12px;text-align:right;font-weight:600;color:#1B2A4A">$${subtotal.toLocaleString("en-US",{minimumFractionDigits:2})}</td>
       </tr>`;
     }).join("");
     return groupHeader + itemRows;
   }).join("");
 
   const totalHTML = cotizacion.descuento > 0 ? `
-    <tr><td colspan="2" style="text-align:right;padding:4px 12px;color:#666">Subtotal:</td>
+    <tr><td colspan="3" style="text-align:right;padding:4px 12px;color:#666">Subtotal:</td>
       <td style="text-align:right;padding:4px 12px">$${(cotizacion.subtotal||0).toLocaleString("en-US",{minimumFractionDigits:2})}</td></tr>
-    <tr><td colspan="2" style="text-align:right;padding:4px 12px;color:#c00">Descuento:</td>
+    <tr><td colspan="3" style="text-align:right;padding:4px 12px;color:#c00">Descuento:</td>
       <td style="text-align:right;padding:4px 12px;color:#c00">-$${cotizacion.descuento.toLocaleString("en-US",{minimumFractionDigits:2})}</td></tr>` : "";
 
   return `<!DOCTYPE html><html><head><meta charset="utf-8">
@@ -389,14 +393,15 @@ function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fe
           <tr style="background:#1B2A4A">
             <th style="padding:8px 12px;text-align:center;color:white;width:40px">#</th>
             <th style="padding:8px 12px;text-align:left;color:white">Service Description</th>
-            <th style="padding:8px 12px;text-align:right;color:white">Unit Price ($)</th>
+            <th style="padding:8px 12px;text-align:center;color:white;width:60px">Qty</th>
+            <th style="padding:8px 12px;text-align:right;color:white">Total ($)</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
         <tfoot>
           ${totalHTML}
           <tr style="border-top:2px solid #1B2A4A">
-            <td colspan="2" style="text-align:right;padding:8px 12px;font-weight:900;font-size:15px;color:#1B2A4A">TOTAL</td>
+            <td colspan="3" style="text-align:right;padding:8px 12px;font-weight:900;font-size:15px;color:#1B2A4A">TOTAL</td>
             <td style="text-align:right;padding:8px 12px;font-weight:900;font-size:15px;color:#1B2A4A">$${(cotizacion.total||0).toLocaleString("en-US",{minimumFractionDigits:2})}</td>
           </tr>
         </tfoot>
