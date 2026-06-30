@@ -116,7 +116,7 @@ export default function ClientesPage() {
   const [paginas, setPaginas] = useState(1);
   const [loading, setLoading] = useState(true);
   const [busqueda, setBusqueda] = useState("");
-  const [estado, setEstado] = useState("ACTIVO");
+  const [estado, setEstado] = useState("OPERATIVOS");
   const [temperatura, setTemperatura] = useState("");
   const [etapa, setEtapa] = useState("");
   const [orden, setOrden] = useState("reciente");
@@ -214,9 +214,10 @@ export default function ClientesPage() {
           <div className="min-w-[120px] flex-1">
             <label className="label text-xs">Estado</label>
             <select value={estado} onChange={(e) => setEstado(e.target.value)} className="input text-sm !py-1.5">
+              <option value="OPERATIVOS">Activos + Ganados</option>
               <option value="">Todos</option>
-              <option value="ACTIVO">Activo</option>
-              <option value="GANADO">Ganado</option>
+              <option value="ACTIVO">Solo Activo</option>
+              <option value="GANADO">Solo Ganado</option>
               <option value="PERDIDO">Perdido</option>
               <option value="ARCHIVADO">Archivado</option>
             </select>
@@ -266,7 +267,7 @@ export default function ClientesPage() {
           </div>
           {(estado || temperatura || etapa) && (
             <button
-              onClick={() => { setEstado(""); setTemperatura(""); setEtapa(""); setZona(""); }}
+              onClick={() => { setEstado("OPERATIVOS"); setTemperatura(""); setEtapa(""); setZona(""); }}
               className="text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] underline col-span-2 sm:col-span-4 text-left"
             >
               Limpiar filtros

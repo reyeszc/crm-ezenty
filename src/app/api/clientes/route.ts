@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db, schema } from "@/lib/db";
-import { eq, and, or, ilike, isNull, desc, asc, sql, count } from "drizzle-orm";
+import { eq, and, or, ilike, isNull, desc, asc, sql, count, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { registrarAuditoria } from "@/lib/auditoria";
 
@@ -22,7 +22,11 @@ export async function GET(req: NextRequest) {
 
   const conditions: any[] = [isNull(schema.clientes.eliminadoEn)];
   if (!esAdmin) conditions.push(eq(schema.clientes.vendedorId, usuarioId));
-  if (estado) conditions.push(eq(schema.clientes.estado, estado));
+  if (estado === "OPERATIVOS") {
+    conditions.push(inArray(schema.clientes.estado, ["ACTIVO", "GANADO"]));
+  } else if (estado) {
+    conditions.push(eq(schema.clientes.estado, estado));
+  }
   if (etapa) conditions.push(eq(schema.clientes.etapa, etapa));
   if (temperatura) conditions.push(eq(schema.clientes.temperatura, temperatura));
   if (sp.get("zona")) conditions.push(eq(schema.clientes.zona, sp.get("zona")!));
