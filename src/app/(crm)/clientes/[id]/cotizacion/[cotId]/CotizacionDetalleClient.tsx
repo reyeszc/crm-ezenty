@@ -256,12 +256,10 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
             <div>
               <p className="text-xs font-bold text-[#1B2A4A] mb-2">PREPARED BY: EZENTY ProCare LLC</p>
               <div className="space-y-2 text-sm">
-                <div><span className="text-[var(--text-muted)] text-xs">Email: </span><span>{vendedor?.correo || "zreyes@ezentyprocare.com"}</span></div>
-                <div><span className="text-[var(--text-muted)] text-xs">Printed Name: </span><span>{vendedor?.nombre || "Zugheily Reyes"}</span></div>
-                {(vendedor as any)?.titulo && (
-                  <div><span className="text-[var(--text-muted)] text-xs">Title: </span><span>{(vendedor as any).titulo}</span></div>
-                )}
-                <div><span className="text-[var(--text-muted)] text-xs">Phone: </span><span>407-844-7019</span></div>
+                <div className="border-b border-gray-300 pb-1"><span className="text-[var(--text-muted)] text-xs">Email: </span><span>{vendedor?.correo || "zreyes@ezentyprocare.com"}</span></div>
+                <div className="border-b border-gray-300 pb-1"><span className="text-[var(--text-muted)] text-xs">Printed Name: </span><span>{vendedor?.nombre || "Zugheily Reyes"}</span></div>
+                <div className="border-b border-gray-300 pb-1"><span className="text-[var(--text-muted)] text-xs">Title: </span><span>{(vendedor as any)?.titulo || ""}</span></div>
+                <div className="border-b border-gray-300 pb-1"><span className="text-[var(--text-muted)] text-xs">Phone: </span><span>407-844-7019</span></div>
               </div>
             </div>
           </div>
@@ -422,10 +420,10 @@ function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fe
         </td>
         <td style="width:50%;vertical-align:top">
           <div style="font-size:11px;font-weight:900;color:#1B2A4A;margin-bottom:10px">PREPARED BY: EZENTY ProCare LLC</div>
-          <div style="margin-bottom:8px"><span style="font-weight:700;color:#1B2A4A">Email: </span>${vendedor?.correo||"zreyes@ezentyprocare.com"}</div>
-          <div style="margin-bottom:8px"><span style="font-weight:700;color:#1B2A4A">Printed Name: </span>${vendedor?.nombre||"Zugheily Reyes"}</div>
-          ${(vendedor as any)?.titulo ? `<div style="margin-bottom:8px"><span style="font-weight:700;color:#1B2A4A">Title: </span>${(vendedor as any).titulo}</div>` : ""}
-          <div><span style="font-weight:700;color:#1B2A4A">Phone: </span>407-844-7019</div>
+          <div style="margin-bottom:12px"><span style="font-weight:700;color:#1B2A4A">Email: </span><span style="border-bottom:1px solid #ccc;padding-bottom:2px">${vendedor?.correo||"zreyes@ezentyprocare.com"}</span></div>
+          <div style="margin-bottom:12px"><span style="font-weight:700;color:#1B2A4A">Printed Name: </span><span style="border-bottom:1px solid #ccc;padding-bottom:2px">${vendedor?.nombre||"Zugheily Reyes"}</span></div>
+          <div style="margin-bottom:12px"><span style="font-weight:700;color:#1B2A4A">Title: </span><span style="border-bottom:1px solid #ccc;padding-bottom:2px">${(vendedor as any)?.titulo||""}</span></div>
+          <div><span style="font-weight:700;color:#1B2A4A">Phone: </span><span style="border-bottom:1px solid #ccc;padding-bottom:2px">407-844-7019</span></div>
         </td>
       </tr></tbody></table>
     </div>
