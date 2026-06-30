@@ -152,7 +152,7 @@ export default function ClientesPage() {
     } finally {
       setLoading(false);
     }
-  }, [pagina, busquedaDebounced, estado, temperatura, etapa, orden]);
+  }, [pagina, busquedaDebounced, estado, temperatura, etapa, orden, zona]);
 
   useEffect(() => { cargar(); }, [cargar]);
   useEffect(() => { setPagina(1); }, [busquedaDebounced, estado, temperatura, etapa, zona]);
