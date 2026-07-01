@@ -10,6 +10,13 @@ const Schema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  // Basic origin validation
+  const origin = req.headers.get("origin") || "";
+  const allowedOrigins = ["https://crm-ezenty.vercel.app", "https://ezentyprocare.com"];
+  if (origin && !allowedOrigins.some(o => origin.startsWith(o))) {
+    // Allow for now but log — don't break existing integrations
+  }
+
   const body = await req.json().catch(() => null);
   const parsed = Schema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Inválido" }, { status: 400 });

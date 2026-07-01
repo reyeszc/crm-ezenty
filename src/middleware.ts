@@ -16,11 +16,12 @@ export function middleware(req: NextRequest) {
     pathname.startsWith("/_next") ||
     pathname.startsWith("/manifest") ||
     pathname.startsWith("/favicon") ||
-    pathname.startsWith("/public");
+    pathname.startsWith("/public") ||
+    pathname.match(/\.(png|svg|ico|jpg|jpeg|webp|css|js)$/);
 
   if (isPublic) return NextResponse.next();
 
-  // Check for session token (NextAuth JWT)
+  // Check for session token (NextAuth JWT — both dev and production cookie names)
   const token =
     req.cookies.get("authjs.session-token")?.value ||
     req.cookies.get("__Secure-authjs.session-token")?.value ||
@@ -28,14 +29,27 @@ export function middleware(req: NextRequest) {
     req.cookies.get("__Secure-next-auth.session-token")?.value;
 
   if (!token) {
-    return NextResponse.redirect(new URL("/login", req.url));
+    // For API routes return 401, for pages redirect to login
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+    }
+    const loginUrl = new URL("/login", req.url);
+    loginUrl.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
-  return NextResponse.next();
+  // Security headers on all responses
+  const response = NextResponse.next();
+  response.headers.set("X-Frame-Options", "DENY");
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=(self)");
+
+  return response;
 }
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.svg$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.svg$|.*\\.ico$).*)",
   ],
 };
