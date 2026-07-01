@@ -56,7 +56,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const body = await req.json().catch(() => ({}));
   const updateData: any = { actualizadoEn: new Date() };
 
-  const fields = ["nombre","telefono","correo","origen","etapa","estado","temperatura","valorEstimado","objecion","notas","proximaAccion","motivoPerdida","titulo","propiedad","management","zona","puesto","vendedorId","ganado","perdido","archivado"];
+  const fields = ["nombre","telefono","correo","origen","etapa","estado","temperatura","valorEstimado","objecion","notas","proximaAccion","motivoPerdida","titulo","propiedad","management","zona","puesto","vendedorId","ganado","perdido","archivado","direccionPropiedad","ciudadCluster","cantidadHabitaciones","tipoPropiedad"];
   for (const f of fields) {
     if (f in body) updateData[f] = body[f];
   }

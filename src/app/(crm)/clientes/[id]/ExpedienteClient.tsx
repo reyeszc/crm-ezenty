@@ -136,6 +136,66 @@ function AIPanel({ clienteId, onAccion }: { clienteId: string; onAccion: (texto:
   );
 }
 
+
+function DireccionEditable({ clienteId, direccionInicial }: { clienteId: string; direccionInicial?: string }) {
+  const [editando, setEditando] = useState(false);
+  const [direccion, setDireccion] = useState(direccionInicial || "");
+  const [guardando, setGuardando] = useState(false);
+  const { success, error } = useToast();
+
+  async function guardar() {
+    setGuardando(true);
+    try {
+      const res = await fetch(`/api/clientes/${clienteId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ direccionPropiedad: direccion }),
+      });
+      if (!res.ok) throw new Error();
+      success("Dirección guardada ✓");
+      setEditando(false);
+    } catch { error("No se pudo guardar"); } finally { setGuardando(false); }
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-[var(--text-muted)]">Dirección</p>
+        {!editando && (
+          <button onClick={() => setEditando(true)} className="text-xs text-marca-500 hover:underline">
+            {direccion ? "Editar" : "+ Agregar"}
+          </button>
+        )}
+      </div>
+      {editando ? (
+        <div className="mt-1 flex gap-1">
+          <input className="input text-xs !py-1 flex-1" value={direccion}
+            onChange={e => setDireccion(e.target.value)}
+            placeholder="1075 Holcomb Bridge Rd, Roswell, GA 30076"
+            autoFocus />
+          <button onClick={guardar} disabled={guardando}
+            className="px-2 py-1 rounded-lg bg-marca-300 text-white text-xs hover:bg-marca-400 transition-colors">
+            {guardando ? "..." : "✓"}
+          </button>
+          <button onClick={() => { setEditando(false); setDireccion(direccionInicial || ""); }}
+            className="px-2 py-1 rounded-lg bg-gray-200 text-gray-600 text-xs">
+            ✕
+          </button>
+        </div>
+      ) : direccion ? (
+        <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(direccion)}`}
+          target="_blank" rel="noopener noreferrer"
+          className="text-sm text-marca-500 hover:underline flex items-start gap-1 mt-0.5">
+          <MapPin className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+          <span>{direccion}</span>
+        </a>
+      ) : (
+        <p className="text-sm text-[var(--text-muted)] italic">Sin dirección registrada</p>
+      )}
+    </div>
+  );
+}
+
 export function ExpedienteClient({ clienteInicial, config, etiquetasDisponibles, plantillas, usuarioActualId, rolActual }: any) {
   const [cliente, setCliente] = useState(clienteInicial);
   const [contactos, setContactos] = useState<any[]>([]);
@@ -749,21 +809,8 @@ export function ExpedienteClient({ clienteInicial, config, etiquetasDisponibles,
               </div>
             ) : null)}
 
-            {/* Dirección — siempre visible con link a Google Maps */}
-            <div>
-              <p className="text-xs text-[var(--text-muted)]">Dirección</p>
-              {cliente.direccionPropiedad ? (
-                <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(cliente.direccionPropiedad)}`}
-                  target="_blank" rel="noopener noreferrer"
-                  className="text-sm text-marca-500 hover:underline flex items-start gap-1 mt-0.5">
-                  <MapPin className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
-                  <span>{cliente.direccionPropiedad}</span>
-                </a>
-              ) : (
-                <p className="text-sm text-[var(--text-muted)] italic">Sin dirección registrada</p>
-              )}
-            </div>
+            {/* Dirección — editable inline */}
+            <DireccionEditable clienteId={cliente.id} direccionInicial={cliente.direccionPropiedad} />
 
             {/* Objeción — editable inline */}
             <div>
