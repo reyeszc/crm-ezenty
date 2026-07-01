@@ -97,6 +97,10 @@ const CreateSchema = z.object({
   puesto: z.string().optional(),
   vendedorId: z.string().optional(),
   utmCanal: z.string().optional(),
+  ciudadCluster: z.string().optional(),
+  cantidadHabitaciones: z.coerce.number().optional(),
+  direccionPropiedad: z.string().optional(),
+  tipoPropiedad: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -139,12 +143,16 @@ export async function POST(req: NextRequest) {
     objecion: data.objecion || null,
     notas: data.notas || null,
     proximaAccion: data.proximaAccion || "Initial contact",
-    proximaAccionFecha: data.proximaAccionFecha ? new Date(data.proximaAccionFecha) : new Date(Date.now() + 86400000),
+    proximaAccionFecha: data.proximaAccionFecha ? new Date(data.proximaAccionFecha) : null,
     titulo: data.titulo || null,
     propiedad: data.propiedad || null,
     management: data.management || null,
     zona: data.zona || null,
     puesto: data.puesto || null,
+    ciudadCluster: data.ciudadCluster || null,
+    cantidadHabitaciones: data.cantidadHabitaciones || null,
+    direccionPropiedad: data.direccionPropiedad || null,
+    tipoPropiedad: data.tipoPropiedad || null,
     vendedorId,
   });
 
