@@ -62,11 +62,13 @@ export async function GET() {
     db.select({ total: sum(schema.clientes.valorEstimado) }).from(schema.clientes)
       .where(and(cVendedor, eq(schema.clientes.estado, "ACTIVO"), isNotNull(schema.clientes.valorEstimado))),
 
-    // Cotizaciones aprobadas sin pago registrado = pendientes de cobro
+    // Cotizaciones aprobadas este mes
     db.select({ total: sum(schema.cotizaciones.total), cnt: count() })
       .from(schema.cotizaciones)
       .where(and(
         eq(schema.cotizaciones.estado, "APROBADA"),
+        gte(schema.cotizaciones.creadoEn, inicioMes),
+        lte(schema.cotizaciones.creadoEn, finMes),
         ...(esAdmin ? [] : [eq(schema.cotizaciones.vendedorId, usuarioId)])
       )),
     // Pagos vencidos
