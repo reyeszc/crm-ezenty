@@ -33,6 +33,7 @@ export async function GET() {
     clientesGanados,
     pagosAgg,
     embudoAgg,
+    cotAprobadas,
     pagosVencidos,
     seguimientoVencidos,
     leadsFrios,
@@ -60,6 +61,14 @@ export async function GET() {
     // Valor embudo
     db.select({ total: sum(schema.clientes.valorEstimado) }).from(schema.clientes)
       .where(and(cVendedor, eq(schema.clientes.estado, "ACTIVO"), isNotNull(schema.clientes.valorEstimado))),
+
+    // Cotizaciones aprobadas sin pago registrado = pendientes de cobro
+    db.select({ total: sum(schema.cotizaciones.total), cnt: count() })
+      .from(schema.cotizaciones)
+      .where(and(
+        eq(schema.cotizaciones.estado, "APROBADA"),
+        ...(esAdmin ? [] : [eq(schema.cotizaciones.vendedorId, usuarioId)])
+      )),
     // Pagos vencidos
     db.select({ cnt: count() }).from(schema.pagos)
       .where(and(
@@ -170,6 +179,8 @@ export async function GET() {
     valorEmbudo: Number(embudoAgg[0]?.total || 0),
     pagosVencidos: Number(pagosVencidos[0]?.cnt || 0),
     seguimientoVencidos: Number(seguimientoVencidos[0]?.cnt || 0),
+    cotizacionesAprobadas: Number(cotAprobadas[0]?.cnt || 0),
+    valorCotizacionesAprobadas: Number(cotAprobadas[0]?.total || 0),
     tasaCierre, pronostico, crecimiento, embudoPorEtapa,
     origenes: origenes.map((o: any) => ({
       canal: o.origen || "Desconocido",

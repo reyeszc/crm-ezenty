@@ -62,6 +62,9 @@ export async function GET(req: NextRequest) {
     ultimoContacto: schema.clientes.ultimoContacto,
     propiedad: schema.clientes.propiedad,
     zona: schema.clientes.zona,
+    direccionPropiedad: schema.clientes.direccionPropiedad,
+    cantidadHabitaciones: schema.clientes.cantidadHabitaciones,
+    management: schema.clientes.management,
     creadoEn: schema.clientes.creadoEn,
     vendedorId: schema.clientes.vendedorId,
   }).from(schema.clientes)

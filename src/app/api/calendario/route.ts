@@ -13,7 +13,22 @@ export async function GET(req: NextRequest) {
   const inicio = sp.get("inicio") ? new Date(sp.get("inicio")!) : new Date(Date.now() - 30 * 86400000);
   const fin = sp.get("fin") ? new Date(sp.get("fin")!) : new Date(Date.now() + 60 * 86400000);
 
-  const [demos, servicios] = await Promise.all([
+  const [citas, demos, servicios] = await Promise.all([
+    // Citas = proxima_accion_fecha from clientes
+    db.select({
+      id: schema.clientes.id,
+      fecha: schema.clientes.proximaAccionFecha,
+      clienteNombre: schema.clientes.nombre,
+      clienteId: schema.clientes.id,
+      proximaAccion: schema.clientes.proximaAccion,
+      zona: schema.clientes.zona,
+    }).from(schema.clientes)
+      .where(and(
+        gte(schema.clientes.proximaAccionFecha, inicio),
+        lte(schema.clientes.proximaAccionFecha, fin),
+        ...(esAdmin ? [] : [eq(schema.clientes.vendedorId, uid)])
+      )),
+
     db.select({
       id: schema.demos.id, fecha: schema.demos.fecha,
       estado: schema.demos.estado, notas: schema.demos.notas,
@@ -21,8 +36,10 @@ export async function GET(req: NextRequest) {
       clienteId: schema.demos.clienteId,
     }).from(schema.demos)
       .leftJoin(schema.clientes, eq(schema.demos.clienteId, schema.clientes.id))
-      .where(and(gte(schema.demos.fecha, inicio), lte(schema.demos.fecha, fin),
-        ...(esAdmin ? [] : [eq(schema.demos.usuarioId, uid)]))),
+      .where(and(
+        gte(schema.demos.fecha, inicio), lte(schema.demos.fecha, fin),
+        ...(esAdmin ? [] : [eq(schema.demos.usuarioId, uid)])
+      )),
 
     db.select({
       id: schema.servicios.id, fecha: schema.servicios.fecha,
@@ -32,9 +49,11 @@ export async function GET(req: NextRequest) {
       clienteId: schema.servicios.clienteId,
     }).from(schema.servicios)
       .leftJoin(schema.clientes, eq(schema.servicios.clienteId, schema.clientes.id))
-      .where(and(gte(schema.servicios.fecha, inicio), lte(schema.servicios.fecha, fin),
-        ...(esAdmin ? [] : [eq(schema.servicios.usuarioId, uid)]))),
+      .where(and(
+        gte(schema.servicios.fecha, inicio), lte(schema.servicios.fecha, fin),
+        ...(esAdmin ? [] : [eq(schema.servicios.usuarioId, uid)])
+      )),
   ]);
 
-  return NextResponse.json({ demos, servicios });
+  return NextResponse.json({ citas, demos, servicios });
 }

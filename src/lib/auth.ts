@@ -12,7 +12,7 @@ const LoginSchema = z.object({
 });
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  session: { strategy: "jwt" },
+  session: { strategy: "jwt", maxAge: 8 * 60 * 60 }, // 8 hours
   pages: { signIn: "/login" },
   providers: [
     Google({
@@ -107,8 +107,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async signIn({ user, account }) {
       // Allow Google sign-in only for authorized emails
       if (account?.provider === "google") {
+        const email = user.email || "";
         const allowedEmails = ["zreyes@ezentyprocare.com", "info@ezentyprocare.com", "admin@ezenty.com"];
-        if (!allowedEmails.includes(user.email || "")) return false;
+        const allowedDomain = "ezentyprocare.com";
+        const isAllowed = allowedEmails.includes(email) || email.endsWith(`@${allowedDomain}`);
+        if (!isAllowed) return false;
         // Save/update token in DB for Gmail API use
         try {
           const [existing] = await db.select({ id: schema.usuarios.id })

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db, schema } from "@/lib/db";
-import { eq, and, isNull, desc } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { puedeAccederCliente } from "@/lib/permisos";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -12,7 +12,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     return NextResponse.json({ error: "Acceso denegado" }, { status: 403 });
   }
   const cotizaciones = await db.select().from(schema.cotizaciones)
-    .where(and(eq(schema.cotizaciones.clienteId, id), isNull(schema.cotizaciones.eliminadoEn)))
+    .where(eq(schema.cotizaciones.clienteId, id))
     .orderBy(desc(schema.cotizaciones.creadoEn));
   return NextResponse.json({ cotizaciones });
 }
@@ -28,9 +28,18 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const body = await req.json().catch(() => null);
   if (!body) return NextResponse.json({ error: "Inválido" }, { status: 400 });
 
-  // Generate quote number
-  const count = await db.select().from(schema.cotizaciones).where(eq(schema.cotizaciones.clienteId, id));
-  const numero = `EZPC-Q-${String(43000 + count.length + 1).padStart(5, "0")}`;
+  // Generate GLOBALLY unique quote number
+  const [last] = await db.select({ numero: schema.cotizaciones.numero })
+    .from(schema.cotizaciones)
+    .orderBy(desc(schema.cotizaciones.creadoEn))
+    .limit(1);
+
+  let nextNum = 43001;
+  if (last?.numero) {
+    const match = last.numero.match(/EZPC-Q-(\d+)/);
+    if (match) nextNum = parseInt(match[1]) + 1;
+  }
+  const numero = `EZPC-Q-${String(nextNum).padStart(5, "0")}`;
 
   const cotizacionId = crypto.randomUUID();
   await db.insert(schema.cotizaciones).values({
@@ -47,28 +56,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     vendedorId: session.user.id,
   });
 
-  // Insert lines
-  for (const linea of (body.lineas || [])) {
-    await db.insert(schema.cotizacionLineas).values({
-      id: crypto.randomUUID(),
-      descripcion: linea.descripcion,
-      tipo: linea.tipo,
-      unidad: linea.unidad,
-      cantidad: linea.cantidad || 0,
-      precioUnitario: linea.precioUnitario || 0,
-      precioFinal: linea.precioFinal || 0,
-      subtotal: linea.subtotal || 0,
-      area: linea.area || null,
-      orden: linea.orden || 0,
-      cotizacionId,
-    });
-  }
-
-  // Log in timeline
   await db.insert(schema.notas).values({
-    id: crypto.randomUUID(),
-    clienteId: id,
-    autorId: session.user.id,
+    id: crypto.randomUUID(), clienteId: id, autorId: session.user.id,
     contenido: `Quote ${numero} created — Total: $${(body.total || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
     tipo: "NOTA",
   });

@@ -1032,6 +1032,9 @@ function PagoForm({ clienteId, onGuardado }: { clienteId: string; onGuardado: (p
           <label className="label text-xs">Método</label>
           <select value={metodo} onChange={(e) => setMetodo(e.target.value)} className="input text-sm">
             <option value="TRANSFERENCIA">Transferencia</option>
+            <option value="EFECTIVO">Efectivo</option>
+            <option value="CHEQUE">Cheque</option>
+            <option value="TARJETA">Tarjeta</option>
             <option value="MESES_SIN_INTERESES">Meses s/int.</option>
             <option value="DEPOSITO_ANTICIPO">Depósito/Anticipo</option>
           </select>
