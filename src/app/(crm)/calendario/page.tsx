@@ -52,6 +52,12 @@ export default function CalendarioPage() {
           id: c.id, tipo: "cita" as const, fecha: c.inicio,
           titulo: c.titulo, clienteNombre: c.clienteNombre, clienteId: c.clienteId, estado: c.estado,
         })),
+        // Visitas programadas (proxima_accion_fecha en clientes)
+        ...(calData.citas || []).map((c: any) => ({
+          id: `visita-${c.id}`, tipo: "cita" as const, fecha: c.fecha,
+          titulo: c.proximaAccion || "Schedule site visit",
+          clienteNombre: c.clienteNombre, clienteId: c.clienteId, estado: "PENDIENTE",
+        })),
         ...(calData.demos || []).map((d: any) => ({
           id: d.id, tipo: "demo" as const, fecha: d.fecha,
           clienteNombre: d.clienteNombre, clienteId: d.clienteId, estado: d.estado,
