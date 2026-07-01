@@ -739,7 +739,6 @@ export function ExpedienteClient({ clienteInicial, config, etiquetasDisponibles,
               { label: "Tipo", val: cliente.tipoPropiedad },
               { label: "Habitaciones", val: cliente.cantidadHabitaciones ? `${cliente.cantidadHabitaciones} rooms` : null },
               { label: "Ciudad / Cluster", val: cliente.ciudadCluster },
-              { label: "Dirección", val: cliente.direccionPropiedad },
               { label: "Management", val: cliente.management },
               { label: "Zona", val: cliente.zona },
               { label: "Título", val: cliente.titulo },
@@ -749,6 +748,22 @@ export function ExpedienteClient({ clienteInicial, config, etiquetasDisponibles,
                 <p className="text-sm text-[var(--text-primary)]">{val}</p>
               </div>
             ) : null)}
+
+            {/* Dirección — siempre visible con link a Google Maps */}
+            <div>
+              <p className="text-xs text-[var(--text-muted)]">Dirección</p>
+              {cliente.direccionPropiedad ? (
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(cliente.direccionPropiedad)}`}
+                  target="_blank" rel="noopener noreferrer"
+                  className="text-sm text-marca-500 hover:underline flex items-start gap-1 mt-0.5">
+                  <MapPin className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                  <span>{cliente.direccionPropiedad}</span>
+                </a>
+              ) : (
+                <p className="text-sm text-[var(--text-muted)] italic">Sin dirección registrada</p>
+              )}
+            </div>
 
             {/* Objeción — editable inline */}
             <div>
