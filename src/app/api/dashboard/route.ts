@@ -91,7 +91,9 @@ export async function GET() {
   ]);
 
   const meta = config[0]?.metaMensual || 10000;
-  const cobradoMes = Number(pagosAgg[0]?.total || 0);
+  const pagosReales = Number(pagosAgg[0]?.total || 0);
+  const cotAprobadoTotal = Number(cotAprobadas[0]?.total || 0);
+  const cobradoMes = pagosReales + cotAprobadoTotal;
 
   // Crecimiento 6 meses
   const crecimiento = await Promise.all(
@@ -170,7 +172,7 @@ export async function GET() {
   }
 
   return NextResponse.json({
-    meta, cobradoMes,
+    meta, cobradoMes, pagosReales,
     porcentajeMeta: Math.min(Math.round((cobradoMes / meta) * 100), 100),
     nuevosLeads: Number(nuevosLeads[0]?.cnt || 0),
     citasDelMes: Number(citasAgg?.cnt || 0),

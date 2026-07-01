@@ -63,6 +63,12 @@ function MetaCard({ data }: { data: DashData }) {
           <p className="text-sm text-[var(--text-secondary)] mt-0.5">
             de {formatearDinero(data.meta)} — {pct}% {semaforo}
           </p>
+          {(data as any).valorCotizacionesAprobadas > 0 && (
+            <div className="flex gap-3 mt-1.5 text-xs text-[var(--text-muted)]">
+              <span>💰 Cobrado: {formatearDinero((data as any).pagosReales || (data.cobradoMes - ((data as any).valorCotizacionesAprobadas || 0)))}</span>
+              <span>📋 Aprobado: {formatearDinero((data as any).valorCotizacionesAprobadas)}</span>
+            </div>
+          )}
         </div>
         <div
           className="w-12 h-12 rounded-xl flex items-center justify-center"
