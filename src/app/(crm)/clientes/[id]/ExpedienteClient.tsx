@@ -862,9 +862,6 @@ export function ExpedienteClient({ clienteInicial, config, etiquetasDisponibles,
             <CampoEditable clienteId={cliente.id} label="Zona" campo="zona" valor={cliente.zona} />
             <CampoEditable clienteId={cliente.id} label="Ciudad / Cluster" campo="ciudadCluster" valor={cliente.ciudadCluster} />
             <CampoEditable clienteId={cliente.id} label="Habitaciones" campo="cantidadHabitaciones" valor={cliente.cantidadHabitaciones?.toString()} tipo="number" />
-            <CampoEditable clienteId={cliente.id} label="Canal UTM" campo="utmCanal" valor={cliente.utmCanal} />
-            <CampoEditable clienteId={cliente.id} label="Propiedad" campo="propiedad" valor={cliente.propiedad} />
-            <CampoEditable clienteId={cliente.id} label="Título" campo="titulo" valor={cliente.titulo} />
             {[
         ].map(({ label, val }) => val ? (
               <div key={label}>
