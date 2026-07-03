@@ -49,6 +49,20 @@ export default function RutaPage() {
     }
   }, [usarGPS]);
 
+  // Load clients by pre-selected IDs (from Seguimiento)
+  const [clientesPreseleccionados, setClientesPreseleccionados] = useState<Cliente[]>([]);
+  useEffect(() => {
+    const ids = searchParams.getAll("id");
+    if (ids.length === 0) return;
+    setLoadingClientes(true);
+    Promise.all(ids.map(id => fetch(`/api/clientes/${id}`).then(r => r.json())))
+      .then(results => {
+        const clientes = results.map(r => r.cliente || r).filter(Boolean);
+        setClientesPreseleccionados(clientes);
+      })
+      .finally(() => setLoadingClientes(false));
+  }, []);
+
   useEffect(() => {
     if (!zona) { setClientesZona([]); return; }
     setLoadingClientes(true);
@@ -79,7 +93,8 @@ export default function RutaPage() {
     setCalculando(true);
     setRuta(null);
     try {
-      const clientesSeleccionados = clientesZona.filter(c => seleccionados.has(c.id));
+      const pool = preseleccionados.length > 0 ? clientesPreseleccionados : clientesZona;
+    const clientesSeleccionados = pool.filter(c => seleccionados.has(c.id));
       const res = await fetch("/api/ruta/calcular", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -147,26 +162,15 @@ export default function RutaPage() {
         </div>
       </div>
 
-      {/* Step 2: Zone + selection */}
-      <div className="card p-4">
-        <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-3">🏨 Seleccionar hoteles</h2>
-        <select className="input text-sm mb-3" value={zona} onChange={e => { setZona(e.target.value); setSeleccionados(new Set()); setRuta(null); }}>
-          <option value="">Selecciona una zona…</option>
-          {zonasDisponibles.map(z => <option key={z} value={z}>{z}</option>)}
-        </select>
-
-        {loadingClientes ? (
-          <div className="text-center py-6 text-sm text-[var(--text-muted)]">Cargando hoteles…</div>
-        ) : zona && clientesZona.length > 0 ? (
-          <>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-[var(--text-muted)]">{clientesZona.length} hoteles en {zona}</span>
-              <button onClick={seleccionarTodos} className="text-xs text-marca-500 hover:underline">
-                {seleccionados.size === clientesZona.length ? "Deseleccionar todos" : "Seleccionar todos"}
-              </button>
-            </div>
-            <div className="space-y-1.5 max-h-80 overflow-y-auto">
-              {clientesZona.map(c => (
+      {/* Step 2: Zone + selection — skip if coming from Seguimiento */}
+      {preseleccionados.length > 0 ? (
+        <div className="card p-4">
+          <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-3">🏨 Hoteles seleccionados desde Seguimiento</h2>
+          {loadingClientes ? (
+            <div className="text-center py-4 text-sm text-[var(--text-muted)]">Cargando hoteles…</div>
+          ) : (
+            <div className="space-y-1.5">
+              {clientesPreseleccionados.map(c => (
                 <label key={c.id} className="flex items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors">
                   <input type="checkbox" checked={seleccionados.has(c.id)} onChange={() => toggleSeleccion(c.id)} className="rounded" />
                   <div className="flex-1 min-w-0">
@@ -176,11 +180,43 @@ export default function RutaPage() {
                 </label>
               ))}
             </div>
-          </>
-        ) : zona ? (
-          <p className="text-sm text-[var(--text-muted)] text-center py-6">No hay hoteles en esta zona</p>
-        ) : null}
-      </div>
+          )}
+        </div>
+      ) : (
+        <div className="card p-4">
+          <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-3">🏨 Seleccionar hoteles</h2>
+          <select className="input text-sm mb-3" value={zona} onChange={e => { setZona(e.target.value); setSeleccionados(new Set()); setRuta(null); }}>
+            <option value="">Selecciona una zona…</option>
+            {zonasDisponibles.map(z => <option key={z} value={z}>{z}</option>)}
+          </select>
+
+          {loadingClientes ? (
+            <div className="text-center py-6 text-sm text-[var(--text-muted)]">Cargando hoteles…</div>
+          ) : zona && clientesZona.length > 0 ? (
+            <>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs text-[var(--text-muted)]">{clientesZona.length} hoteles en {zona}</span>
+                <button onClick={seleccionarTodos} className="text-xs text-marca-500 hover:underline">
+                  {seleccionados.size === clientesZona.length ? "Deseleccionar todos" : "Seleccionar todos"}
+                </button>
+              </div>
+              <div className="space-y-1.5 max-h-80 overflow-y-auto">
+                {clientesZona.map(c => (
+                  <label key={c.id} className="flex items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors">
+                    <input type="checkbox" checked={seleccionados.has(c.id)} onChange={() => toggleSeleccion(c.id)} className="rounded" />
+                    <div className="flex-1 min-w-0">
+                      <span className="text-sm text-[var(--text-primary)]">{c.nombre}</span>
+                      {!c.direccionPropiedad && <span className="text-xs text-amber-500 ml-2">⚠️ Sin dirección</span>}
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </>
+          ) : zona ? (
+            <p className="text-sm text-[var(--text-muted)] text-center py-6">No hay hoteles en esta zona</p>
+          ) : null}
+        </div>
+      )}
 
       {/* Calculate button */}
       <button onClick={calcularRuta} disabled={calculando || seleccionados.size === 0}
