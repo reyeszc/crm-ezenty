@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { MapPin, Navigation, Loader2, X, GripVertical, Clock, RouteIcon } from "lucide-react";
 import { useToast } from "@/components/providers/ToastProvider";
@@ -20,12 +21,17 @@ export default function RutaPage() {
   const [zona, setZona] = useState("");
   const [zonasDisponibles, setZonasDisponibles] = useState<string[]>([]);
   const [clientesZona, setClientesZona] = useState<Cliente[]>([]);
-  const [seleccionados, setSeleccionados] = useState<Set<string>>(new Set());
+  const searchParams = useSearchParams();
+  const [seleccionados, setSeleccionados] = useState<Set<string>>(() => {
+    const ids = searchParams.getAll("id");
+    return ids.length > 0 ? new Set(ids) : new Set();
+  });
   const [puntoPartida, setPuntoPartida] = useState("");
   const [usarGPS, setUsarGPS] = useState(true);
   const [coordsGPS, setCoordsGPS] = useState<{lat: number, lng: number} | null>(null);
   const [calculando, setCalculando] = useState(false);
   const [ruta, setRuta] = useState<Parada[] | null>(null);
+  const preseleccionados = searchParams.getAll("id");
   const [loadingClientes, setLoadingClientes] = useState(false);
   const [tiempoTotal, setTiempoTotal] = useState<number | null>(null);
   const [distanciaTotal, setDistanciaTotal] = useState<number | null>(null);
