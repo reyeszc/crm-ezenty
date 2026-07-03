@@ -18,9 +18,13 @@ export default function SeguimientoPage() {
         const now = new Date();
         const hoy = now.toDateString();
 
-        // Next 2 upcoming dates after today
+        // Next 2 upcoming dates AFTER today (not including today)
+        const manana = new Date(now);
+        manana.setHours(0, 0, 0, 0);
+        manana.setDate(manana.getDate() + 1);
+
         const future = todos
-          .filter((c: any) => c.proximaAccionFecha && new Date(c.proximaAccionFecha) > now)
+          .filter((c: any) => c.proximaAccionFecha && new Date(c.proximaAccionFecha) >= manana)
           .sort((a: any, b: any) => new Date(a.proximaAccionFecha).getTime() - new Date(b.proximaAccionFecha).getTime());
 
         const fechasUnicas = [...new Set(future.map((c: any) =>
