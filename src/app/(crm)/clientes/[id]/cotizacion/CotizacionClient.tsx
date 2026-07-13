@@ -223,7 +223,7 @@ export function CotizacionClient({ cliente, medidas, cotizacionesPrevias, contac
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contactoNombre: contactoFinal?.nombre || null,
-          contactoPuesto: contactoFinal?.puesto || null,
+          contactoPuesto: contactoFinal?.puesto || contactoFinal?.cargo || null,
           contactoCorreo: contactoFinal?.correo || null,
           contactoTelefono: contactoFinal?.telefono || null,
           lineas: lineas.map((l, i) => ({
@@ -279,8 +279,8 @@ export function CotizacionClient({ cliente, medidas, cotizacionesPrevias, contac
                         <div className="space-y-2" onClick={e => e.stopPropagation()}>
                           <input className="input text-sm !py-1.5 font-semibold" value={contactoEditado?.nombre || ""} placeholder="Nombre"
                             onChange={e => setContactoEditado((p: any) => ({ ...p, nombre: e.target.value }))} />
-                          <input className="input text-sm !py-1.5" value={contactoEditado?.puesto || ""} placeholder="Título / Cargo"
-                            onChange={e => setContactoEditado((p: any) => ({ ...p, puesto: e.target.value }))} />
+                          <input className="input text-sm !py-1.5" value={contactoEditado?.cargo || contactoEditado?.puesto || ""} placeholder="Título / Cargo"
+                            onChange={e => setContactoEditado((p: any) => ({ ...p, cargo: e.target.value, puesto: e.target.value }))} />
                           <input className="input text-sm !py-1.5" value={contactoEditado?.correo || ""} placeholder="Email"
                             onChange={e => setContactoEditado((p: any) => ({ ...p, correo: e.target.value }))} />
                           <input className="input text-sm !py-1.5" value={contactoEditado?.telefono || ""} placeholder="Teléfono"
@@ -295,7 +295,7 @@ export function CotizacionClient({ cliente, medidas, cotizacionesPrevias, contac
                       ) : (
                         <>
                           <p className="text-sm font-semibold text-[var(--text-primary)]">{datos.nombre}</p>
-                          {(datos.puesto || datos.cargo) && <p className="text-xs text-[var(--text-muted)]">{datos.puesto || datos.cargo}</p>}
+                          {(datos.cargo || datos.puesto) && <p className="text-xs text-[var(--text-muted)]">{datos.cargo || datos.puesto}</p>}
                           {datos.correo && <p className="text-xs text-[var(--text-secondary)]">{datos.correo}</p>}
                           {datos.telefono && <p className="text-xs text-[var(--text-secondary)]">{datos.telefono}</p>}
                         </>

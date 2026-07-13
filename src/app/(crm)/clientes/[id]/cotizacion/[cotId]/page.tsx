@@ -30,15 +30,23 @@ export default async function CotizacionDetallePage({ params }: Props) {
   const [vendedor] = await db.select({ nombre: schema.usuarios.nombre, correo: schema.usuarios.correo, titulo: schema.usuarios.titulo })
     .from(schema.usuarios).where(eq(schema.usuarios.id, cot.vendedorId)).limit(1);
 
-  // Get primary contact
-  const contactos = await db.select().from(schema.contactos)
-    .where(eq(schema.contactos.clienteId, id))
-    .orderBy(schema.contactos.principal)
-    .limit(5);
-  const contactoPrincipal = contactos.find(c => c.principal) || contactos[0] || null;
-
+  // Use contact stored on the quote first, fallback to client's primary contact
   const cotObj = JSON.parse(JSON.stringify(cot));
-  if (contactoPrincipal) cotObj.contactoPrincipal = JSON.parse(JSON.stringify(contactoPrincipal));
+  if ((cot as any).contactoNombre) {
+    cotObj.contactoPrincipal = {
+      nombre: (cot as any).contactoNombre,
+      cargo: (cot as any).contactoPuesto || null,
+      correo: (cot as any).contactoCorreo || null,
+      telefono: (cot as any).contactoTelefono || null,
+    };
+  } else {
+    const contactos = await db.select().from(schema.contactos)
+      .where(eq(schema.contactos.clienteId, id))
+      .orderBy(schema.contactos.principal)
+      .limit(5);
+    const contactoPrincipal = contactos.find(c => c.principal) || contactos[0] || null;
+    if (contactoPrincipal) cotObj.contactoPrincipal = JSON.parse(JSON.stringify(contactoPrincipal));
+  }
 
   return (
     <CotizacionDetalleClient
