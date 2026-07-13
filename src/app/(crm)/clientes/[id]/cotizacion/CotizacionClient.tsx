@@ -6,10 +6,10 @@ import { useToast } from "@/components/providers/ToastProvider";
 
 // ── Default prices ────────────────────────────────────────────────────────
 const PRECIOS_DEFAULT: Record<string, { precio: number; unidad: string; label: string }> = {
-  "Carpet - Flat Fee/Room":       { precio: 22.00,  unidad: "flat_fee", label: "Carpet (Flat Fee/hab)" },
-  "Carpet - Sq Ft":               { precio: 0.20,   unidad: "sqft",     label: "Carpet ($/sq ft)" },
-  "Tile & Grout - Flat Fee/Bath": { precio: 20.00,  unidad: "flat_fee", label: "Tile & Grout (Flat Fee/baño)" },
-  "Tile & Grout - Sq Ft":         { precio: 0.55,   unidad: "sqft",     label: "Tile & Grout ($/sq ft)" },
+  "Carpet - Flat Fee/Room":       { precio: 22.00,  unidad: "flat_fee", label: "Carpet Cleaning (Flat Fee/hab)" },
+  "Carpet - Sq Ft":               { precio: 0.20,   unidad: "sqft",     label: "Carpet Cleaning ($/sq ft)" },
+  "Tile & Grout - Flat Fee/Bath": { precio: 20.00,  unidad: "flat_fee", label: "Tile & Grout Cleaning (Flat Fee/baño)" },
+  "Tile & Grout - Sq Ft":         { precio: 0.55,   unidad: "sqft",     label: "Tile & Grout Cleaning ($/sq ft)" },
   "LVT - Sq Ft":                  { precio: 0.55,   unidad: "sqft",     label: "LVT ($/sq ft)" },
   "Concrete - Sq Ft":             { precio: 0.55,   unidad: "sqft",     label: "Concrete ($/sq ft)" },
   "Upholstery":                   { precio: 45.00,  unidad: "pieza",    label: "Upholstery ($/pieza)" },

@@ -175,8 +175,8 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
                 const grupos: Record<string, any[]> = {};
                 lineas.forEach(l => {
                   const g = l.tipo?.includes("Guest") ? "Guest Services" :
-                            l.tipo?.includes("Carpet") ? "Carpet" :
-                            l.tipo?.includes("Tile") ? "Tile & Grout" :
+                            l.tipo?.includes("Carpet") ? "Carpet Cleaning" :
+                            l.tipo?.includes("Tile") ? "Tile & Grout Cleaning" :
                             l.tipo?.includes("LVT") ? "LVT" :
                             l.tipo?.includes("Concrete") ? "Concrete" :
                             l.tipo?.includes("Upholstery") ? "Upholstery" :
@@ -291,8 +291,8 @@ function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fe
   const grupos: Record<string, any[]> = {};
   lineas.forEach((l: any) => {
     const grupo = l.tipo?.includes("Guest") ? "Guest Services" : 
-                  l.tipo?.includes("Carpet") ? "Carpet" :
-                  l.tipo?.includes("Tile") ? "Tile & Grout" :
+                  l.tipo?.includes("Carpet") ? "Carpet Cleaning" :
+                  l.tipo?.includes("Tile") ? "Tile & Grout Cleaning" :
                   l.tipo?.includes("LVT") ? "LVT" :
                   l.tipo?.includes("Concrete") ? "Concrete" :
                   l.tipo?.includes("Upholstery") ? "Upholstery" :
