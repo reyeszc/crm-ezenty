@@ -146,7 +146,7 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
         <div className="px-6 py-3" style={{ background: "#FFF8E7" }}>
           <p className="text-xs font-bold text-[#1B2A4A] mb-2 uppercase tracking-wide">Property Information</p>
           <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
-            <div><span className="font-semibold text-[#1B2A4A]">Company: </span><span>{cliente.management || "—"}</span></div>
+            <div><span className="font-semibold text-[#1B2A4A]">Management: </span><span>{cliente.management || "—"}</span></div>
             <div><span className="font-semibold text-[#1B2A4A]">Property Name: </span><span>{cliente.nombre}</span></div>
             <div><span className="font-semibold text-[#1B2A4A]">Contact Name: </span><span>{contactoPrincipal?.nombre || "—"}</span></div>
             <div><span className="font-semibold text-[#1B2A4A]">Property Address: </span><span>{cliente.direccionPropiedad || "—"}</span></div>
@@ -365,7 +365,7 @@ function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fe
       <div style="font-size:11px;font-weight:900;color:#1B2A4A;letter-spacing:1px;margin-bottom:10px">PROPERTY INFORMATION</div>
       <table><tbody>
         <tr>
-          <td style="padding:3px 0;width:50%"><span style="font-weight:700;color:#1B2A4A">Company: </span>${cliente.management||"—"}</td>
+          <td style="padding:3px 0;width:50%"><span style="font-weight:700;color:#1B2A4A">Management: </span>${cliente.management||"—"}</td>
           <td style="padding:3px 0"><span style="font-weight:700;color:#1B2A4A">Property Name: </span>${cliente.nombre}</td>
         </tr>
         <tr>
