@@ -261,6 +261,62 @@ export function CotizacionClient({ cliente, medidas, cotizacionesPrevias, contac
         </div>
       </div>
 
+      {/* Contact selector */}
+      {contactos && contactos.length > 0 && (
+        <div className="card p-4">
+          <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-3">👤 Dirigir cotización a</h2>
+          <div className="space-y-2">
+            {contactos.map((c: any) => {
+              const seleccionado = contactoSeleccionadoId === c.id;
+              const datos = (editandoContacto && seleccionado && contactoEditado) ? contactoEditado : c;
+              return (
+                <div key={c.id}
+                  onClick={() => { setContactoSeleccionadoId(c.id); setEditandoContacto(false); setContactoEditado(null); }}
+                  className={`p-3 rounded-xl border-2 cursor-pointer transition-all ${seleccionado ? "border-marca-300 bg-marca-50/30 dark:bg-marca-900/10" : "border-[var(--border)] hover:border-marca-200"}`}>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      {(editandoContacto && seleccionado) ? (
+                        <div className="space-y-2" onClick={e => e.stopPropagation()}>
+                          <input className="input text-sm !py-1.5 font-semibold" value={contactoEditado?.nombre || ""} placeholder="Nombre"
+                            onChange={e => setContactoEditado((p: any) => ({ ...p, nombre: e.target.value }))} />
+                          <input className="input text-sm !py-1.5" value={contactoEditado?.puesto || ""} placeholder="Título / Cargo"
+                            onChange={e => setContactoEditado((p: any) => ({ ...p, puesto: e.target.value }))} />
+                          <input className="input text-sm !py-1.5" value={contactoEditado?.correo || ""} placeholder="Email"
+                            onChange={e => setContactoEditado((p: any) => ({ ...p, correo: e.target.value }))} />
+                          <input className="input text-sm !py-1.5" value={contactoEditado?.telefono || ""} placeholder="Teléfono"
+                            onChange={e => setContactoEditado((p: any) => ({ ...p, telefono: e.target.value }))} />
+                          <div className="flex gap-2 pt-1">
+                            <button onClick={() => setEditandoContacto(false)}
+                              className="flex-1 py-1.5 rounded-lg bg-marca-300 text-white text-xs font-semibold">✓ Listo</button>
+                            <button onClick={() => { setEditandoContacto(false); setContactoEditado(null); }}
+                              className="px-3 py-1.5 rounded-lg bg-gray-200 text-gray-600 text-xs">Cancelar</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="text-sm font-semibold text-[var(--text-primary)]">{datos.nombre}</p>
+                          {(datos.puesto || datos.cargo) && <p className="text-xs text-[var(--text-muted)]">{datos.puesto || datos.cargo}</p>}
+                          {datos.correo && <p className="text-xs text-[var(--text-secondary)]">{datos.correo}</p>}
+                          {datos.telefono && <p className="text-xs text-[var(--text-secondary)]">{datos.telefono}</p>}
+                        </>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 ml-2 flex-shrink-0">
+                      {c.principal && <span className="text-xs bg-marca-100 text-marca-600 px-1.5 py-0.5 rounded">Principal</span>}
+                      {seleccionado && !editandoContacto && (
+                        <button onClick={e => { e.stopPropagation(); setContactoEditado({ ...c }); setEditandoContacto(true); }}
+                          className="text-xs text-marca-500 hover:underline">Editar</button>
+                      )}
+                      {seleccionado && <span className="text-marca-500">✓</span>}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Previous quotes */}
       {cotizacionesPrevias.length > 0 && (
         <div className="card mb-4 overflow-hidden">
