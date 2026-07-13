@@ -28,9 +28,31 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ error: "Acceso denegado" }, { status: 403 });
   }
   const body = await req.json().catch(() => ({}));
-  const allowed = ["estado", "notas", "validezDias", "descuento"];
+
   const data: any = { actualizadoEn: new Date() };
+  const allowed = ["estado", "notas", "validezDias", "descuento", "total", "subtotal"];
   for (const k of allowed) { if (k in body) data[k] = body[k]; }
   await db.update(schema.cotizaciones).set(data).where(eq(schema.cotizaciones.id, cotId));
+
+  // If lineas are included, replace them all
+  if (body.lineas && Array.isArray(body.lineas)) {
+    await db.delete(schema.cotizacionLineas).where(eq(schema.cotizacionLineas.cotizacionId, cotId));
+    for (const [i, linea] of body.lineas.entries()) {
+      await db.insert(schema.cotizacionLineas).values({
+        id: crypto.randomUUID(),
+        cotizacionId: cotId,
+        descripcion: linea.descripcion || "",
+        tipo: linea.tipo || "Servicio",
+        unidad: linea.unidad || "sqft",
+        cantidad: linea.cantidad || 1,
+        precioUnitario: linea.precioUnitario || linea.precioFinal || 0,
+        precioFinal: linea.precioFinal || linea.precioUnitario || 0,
+        subtotal: (linea.precioFinal || 0) * (linea.cantidad || 1),
+        area: linea.area || null,
+        orden: i,
+      });
+    }
+  }
+
   return NextResponse.json({ ok: true });
 }

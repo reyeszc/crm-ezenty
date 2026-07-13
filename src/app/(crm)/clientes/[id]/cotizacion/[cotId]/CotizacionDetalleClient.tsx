@@ -1,7 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
-import { ArrowLeft, FileText, Download, Send, CheckCircle, XCircle, Printer } from "lucide-react";
+import { ArrowLeft, FileText, Download, Send, CheckCircle, XCircle, Printer, Edit2, Save, Plus, Trash2, GripVertical } from "lucide-react";
 import { useToast } from "@/components/providers/ToastProvider";
 import { formatearDinero } from "@/lib/utils";
 
@@ -24,6 +24,67 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
   const [estado, setEstado] = useState(cotizacion.estado);
   const [updatingEstado, setUpdatingEstado] = useState(false);
   const [generatingPdf, setGeneratingPdf] = useState(false);
+
+  // Edit mode
+  const [editando, setEditando] = useState(false);
+  const [editLineas, setEditLineas] = useState<any[]>(lineas.map(l => ({ ...l })));
+  const [editNotas, setEditNotas] = useState(cotizacion.notas || "");
+  const [savingEdit, setSavingEdit] = useState(false);
+  const dragItem = useRef<number | null>(null);
+  const dragOver = useRef<number | null>(null);
+
+  function handleDragEnd() {
+    if (dragItem.current === null || dragOver.current === null) return;
+    const copy = [...editLineas];
+    const moved = copy.splice(dragItem.current, 1)[0];
+    copy.splice(dragOver.current, 0, moved);
+    setEditLineas(copy);
+    dragItem.current = null; dragOver.current = null;
+  }
+
+  function updateEditLinea(id: string, patch: any) {
+    setEditLineas(p => p.map(l => l.id === id ? { ...l, ...patch } : l));
+  }
+
+  function removeEditLinea(id: string) {
+    setEditLineas(p => p.filter(l => l.id !== id));
+  }
+
+  function addEditLinea() {
+    setEditLineas(p => [...p, {
+      id: crypto.randomUUID(), descripcion: "", tipo: "Carpet Cleaning", unidad: "sqft",
+      cantidad: 1, precioUnitario: 0, precioFinal: 0, subtotal: 0, area: "", orden: p.length
+    }]);
+  }
+
+  async function guardarEdicion() {
+    setSavingEdit(true);
+    try {
+      const lineasActualizadas = editLineas.map((l, i) => ({
+        ...l,
+        subtotal: (l.precioFinal || l.precioUnitario || 0) * (l.cantidad || 1),
+        orden: i,
+      }));
+      const nuevoTotal = lineasActualizadas.reduce((s, l) => s + l.subtotal, 0);
+      const res = await fetch(`/api/clientes/${cliente.id}/cotizaciones/${cotizacion.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lineas: lineasActualizadas,
+          notas: editNotas,
+          total: nuevoTotal,
+          subtotal: nuevoTotal,
+          estado: "BORRADOR",
+        }),
+      });
+      if (!res.ok) throw new Error();
+      success("Cotización actualizada ✓");
+      setEditando(false);
+      setEstado("BORRADOR");
+      // Refresh page to show updated data
+      window.location.reload();
+    } catch { error("No se pudo guardar"); } finally { setSavingEdit(false); }
+  }
 
   const cfg = ESTADO_CONFIG[estado] || ESTADO_CONFIG.BORRADOR;
   // Get primary contact from cliente contacts (passed as prop)
@@ -93,13 +154,30 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
 
         {/* Actions */}
         <div className="flex items-center gap-2 flex-wrap">
-          {estado === "BORRADOR" && (
+          {!editando ? (
+            <button onClick={() => { setEditLineas(lineas.map(l => ({ ...l }))); setEditNotas(cotizacion.notas || ""); setEditando(true); }}
+              className="btn-secondary !py-2 !px-3 text-sm">
+              <Edit2 className="w-3.5 h-3.5" /> Editar
+            </button>
+          ) : (
+            <>
+              <button onClick={guardarEdicion} disabled={savingEdit}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium bg-green-50 text-green-700 hover:bg-green-100 transition-colors">
+                <Save className="w-3.5 h-3.5" /> {savingEdit ? "Guardando…" : "Guardar cambios"}
+              </button>
+              <button onClick={() => setEditando(false)}
+                className="btn-secondary !py-2 !px-3 text-sm">
+                Cancelar
+              </button>
+            </>
+          )}
+          {!editando && estado === "BORRADOR" && (
             <button onClick={() => cambiarEstado("ENVIADA")} disabled={updatingEstado}
               className="btn-secondary !py-2 !px-3 text-sm">
               <Send className="w-3.5 h-3.5" /> Marcar enviada
             </button>
           )}
-          {estado === "ENVIADA" && (
+          {!editando && estado === "ENVIADA" && (
             <>
               <button onClick={() => cambiarEstado("APROBADA")} disabled={updatingEstado}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium bg-green-50 text-green-700 hover:bg-green-100 transition-colors">
@@ -111,12 +189,92 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
               </button>
             </>
           )}
-          <button onClick={generateAndPrintPDF} disabled={generatingPdf}
-            className="btn-primary !py-2 !px-3 text-sm">
-            {generatingPdf ? "Generando…" : <><Printer className="w-3.5 h-3.5" /> PDF / Imprimir</>}
-          </button>
+          {!editando && (
+            <button onClick={generateAndPrintPDF} disabled={generatingPdf}
+              className="btn-primary !py-2 !px-3 text-sm">
+              {generatingPdf ? "Generando…" : <><Printer className="w-3.5 h-3.5" /> PDF / Imprimir</>}
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Edit mode */}
+      {editando && (
+        <div className="card p-4 space-y-4 border-2 border-marca-200">
+          <h2 className="text-sm font-semibold text-[var(--text-primary)]">✏️ Editando cotización</h2>
+
+          {/* Lines */}
+          <div className="divide-y divide-[var(--border)]">
+            {editLineas.map((l, idx) => (
+              <div key={l.id} data-idx={idx}
+                className="py-3 grid grid-cols-12 gap-2 items-center"
+                draggable onDragStart={() => dragItem.current = idx}
+                onDragEnter={() => dragOver.current = idx}
+                onDragEnd={handleDragEnd} onDragOver={e => e.preventDefault()}>
+                <div className="col-span-1 flex justify-center cursor-grab">
+                  <GripVertical className="w-4 h-4 text-[var(--text-muted)]" />
+                </div>
+                <div className="col-span-5 space-y-1">
+                  <input className="input text-xs !py-1" value={l.descripcion}
+                    onChange={e => updateEditLinea(l.id, { descripcion: e.target.value })}
+                    placeholder="Descripción" />
+                  <input className="input text-xs !py-1" value={l.tipo || ""}
+                    onChange={e => updateEditLinea(l.id, { tipo: e.target.value })}
+                    placeholder="Tipo (Carpet Cleaning, Tile...)" />
+                </div>
+                <div className="col-span-2">
+                  <input type="number" className="input text-sm !py-1 text-center" value={l.cantidad}
+                    onChange={e => updateEditLinea(l.id, { cantidad: parseFloat(e.target.value) || 0 })}
+                    placeholder="Cant." min="0" />
+                  <p className="text-xs text-center text-[var(--text-muted)]">{UNIDAD_LABEL[l.unidad] || l.unidad}</p>
+                </div>
+                <div className="col-span-2">
+                  <div className="relative">
+                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-[var(--text-muted)]">$</span>
+                    <input type="number" className="input text-sm !py-1 pl-5 text-center" value={l.precioFinal}
+                      onChange={e => updateEditLinea(l.id, { precioFinal: parseFloat(e.target.value) || 0, precioUnitario: parseFloat(e.target.value) || 0 })}
+                      placeholder="Precio" min="0" step="0.01" />
+                  </div>
+                </div>
+                <div className="col-span-1 text-right text-xs font-bold text-[var(--text-primary)]">
+                  ${((l.precioFinal || 0) * (l.cantidad || 1)).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                </div>
+                <div className="col-span-1 flex justify-end">
+                  <button onClick={() => removeEditLinea(l.id)} className="text-red-400 hover:text-red-500">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <button onClick={addEditLinea}
+            className="flex items-center gap-1.5 text-sm text-marca-500 hover:text-marca-600">
+            <Plus className="w-4 h-4" /> Agregar línea
+          </button>
+
+          {/* Total */}
+          <div className="flex justify-between items-center pt-2 border-t border-[var(--border)]">
+            <span className="text-sm font-semibold text-[var(--text-primary)]">TOTAL</span>
+            <span className="text-lg font-bold text-emerald-600">
+              ${editLineas.reduce((s, l) => s + (l.precioFinal || 0) * (l.cantidad || 1), 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+            </span>
+          </div>
+
+          {/* Notes */}
+          <div>
+            <label className="label text-sm">Notas / Terms & Conditions</label>
+            <textarea className="input resize-y" rows={8} value={editNotas}
+              onChange={e => setEditNotas(e.target.value)} />
+          </div>
+
+          <button onClick={guardarEdicion} disabled={savingEdit}
+            className="btn-primary w-full justify-center">
+            <Save className="w-4 h-4" />
+            {savingEdit ? "Guardando…" : "Guardar cambios"}
+          </button>
+        </div>
+      )}
 
       {/* Preview card - matches PDF format */}
       <div className="card overflow-hidden">
