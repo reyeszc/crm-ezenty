@@ -35,6 +35,7 @@ export default function RutaPage() {
   const [loadingClientes, setLoadingClientes] = useState(false);
   const [tiempoTotal, setTiempoTotal] = useState<number | null>(null);
   const [distanciaTotal, setDistanciaTotal] = useState<number | null>(null);
+  const [modo, setModo] = useState<"cercano" | "lejano">("cercano");
 
   useEffect(() => {
     fetch("/api/clientes/zonas").then(r => r.json()).then(d => setZonasDisponibles(d.zonas || [])).catch(() => {});
@@ -100,6 +101,7 @@ export default function RutaPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           origen: usarGPS ? coordsGPS : puntoPartida,
+          modo,
           paradas: clientesSeleccionados.map(c => ({
             id: c.id, nombre: c.nombre,
             direccion: c.direccionPropiedad || `${c.nombre}, ${c.zona}`,
@@ -219,6 +221,24 @@ export default function RutaPage() {
       )}
 
       {/* Calculate button */}
+      {/* Modo de ordenamiento */}
+      <div className="card p-4">
+        <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-3">📍 Orden de visita</h2>
+        <div className="grid grid-cols-2 gap-2">
+          <button onClick={() => setModo("cercano")}
+            className={`py-2.5 rounded-xl text-sm font-medium border-2 transition-all ${modo === "cercano" ? "border-marca-300 bg-marca-50 text-marca-600 dark:bg-marca-900/20" : "border-[var(--border)] text-[var(--text-secondary)]"}`}>
+            🎯 Más cercano primero
+          </button>
+          <button onClick={() => setModo("lejano")}
+            className={`py-2.5 rounded-xl text-sm font-medium border-2 transition-all ${modo === "lejano" ? "border-purple-300 bg-purple-50 text-purple-600 dark:bg-purple-900/20" : "border-[var(--border)] text-[var(--text-secondary)]"}`}>
+            🗺️ Más lejano primero
+          </button>
+        </div>
+        <p className="text-xs text-[var(--text-muted)] mt-2">
+          {modo === "cercano" ? "Empieza por el hotel más cercano a tu punto de partida y avanza gradualmente." : "Empieza por el hotel más lejano y termina cerca de tu punto de partida."}
+        </p>
+      </div>
+
       <button onClick={calcularRuta} disabled={calculando || seleccionados.size === 0}
         className="btn-primary w-full justify-center text-base py-3 disabled:opacity-40">
         {calculando ? <Loader2 className="w-5 h-5 animate-spin" /> : <Navigation className="w-5 h-5" />}
