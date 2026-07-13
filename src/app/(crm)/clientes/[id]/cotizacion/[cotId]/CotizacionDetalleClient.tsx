@@ -604,11 +604,7 @@ function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fe
     <div style="background:#f8f9fa;padding:12px 32px;border-top:1px solid #ddd;display:flex;justify-content:space-between;align-items:center">
       <span style="font-size:11px;color:#888">EZENTY ProCare LLC · Atlanta, GA · IICRC Certified · ezentyprocare.com</span>
       <div style="display:flex;align-items:center;gap:12px">
-        <div style="text-align:center">
-          <div style="width:44px;height:44px;border-radius:50%;border:3px solid #1B2A4A;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:7px;font-weight:900;color:#1B2A4A;line-height:1.1">
-            <div>IICRC</div><div style="font-size:5px;color:#666">CERTIFIED</div><div>FIRM</div>
-          </div>
-        </div>
+        <img src="https://crm-ezenty.vercel.app/iicrc.png" alt="IICRC Certified Firm" style="width:44px;height:44px;object-fit:contain" />
         <span style="font-size:11px;color:#888">${cotizacion.numero} · Confidential. For Client Use Only · Valid ${cotizacion.validezDias||30} Days</span>
       </div>
     </div>
