@@ -56,6 +56,26 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     vendedorId: session.user.id,
   });
 
+  // Save line items
+  if (body.lineas && body.lineas.length > 0) {
+    for (const [i, linea] of body.lineas.entries()) {
+      const subtotal = (linea.precioFinal || linea.precioUnitario || 0) * (linea.cantidad || 1);
+      await db.insert(schema.cotizacionLineas).values({
+        id: crypto.randomUUID(),
+        cotizacionId,
+        descripcion: linea.descripcion || "",
+        tipo: linea.tipoPiso || linea.tipo || "Servicio",
+        unidad: linea.unidad || "sqft",
+        cantidad: linea.cantidad || 1,
+        precioUnitario: linea.precioUnitario || 0,
+        precioFinal: linea.precioFinal || linea.precioUnitario || 0,
+        subtotal,
+        area: linea.area || null,
+        orden: i,
+      });
+    }
+  }
+
   await db.insert(schema.notas).values({
     id: crypto.randomUUID(), clienteId: id, autorId: session.user.id,
     contenido: `Quote ${numero} created — Total: $${(body.total || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
