@@ -17,9 +17,16 @@ export default async function CotizacionPage({ params }: Props) {
     management: schema.clientes.management,
     cantidadHabitaciones: schema.clientes.cantidadHabitaciones,
     direccionPropiedad: schema.clientes.direccionPropiedad,
+    tipoPropiedad: schema.clientes.tipoPropiedad,
+    ciudadCluster: schema.clientes.ciudadCluster,
   }).from(schema.clientes)
     .where(and(eq(schema.clientes.id, id), isNull(schema.clientes.eliminadoEn))).limit(1);
   if (!cliente) notFound();
+
+  // Get contacts
+  const contactos = await db.select().from(schema.contactos)
+    .where(eq(schema.contactos.clienteId, id))
+    .orderBy(schema.contactos.principal);
 
   // Get latest medidas
   const medidas = await db.select().from(schema.medidasPropiedad)
@@ -43,6 +50,7 @@ export default async function CotizacionPage({ params }: Props) {
       cliente={JSON.parse(JSON.stringify(cliente))}
       medidas={JSON.parse(JSON.stringify(medidasConAreas))}
       cotizacionesPrevias={JSON.parse(JSON.stringify(cotizaciones))}
+      contactos={JSON.parse(JSON.stringify(contactos))}
       vendedorId={session.user.id}
     />
   );

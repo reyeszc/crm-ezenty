@@ -55,8 +55,8 @@ const ESTADO_CONFIG: Record<string, { label: string; cls: string }> = {
   RECHAZADA: { label: "Rechazada", cls: "bg-red-100 text-red-600" },
 };
 
-export function CotizacionClient({ cliente, medidas, cotizacionesPrevias }: {
-  cliente: any; medidas: any[]; cotizacionesPrevias: any[]; vendedorId: string;
+export function CotizacionClient({ cliente, medidas, cotizacionesPrevias, contactos }: {
+  cliente: any; medidas: any[]; cotizacionesPrevias: any[]; contactos: any[]; vendedorId: string;
 }) {
   const { success, error } = useToast();
   const [lineas, setLineas] = useState<Linea[]>([
@@ -75,6 +75,11 @@ export function CotizacionClient({ cliente, medidas, cotizacionesPrevias }: {
   const [detalleCot, setDetalleCot] = useState<{cot: any, lineas: any[]} | null>(null);
   const [loadingDetalle, setLoadingDetalle] = useState(false);
   const [mostrarPrecios, setMostrarPrecios] = useState(false);
+  // Contact selection
+  const contactoPrincipal = contactos?.find((c: any) => c.esPrincipal) || contactos?.[0];
+  const [contactoSeleccionadoId, setContactoSeleccionadoId] = useState<string>(contactoPrincipal?.id || "");
+  const [editandoContacto, setEditandoContacto] = useState(false);
+  const [contactoEditado, setContactoEditado] = useState<any>(null);
   const [precios, setPrecios] = useState(
     Object.fromEntries(Object.entries(PRECIOS_DEFAULT).map(([k, v]) => [k, String(v.precio)]))
   );
@@ -173,10 +178,18 @@ export function CotizacionClient({ cliente, medidas, cotizacionesPrevias }: {
     if (lineas.length === 0) { error("Agrega al menos una línea"); return; }
     setSaving(true);
     try {
+      // Get effective contact data (edited or original)
+      const contactoSeleccionado = contactos?.find((c: any) => c.id === contactoSeleccionadoId);
+      const contactoFinal = (editandoContacto && contactoEditado) ? contactoEditado : contactoSeleccionado;
+
       const res = await fetch(`/api/clientes/${cliente.id}/cotizaciones`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          contactoNombre: contactoFinal?.nombre || null,
+          contactoPuesto: contactoFinal?.puesto || null,
+          contactoCorreo: contactoFinal?.correo || null,
+          contactoTelefono: contactoFinal?.telefono || null,
           lineas: lineas.map((l, i) => ({
             descripcion: l.descripcion, tipo: l.tipo, unidad: l.unidad,
             cantidad: parseFloat(l.cantidad) || 0,

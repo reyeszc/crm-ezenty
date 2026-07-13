@@ -52,6 +52,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     notas: body.notas || null,
     validezDias: body.validezDias || 30,
     medidaId: body.medidaId || null,
+    contactoNombre: body.contactoNombre || null,
+    contactoPuesto: body.contactoPuesto || null,
+    contactoCorreo: body.contactoCorreo || null,
+    contactoTelefono: body.contactoTelefono || null,
     clienteId: id,
     vendedorId: session.user.id,
   });
