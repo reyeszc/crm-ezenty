@@ -137,6 +137,132 @@ function AIPanel({ clienteId, onAccion }: { clienteId: string; onAccion: (texto:
 }
 
 
+function ContactoCard({ contacto, clienteId, clienteNombre, onUpdate, onDelete, onSetPrincipal }: {
+  contacto: any; clienteId: string; clienteNombre: string;
+  onUpdate: (u: any) => void; onDelete: (id: string) => void; onSetPrincipal: (id: string) => void;
+}) {
+  const [editando, setEditando] = useState(false);
+  const [form, setForm] = useState({ nombre: contacto.nombre || "", cargo: contacto.cargo || "", telefono: contacto.telefono || "", correo: contacto.correo || "", notas: contacto.notas || "" });
+  const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const { success, error } = useToast();
+
+  async function guardar() {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/clientes/${clienteId}/contactos/${contacto.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) throw new Error();
+      onUpdate(form);
+      setEditando(false);
+      success("Contacto actualizado ✓");
+    } catch { error("No se pudo guardar"); } finally { setSaving(false); }
+  }
+
+  async function eliminar() {
+    try {
+      const res = await fetch(`/api/clientes/${clienteId}/contactos/${contacto.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error();
+      onDelete(contacto.id);
+      success("Contacto eliminado ✓");
+    } catch { error("No se pudo eliminar"); }
+  }
+
+  async function setPrincipal() {
+    try {
+      const res = await fetch(`/api/clientes/${clienteId}/contactos/${contacto.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ principal: true }),
+      });
+      if (!res.ok) throw new Error();
+      onSetPrincipal(contacto.id);
+      success("Marcado como principal ✓");
+    } catch { error("No se pudo actualizar"); }
+  }
+
+  return (
+    <div className="bg-[var(--bg-secondary)] rounded-lg p-3">
+      {editando ? (
+        <div className="space-y-2">
+          {[
+            { key: "nombre", placeholder: "Nombre completo *" },
+            { key: "cargo", placeholder: "Cargo / Título" },
+            { key: "telefono", placeholder: "Teléfono" },
+            { key: "correo", placeholder: "Email" },
+            { key: "notas", placeholder: "Notas" },
+          ].map(({ key, placeholder }) => (
+            <input key={key} className="input text-sm !py-1.5" placeholder={placeholder}
+              value={(form as any)[key]}
+              onChange={e => setForm(p => ({ ...p, [key]: e.target.value }))} />
+          ))}
+          <div className="flex gap-2 pt-1">
+            <button onClick={guardar} disabled={saving}
+              className="flex-1 py-1.5 rounded-lg bg-marca-300 text-white text-xs font-semibold">
+              {saving ? "Guardando…" : "✓ Guardar"}
+            </button>
+            <button onClick={() => { setEditando(false); setForm({ nombre: contacto.nombre || "", cargo: contacto.cargo || "", telefono: contacto.telefono || "", correo: contacto.correo || "", notas: contacto.notas || "" }); }}
+              className="px-3 py-1.5 rounded-lg bg-gray-200 text-gray-600 text-xs">Cancelar</button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-[var(--text-primary)] truncate">{contacto.nombre}</p>
+              {contacto.cargo && <p className="text-xs text-marca-500">{contacto.cargo}</p>}
+            </div>
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              {contacto.principal && <span className="badge text-xs bg-marca-100 text-marca-700">Principal</span>}
+              <button onClick={() => setEditando(true)} className="text-xs text-[var(--text-muted)] hover:text-marca-500 px-1.5 py-0.5 rounded hover:bg-[var(--bg-tertiary)]">
+                Editar
+              </button>
+            </div>
+          </div>
+          <div className="mt-2 space-y-1">
+            {contacto.telefono && (
+              <a href={`sms:${contacto.telefono}`} className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)] hover:text-marca-500 transition-colors">
+                <Phone className="w-3 h-3 flex-shrink-0" />{contacto.telefono}
+              </a>
+            )}
+            {contacto.correo && (
+              <a href={`https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(contacto.correo)}&su=${encodeURIComponent(`Ezenty ProCare — ${clienteNombre}`)}`}
+                target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)] hover:text-marca-500 transition-colors">
+                <Mail className="w-3 h-3 flex-shrink-0" /><span className="truncate">{contacto.correo}</span>
+              </a>
+            )}
+            {contacto.notas && <p className="text-xs text-[var(--text-muted)] mt-1 italic">{contacto.notas}</p>}
+          </div>
+          <div className="flex gap-2 mt-2 pt-2 border-t border-[var(--border)]">
+            {!contacto.principal && (
+              <button onClick={setPrincipal} className="text-xs text-marca-500 hover:underline">
+                Marcar como principal
+              </button>
+            )}
+            <div className="flex-1" />
+            {!confirmDelete ? (
+              <button onClick={() => setConfirmDelete(true)} className="text-xs text-red-400 hover:text-red-500">
+                Eliminar
+              </button>
+            ) : (
+              <div className="flex gap-2 items-center">
+                <span className="text-xs text-[var(--text-muted)]">¿Segura?</span>
+                <button onClick={eliminar} className="text-xs text-red-500 font-semibold">Sí</button>
+                <button onClick={() => setConfirmDelete(false)} className="text-xs text-[var(--text-muted)]">No</button>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+
 function CampoEditable({ clienteId, label, campo, valor, tipo = "text" }: {
   clienteId: string; label: string; campo: string; valor?: string | null; tipo?: string;
 }) {
@@ -776,30 +902,12 @@ export function ExpedienteClient({ clienteInicial, config, etiquetasDisponibles,
 
             <div className="space-y-3">
               {contactos.map((c: any) => (
-                <div key={c.id} className="bg-[var(--bg-secondary)] rounded-lg p-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-[var(--text-primary)] truncate">{c.nombre}</p>
-                      {c.cargo && <p className="text-xs text-marca-500">{c.cargo}</p>}
-                    </div>
-                    {c.principal && <span className="badge text-xs bg-marca-100 text-marca-700 flex-shrink-0">Principal</span>}
-                  </div>
-                  <div className="mt-2 space-y-1">
-                    {c.telefono && (
-                      <a href={`sms:${c.telefono}`} className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)] hover:text-marca-500 transition-colors">
-                        <Phone className="w-3 h-3 flex-shrink-0" />
-                        {c.telefono}
-                      </a>
-                    )}
-                    {c.correo && (
-                      <a href={`https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(c.correo)}&su=${encodeURIComponent(`Ezenty ProCare — ${cliente.nombre}`)}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-[var(--text-secondary)] hover:text-marca-500 transition-colors">
-                        <Mail className="w-3 h-3 flex-shrink-0" />
-                        <span className="truncate">{c.correo}</span>
-                      </a>
-                    )}
-                    {c.notas && <p className="text-xs text-[var(--text-muted)] mt-1 italic">{c.notas}</p>}
-                  </div>
-                </div>
+                <ContactoCard key={c.id} contacto={c} clienteId={cliente.id}
+                  clienteNombre={cliente.nombre}
+                  onUpdate={(updated: any) => setContactos(p => p.map((x: any) => x.id === c.id ? { ...x, ...updated } : x))}
+                  onDelete={(id: string) => setContactos(p => p.filter((x: any) => x.id !== id))}
+                  onSetPrincipal={(id: string) => setContactos(p => p.map((x: any) => ({ ...x, principal: x.id === id })))}
+                />
               ))}
             </div>
 
