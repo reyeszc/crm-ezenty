@@ -1,7 +1,7 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { ArrowLeft, FileText, Plus, Trash2, Save, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft, FileText, Plus, Trash2, Save, Loader2, ChevronDown, ChevronUp, GripVertical } from "lucide-react";
 import { useToast } from "@/components/providers/ToastProvider";
 
 // ── Default prices ────────────────────────────────────────────────────────
@@ -87,6 +87,42 @@ export function CotizacionClient({ cliente, medidas, cotizacionesPrevias, contac
   const subtotal = lineas.reduce((s, l) => s + calcSubtotal(l), 0);
   const descuentoVal = parseFloat(descuento) || 0;
   const total = subtotal - descuentoVal;
+
+  // Drag-to-reorder state
+  const dragItem = useRef<number | null>(null);
+  const dragOverItem = useRef<number | null>(null);
+
+  function handleDragStart(index: number) { dragItem.current = index; }
+  function handleDragEnter(index: number) { dragOverItem.current = index; }
+  function handleDragEnd() {
+    if (dragItem.current === null || dragOverItem.current === null) return;
+    const copy = [...lineas];
+    const dragged = copy.splice(dragItem.current, 1)[0];
+    copy.splice(dragOverItem.current, 0, dragged);
+    setLineas(copy);
+    dragItem.current = null;
+    dragOverItem.current = null;
+  }
+
+  // Touch drag support
+  const touchStartY = useRef<number>(0);
+  const touchDragIndex = useRef<number | null>(null);
+
+  function handleTouchStart(e: React.TouchEvent, index: number) {
+    touchStartY.current = e.touches[0].clientY;
+    touchDragIndex.current = index;
+    dragItem.current = index;
+  }
+  function handleTouchMove(e: React.TouchEvent) {
+    if (touchDragIndex.current === null) return;
+    const el = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
+    const row = el?.closest("[data-linea-index]");
+    if (row) {
+      const idx = parseInt(row.getAttribute("data-linea-index") || "-1");
+      if (idx >= 0 && idx !== dragItem.current) dragOverItem.current = idx;
+    }
+  }
+  function handleTouchEnd() { handleDragEnd(); touchDragIndex.current = null; }
 
   const addLinea = () => setLineas(p => [...p, newLinea()]);
   const removeLinea = (id: string) => setLineas(p => p.filter(l => l.id !== id));
@@ -354,12 +390,25 @@ export function CotizacionClient({ cliente, medidas, cotizacionesPrevias, contac
         </div>
 
         <div className="divide-y divide-[var(--border)]">
-          {lineas.map((l) => {
+          {lineas.map((l, idx) => {
             const sub = calcSubtotal(l);
             const editado = parseFloat(l.precioFinal) !== parseFloat(l.precioUnitario);
             return (
-              <div key={l.id} className="p-3 grid grid-cols-12 gap-2 items-start">
-                <div className="col-span-12 sm:col-span-4 space-y-1">
+              <div key={l.id} data-linea-index={idx}
+                className="p-3 grid grid-cols-12 gap-2 items-start transition-opacity"
+                draggable
+                onDragStart={() => handleDragStart(idx)}
+                onDragEnter={() => handleDragEnter(idx)}
+                onDragEnd={handleDragEnd}
+                onDragOver={e => e.preventDefault()}>
+                {/* Drag handle */}
+                <div className="col-span-1 flex items-center justify-center pt-2 cursor-grab active:cursor-grabbing touch-none"
+                  onTouchStart={e => handleTouchStart(e, idx)}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}>
+                  <GripVertical className="w-4 h-4 text-[var(--text-muted)]" />
+                </div>
+                <div className="col-span-11 sm:col-span-3 space-y-1">
                   <select className="input text-xs !py-1" value={l.tipo}
                     onChange={e => handleTipoChange(l.id, e.target.value)}>
                     {Object.keys(PRECIOS_DEFAULT).map(k => <option key={k} value={k}>{PRECIOS_DEFAULT[k].label}</option>)}
@@ -407,7 +456,7 @@ export function CotizacionClient({ cliente, medidas, cotizacionesPrevias, contac
                   {editado && <p className="text-xs text-emerald-500 text-center">Editado</p>}
                 </div>
 
-                <div className="col-span-11 sm:col-span-1 text-right pt-1">
+                <div className="col-span-11 sm:col-span-1 text-right pt-1 col-start-2 sm:col-start-auto">
                   <p className="text-sm font-bold text-[var(--text-primary)]">
                     ${sub.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                   </p>
