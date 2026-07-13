@@ -55,7 +55,7 @@ const ESTADO_CONFIG: Record<string, { label: string; cls: string }> = {
   RECHAZADA: { label: "Rechazada", cls: "bg-red-100 text-red-600" },
 };
 
-export function CotizacionClient({ cliente, medidas, cotizacionesPrevias, contactos }: {
+export function CotizacionClient({ cliente, medidas, cotizacionesPrevias, contactos = [] }: {
   cliente: any; medidas: any[]; cotizacionesPrevias: any[]; contactos: any[]; vendedorId: string;
 }) {
   const { success, error } = useToast();
@@ -76,7 +76,7 @@ export function CotizacionClient({ cliente, medidas, cotizacionesPrevias, contac
   const [loadingDetalle, setLoadingDetalle] = useState(false);
   const [mostrarPrecios, setMostrarPrecios] = useState(false);
   // Contact selection
-  const contactoPrincipal = contactos?.find((c: any) => c.esPrincipal) || contactos?.[0];
+  const contactoPrincipal = contactos?.find((c: any) => c.principal) || contactos?.[0];
   const [contactoSeleccionadoId, setContactoSeleccionadoId] = useState<string>(contactoPrincipal?.id || "");
   const [editandoContacto, setEditandoContacto] = useState(false);
   const [contactoEditado, setContactoEditado] = useState<any>(null);
