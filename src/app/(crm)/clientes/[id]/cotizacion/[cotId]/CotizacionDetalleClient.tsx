@@ -428,7 +428,19 @@ function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fe
       </tr></tbody></table>
     </div>
 
-    ${cotizacion.notas ? `<div style="padding:8px 32px;border-top:1px solid #eee"><p style="font-size:12px;color:#666;font-style:italic">Note: ${cotizacion.notas}</p></div>` : ""}
+    ${cotizacion.notas ? `
+        <div style="padding:16px 32px 20px;border-top:1px solid #eee">
+          <p style="font-size:11px;font-weight:900;color:#1B2A4A;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Terms &amp; Conditions</p>
+          ${cotizacion.notas.split("\n\n").map((para: string) => {
+            const ci = para.indexOf(":");
+            if (ci > 0 && ci < 20) {
+              const lbl = para.slice(0, ci);
+              const txt = para.slice(ci + 1).trim();
+              return `<p style="font-size:11px;color:#555;margin-bottom:7px;line-height:1.5"><strong style="color:#1B2A4A">${lbl}:</strong> ${txt}</p>`;
+            }
+            return `<p style="font-size:11px;color:#555;margin-bottom:7px;line-height:1.5">${para}</p>`;
+          }).join("")}
+        </div>` : ""}
 
     <!-- Footer -->
     <div style="background:#f8f9fa;padding:12px 32px;border-top:1px solid #ddd;display:flex;justify-content:space-between;align-items:center">

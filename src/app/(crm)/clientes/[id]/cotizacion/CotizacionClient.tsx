@@ -67,7 +67,15 @@ export function CotizacionClient({ cliente, medidas, cotizacionesPrevias, contac
   const [areasSeleccionadas, setAreasSeleccionadas] = useState<Set<string>>(new Set());
   const [mostrarAreas, setMostrarAreas] = useState(false);
   const [descuento, setDescuento] = useState("0");
-  const [notas, setNotas] = useState("");
+  const [notas, setNotas] = useState(`Validity: This quotation is valid for thirty (30) days from the Quote Date above. Pricing is subject to change after the validity period or upon material changes to the scope of work.
+
+Scope: This quote covers only the services and areas expressly listed herein. Additional areas, access restrictions, or conditions discovered on-site may require a revised quotation prior to commencement.
+
+Scheduling: Service Provider will coordinate directly with Client's designated contact to confirm access windows, minimize disruption to guests, and adhere to property operational standards.
+
+Standards: All services are performed in compliance with IICRC S100/S300 industry standards using commercial grade equipment. General liability insurance and IICRC certification documentation available upon request.
+
+Acceptance: This quotation becomes a binding Service Agreement upon execution of the Authorization block below or a separately issued Exhibit A. Verbal or written acceptance by an authorized representative constitutes agreement.`);
   const [validez, setValidez] = useState("30");
   const [saving, setSaving] = useState(false);
   const [mostrarPrevias, setMostrarPrevias] = useState(true);
@@ -557,7 +565,7 @@ export function CotizacionClient({ cliente, medidas, cotizacionesPrevias, contac
         </div>
         <div className="col-span-2">
           <label className="label text-sm">Notas / condiciones</label>
-          <textarea className="input resize-none" rows={3} value={notas} onChange={e => setNotas(e.target.value)}
+          <textarea className="input resize-y" rows={10} value={notas} onChange={e => setNotas(e.target.value)}
             placeholder="Materiales, tiempos de entrega, condiciones de pago…" />
         </div>
       </div>
