@@ -27,12 +27,7 @@ interface Linea {
 
 function calcSubtotal(l: Linea): number {
   const pf = parseFloat(l.precioFinal) || 0;
-  const qty = parseFloat(l.cantidad) || 0;
-  // flat_fee and sqft areas: precio already includes total, qty=1
-  if (l.unidad === "flat_fee") return pf;
-  // Guest rooms/bathrooms: cantidad × precio unitario
-  if (l.unidad === "habitacion" || l.unidad === "bano" || l.unidad === "pieza") return pf * qty;
-  // sqft: already calculated as total
+  const qty = parseFloat(l.cantidad) || 1;
   return pf * qty;
 }
 
