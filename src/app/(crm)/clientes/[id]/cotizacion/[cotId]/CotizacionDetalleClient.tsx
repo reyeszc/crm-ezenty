@@ -118,8 +118,8 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
         cliente: data.cliente || cliente,
         lineas: data.lineas?.length > 0 ? data.lineas : lineas,
         vendedor: data.vendedor || vendedor,
-        fechaCreacion: data.fechaCreacion || fechaCreacion,
-        fechaValidez: data.fechaValidez || fechaValidez,
+        fechaCreacion: new Date(data.fechaCreacion || data.cotizacion?.creadoEn || cotizacion.creadoEn),
+        fechaValidez: new Date(data.fechaValidez || new Date(data.cotizacion?.creadoEn || cotizacion.creadoEn).getTime() + ((data.cotizacion?.validezDias || cotizacion.validezDias || 30) * 86400000)),
         estado: data.cotizacion?.estado || estado,
       };
 
@@ -472,6 +472,8 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
 
 // ── PDF HTML Generator ────────────────────────────────────────────────────────
 function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fechaValidez, estado }: any) {
+  const fc = fechaCreacion instanceof Date ? fechaCreacion : new Date(fechaCreacion || cotizacion.creadoEn);
+  const fv = fechaValidez instanceof Date ? fechaValidez : new Date(fechaValidez || new Date(cotizacion.creadoEn).getTime() + (cotizacion.validezDias || 30) * 86400000);
   // Group lines by tipo (floor type)
   const grupos: Record<string, any[]> = {};
   lineas.forEach((l: any) => {
@@ -537,9 +539,9 @@ function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fe
       </div>
       <div style="text-align:right;color:white">
         <div style="font-size:16px;font-weight:bold">${cotizacion.numero}</div>
-        <div style="color:#90c4e8;font-size:12px">${fechaCreacion.toLocaleDateString("en-US",{month:"2-digit",day:"2-digit",year:"numeric"})}</div>
+        <div style="color:#90c4e8;font-size:12px">${fc.toLocaleDateString("en-US",{month:"2-digit",day:"2-digit",year:"numeric"})}</div>
         <div style="color:#90c4e8;font-size:11px;margin-top:6px">Valid Through:</div>
-        <div style="color:#FFD700;font-weight:bold">${fechaValidez.toLocaleDateString("en-US",{month:"2-digit",day:"2-digit",year:"numeric"})}</div>
+        <div style="color:#FFD700;font-weight:bold">${fv.toLocaleDateString("en-US",{month:"2-digit",day:"2-digit",year:"numeric"})}</div>
       </div>
     </div>
 
