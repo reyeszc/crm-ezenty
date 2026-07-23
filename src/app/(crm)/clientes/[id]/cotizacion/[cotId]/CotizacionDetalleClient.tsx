@@ -365,9 +365,7 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
                     </tr>
                     {items.map((l: any) => {
                       num++;
-                      const subtotal = (l.unidad === "habitacion" || l.unidad === "bano" || l.unidad === "pieza")
-                        ? (l.precioFinal || 0) * (l.cantidad || 1)
-                        : (l.precioFinal || 0);
+                      const subtotal = (l.precioFinal || 0) * (l.cantidad || 1);
                       return (
                         <tr key={l.id} style={{ background: num % 2 === 0 ? "#FFFFFF" : "#F8F9FA" }}>
                           <td className="py-2 pl-5 pr-3 text-center text-[var(--text-muted)] font-mono text-xs">{String(num).padStart(2,"0")}</td>
@@ -483,9 +481,7 @@ function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fe
     const groupHeader = `<tr style="background:#e8eef5"><td colspan="5" style="padding:6px 12px;font-weight:700;font-size:11px;color:#1B2A4A;text-transform:uppercase;letter-spacing:0.5px">${grupo}</td></tr>`;
     const itemRows = (items as any[]).map((l: any) => {
       rowNum++;
-      const subtotal = (l.unidad === "habitacion" || l.unidad === "bano" || l.unidad === "pieza")
-        ? (l.precioFinal || 0) * (l.cantidad || 1)
-        : (l.precioFinal || 0);
+      const subtotal = (l.precioFinal || 0) * (l.cantidad || 1);
       const qty = l.cantidad || 1;
       const eachLabel = qty > 1
         ? `` : ``;
