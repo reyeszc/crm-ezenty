@@ -491,8 +491,7 @@ Acceptance: This quotation becomes a binding Service Agreement upon execution of
                   <div className="flex items-center gap-1">
                     <input type="number" className="input text-sm !py-1.5 text-center" value={l.cantidad}
                       onChange={e => updateLinea(l.id, { cantidad: e.target.value })}
-                      min="0" step="1"
-                      disabled={l.unidad === "flat_fee"} />
+                      min="0" step="1" />
                     <span className="text-xs text-[var(--text-muted)] flex-shrink-0">
                       {l.unidad === "sqft" ? "ft²" : l.unidad === "pieza" ? "pza" : l.unidad === "habitacion" ? "hab" : l.unidad === "bano" ? "baños" : l.unidad === "flat_fee" ? "" : "—"}
                     </span>
