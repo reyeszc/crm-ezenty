@@ -6,13 +6,13 @@ import { useToast } from "@/components/providers/ToastProvider";
 
 // ── Default prices ────────────────────────────────────────────────────────
 const PRECIOS_DEFAULT: Record<string, { precio: number; unidad: string; label: string }> = {
-  "Carpet - Flat Fee/Room":       { precio: 22.00,  unidad: "flat_fee", label: "Carpet Cleaning (Flat Fee/hab)" },
+  "Carpet - Flat Fee/Room":       { precio: 22.00,  unidad: "flat_fee", label: "Carpet Cleaning (Flat Fee/Room)" },
   "Carpet - Sq Ft":               { precio: 0.20,   unidad: "sqft",     label: "Carpet Cleaning ($/sq ft)" },
-  "Tile & Grout - Flat Fee/Bath": { precio: 20.00,  unidad: "flat_fee", label: "Tile & Grout Cleaning (Flat Fee/baño)" },
+  "Tile & Grout - Flat Fee/Bath": { precio: 20.00,  unidad: "flat_fee", label: "Tile & Grout Cleaning (Flat Fee/Bath)" },
   "Tile & Grout - Sq Ft":         { precio: 0.55,   unidad: "sqft",     label: "Tile & Grout Cleaning ($/sq ft)" },
-  "LVT - Sq Ft":                  { precio: 0.55,   unidad: "sqft",     label: "LVT ($/sq ft)" },
-  "Concrete - Sq Ft":             { precio: 0.55,   unidad: "sqft",     label: "Concrete ($/sq ft)" },
-  "Upholstery":                   { precio: 45.00,  unidad: "pieza",    label: "Upholstery ($/pieza)" },
+  "LVT - Sq Ft":                  { precio: 0.55,   unidad: "sqft",     label: "LVT Cleaning ($/sq ft)" },
+  "Concrete - Sq Ft":             { precio: 0.55,   unidad: "sqft",     label: "Concrete Cleaning ($/sq ft)" },
+  "Upholstery":                   { precio: 45.00,  unidad: "pieza",    label: "Upholstery Cleaning ($/piece)" },
   "Odor Control":                 { precio: 300.00, unidad: "flat_fee", label: "Odor Control" },
   "Decontamination - Sq Ft": { precio: 1.50, unidad: "sqft",     label: "Decontamination & Odor Control Treatment ($/sq ft)" },
   "Decontamination - Flat":  { precio: 450.00, unidad: "flat_fee", label: "Decontamination & Odor Control Treatment (Flat Fee)" },
@@ -145,7 +145,6 @@ Acceptance: This quotation becomes a binding Service Agreement upon execution of
     const lineaActual = lineas.find(l => l.id === id);
     const descripcionActual = lineaActual?.descripcion || "";
     const descripcionPrevia = PRECIOS_DEFAULT[lineaActual?.tipo || ""]?.label || lineaActual?.tipo || "";
-    // Only auto-fill description if user hasn't changed it from the previous preset
     const usarDescripcionAuto = !descripcionActual || descripcionActual === descripcionPrevia;
     updateLinea(id, {
       tipo,
@@ -153,6 +152,11 @@ Acceptance: This quotation becomes a binding Service Agreement upon execution of
       unidad: preset?.unidad || "flat_fee",
       precioUnitario: precioActual, precioFinal: precioActual,
     });
+    // Add disclaimer to notes when Decontamination is selected
+    if (tipo.startsWith("Decontamination")) {
+      const disclaimer = `*** This limited scope includes extraction, cleaning and treatment of accessible carpet and flooring hard-surface areas only. It does not constitute complete Category 3 remediation. Carpet padding, subflooring, wall cavities and concealed materials are excluded. Removal, structural drying, environmental testing and reconstruction will be quoted separately if required.***`;
+      setNotas(prev => prev.includes(disclaimer) ? prev : disclaimer + "\n\n" + prev);
+    }
   }
 
   // Load cotizacion detail when selected
