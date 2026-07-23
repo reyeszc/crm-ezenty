@@ -142,8 +142,14 @@ Acceptance: This quotation becomes a binding Service Agreement upon execution of
   function handleTipoChange(id: string, tipo: string) {
     const preset = PRECIOS_DEFAULT[tipo];
     const precioActual = precios[tipo] || String(preset?.precio || 0);
+    const lineaActual = lineas.find(l => l.id === id);
+    const descripcionActual = lineaActual?.descripcion || "";
+    const descripcionPrevia = PRECIOS_DEFAULT[lineaActual?.tipo || ""]?.label || lineaActual?.tipo || "";
+    // Only auto-fill description if user hasn't changed it from the previous preset
+    const usarDescripcionAuto = !descripcionActual || descripcionActual === descripcionPrevia;
     updateLinea(id, {
-      tipo, descripcion: preset?.label || tipo,
+      tipo,
+      descripcion: usarDescripcionAuto ? (preset?.label || tipo) : descripcionActual,
       unidad: preset?.unidad || "flat_fee",
       precioUnitario: precioActual, precioFinal: precioActual,
     });
