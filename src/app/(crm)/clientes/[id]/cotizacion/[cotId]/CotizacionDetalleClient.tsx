@@ -81,8 +81,6 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
       success("Cotización actualizada ✓");
       setEditando(false);
       setEstado("BORRADOR");
-      // Refresh page to show updated data
-      window.location.reload();
     } catch { error("No se pudo guardar"); } finally { setSavingEdit(false); }
   }
 
@@ -106,19 +104,34 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
     } catch { error("No se pudo actualizar"); } finally { setUpdatingEstado(false); }
   }
 
-  function generateAndPrintPDF() {
+  async function generateAndPrintPDF() {
     setGeneratingPdf(true);
-    // Open print view
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) { setGeneratingPdf(false); return; }
+    try {
+      // Always fetch fresh data so edits are reflected in PDF
+      const res = await fetch(`/api/cotizaciones/${cotizacion.id}/pdf`);
+      const data = await res.json();
 
-    const html = buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fechaValidez, estado });
-    printWindow.document.write(html);
-    printWindow.document.close();
-    printWindow.onload = () => {
-      printWindow.print();
+      const printWindow = window.open("", "_blank");
+      if (!printWindow) { setGeneratingPdf(false); return; }
+
+      const html = buildPDFHTML({
+        cotizacion: data.cotizacion || cotizacion,
+        cliente: data.cliente || cliente,
+        lineas: data.lineas || lineas,
+        vendedor: data.vendedor || vendedor,
+        fechaCreacion: data.fechaCreacion || fechaCreacion,
+        fechaValidez: data.fechaValidez || fechaValidez,
+        estado: data.cotizacion?.estado || estado,
+      });
+      printWindow.document.write(html);
+      printWindow.document.close();
+      printWindow.onload = () => {
+        printWindow.print();
+        setGeneratingPdf(false);
+      };
+    } catch {
       setGeneratingPdf(false);
-    };
+    }
   }
 
   return (

@@ -14,6 +14,8 @@ const PRECIOS_DEFAULT: Record<string, { precio: number; unidad: string; label: s
   "Concrete - Sq Ft":             { precio: 0.55,   unidad: "sqft",     label: "Concrete ($/sq ft)" },
   "Upholstery":                   { precio: 45.00,  unidad: "pieza",    label: "Upholstery ($/pieza)" },
   "Odor Control":                 { precio: 300.00, unidad: "flat_fee", label: "Odor Control" },
+  "Cat3 Water Remediation - Sq Ft": { precio: 1.50, unidad: "sqft",     label: "Cat. 3 Water Remediation ($/sq ft)" },
+  "Cat3 Water Remediation - Flat":  { precio: 450.00, unidad: "flat_fee", label: "Cat. 3 Water Remediation (Flat Fee)" },
   "Guest Rooms":                  { precio: 22.00,  unidad: "habitacion", label: "Guest Rooms" },
   "Guest Bathrooms":              { precio: 20.00,  unidad: "bano",     label: "Guest Bathrooms" },
 };
