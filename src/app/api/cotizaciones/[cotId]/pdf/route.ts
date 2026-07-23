@@ -22,7 +22,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ cotI
     .where(eq(schema.cotizacionLineas.cotizacionId, cotId))
     .orderBy(schema.cotizacionLineas.orden);
 
-  const [vendedor] = await db.select({ nombre: schema.usuarios.nombre, correo: schema.usuarios.correo })
+  const [vendedor] = await db.select({ nombre: schema.usuarios.nombre, correo: schema.usuarios.correo, titulo: schema.usuarios.titulo })
     .from(schema.usuarios).where(eq(schema.usuarios.id, cot.vendedorId)).limit(1);
 
   // Return data for client-side PDF generation

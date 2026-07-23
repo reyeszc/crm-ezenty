@@ -109,27 +109,38 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
     try {
       // Always fetch fresh data so edits are reflected in PDF
       const res = await fetch(`/api/cotizaciones/${cotizacion.id}/pdf`);
+      if (!res.ok) throw new Error("API error");
       const data = await res.json();
+      if (data.error) throw new Error(data.error);
 
-      const printWindow = window.open("", "_blank");
-      if (!printWindow) { setGeneratingPdf(false); return; }
-
-      const html = buildPDFHTML({
+      const pdfData = {
         cotizacion: data.cotizacion || cotizacion,
         cliente: data.cliente || cliente,
-        lineas: data.lineas || lineas,
+        lineas: data.lineas?.length > 0 ? data.lineas : lineas,
         vendedor: data.vendedor || vendedor,
         fechaCreacion: data.fechaCreacion || fechaCreacion,
         fechaValidez: data.fechaValidez || fechaValidez,
         estado: data.cotizacion?.estado || estado,
-      });
+      };
+
+      const html = buildPDFHTML(pdfData);
+
+      const printWindow = window.open("", "_blank");
+      if (!printWindow) {
+        error("El navegador bloqueó la ventana emergente. Permite pop-ups para este sitio.");
+        setGeneratingPdf(false);
+        return;
+      }
+
+      printWindow.document.open();
       printWindow.document.write(html);
       printWindow.document.close();
-      printWindow.onload = () => {
+      setTimeout(() => {
         printWindow.print();
         setGeneratingPdf(false);
-      };
-    } catch {
+      }, 800);
+    } catch (e: any) {
+      error("No se pudo generar el PDF: " + (e.message || "error desconocido"));
       setGeneratingPdf(false);
     }
   }
