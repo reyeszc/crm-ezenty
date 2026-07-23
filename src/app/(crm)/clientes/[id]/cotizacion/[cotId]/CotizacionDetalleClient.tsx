@@ -474,6 +474,7 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
 function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fechaValidez, estado }: any) {
   const fc = fechaCreacion instanceof Date ? fechaCreacion : new Date(fechaCreacion || cotizacion.creadoEn);
   const fv = fechaValidez instanceof Date ? fechaValidez : new Date(fechaValidez || new Date(cotizacion.creadoEn).getTime() + (cotizacion.validezDias || 30) * 86400000);
+  const contacto = cotizacion.contactoPrincipal || null;
   // Group lines by tipo (floor type)
   const grupos: Record<string, any[]> = {};
   lineas.forEach((l: any) => {
@@ -554,19 +555,19 @@ function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fe
           <td style="padding:3px 0"><span style="font-weight:700;color:#1B2A4A">Property Name: </span>${cliente.nombre}</td>
         </tr>
         <tr>
-          <td style="padding:3px 0"><span style="font-weight:700;color:#1B2A4A">Contact Name: </span>${(cotizacion as any).contactoPrincipal?.nombre||"—"}</td>
+          <td style="padding:3px 0"><span style="font-weight:700;color:#1B2A4A">Contact Name: </span>${contacto?.nombre||"—"}</td>
           <td style="padding:3px 0"><span style="font-weight:700;color:#1B2A4A">Property Address: </span>${cliente.direccionPropiedad||"—"}</td>
         </tr>
         <tr>
-          <td style="padding:3px 0"><span style="font-weight:700;color:#1B2A4A">Contact Title: </span>${(cotizacion as any).contactoPrincipal?.cargo||"—"}</td>
+          <td style="padding:3px 0"><span style="font-weight:700;color:#1B2A4A">Contact Title: </span>${contacto?.cargo||"—"}</td>
           <td style="padding:3px 0"><span style="font-weight:700;color:#1B2A4A">City / State / ZIP: </span>${cliente.zona||"—"}</td>
         </tr>
         <tr>
-          <td style="padding:3px 0"><span style="font-weight:700;color:#1B2A4A">Email: </span>${(cotizacion as any).contactoPrincipal?.correo||cliente.correo||"—"}</td>
+          <td style="padding:3px 0"><span style="font-weight:700;color:#1B2A4A">Email: </span>${contacto?.correo||cliente.correo||"—"}</td>
           <td style="padding:3px 0"><span style="font-weight:700;color:#1B2A4A">Property Type: </span>${cliente.tipoPropiedad||"Hotel"}</td>
         </tr>
         <tr>
-          <td style="padding:3px 0"><span style="font-weight:700;color:#1B2A4A">Phone: </span>${(cotizacion as any).contactoPrincipal?.telefono||cliente.telefono||"—"}</td>
+          <td style="padding:3px 0"><span style="font-weight:700;color:#1B2A4A">Phone: </span>${contacto?.telefono||cliente.telefono||"—"}</td>
         </tr>
       </tbody></table>
     </div>
