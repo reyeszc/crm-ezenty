@@ -139,13 +139,21 @@ Acceptance: This quotation becomes a binding Service Agreement upon execution of
     const precioActual = precios[tipo] || String(preset?.precio || 0);
     const lineaActual = lineas.find(l => l.id === id);
     const descripcionActual = lineaActual?.descripcion || "";
-    const descripcionPrevia = PRECIOS_DEFAULT[lineaActual?.tipo || ""]?.label || lineaActual?.tipo || "";
-    const usarDescripcionAuto = !descripcionActual || descripcionActual === descripcionPrevia;
+    const tipoPrevio = lineaActual?.tipo || "";
+    const labelPrevio = PRECIOS_DEFAULT[tipoPrevio]?.label || "";
+
+    // Only auto-update description if it's empty or matches the previous preset label exactly
+    const esDescripcionAutoGenerada = !descripcionActual
+      || descripcionActual === labelPrevio
+      || descripcionActual === tipoPrevio
+      || descripcionActual.endsWith(labelPrevio);
+
     updateLinea(id, {
       tipo,
-      descripcion: usarDescripcionAuto ? (preset?.label || tipo) : descripcionActual,
+      descripcion: esDescripcionAutoGenerada ? (preset?.label || tipo) : descripcionActual,
       unidad: preset?.unidad || "flat_fee",
-      precioUnitario: precioActual, precioFinal: precioActual,
+      precioUnitario: precioActual,
+      precioFinal: precioActual,
     });
     // Add disclaimer to notes when Decontamination is selected
     if (tipo.startsWith("Decontamination")) {

@@ -501,7 +501,11 @@ function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fe
         ? `` : ``;
       return `<tr style="background:${rowNum % 2 === 0 ? "#ffffff" : "#f8f9fa"}">
         <td style="padding:7px 12px 7px 20px;text-align:center;color:#666;font-family:monospace;font-size:11px">${String(rowNum).padStart(2,"0")}</td>
-        <td style="padding:7px 12px">${l.descripcion}</td>
+        <td style="padding:7px 12px">${
+          l.descripcion && l.descripcion.includes(" — ")
+            ? `<span style="font-size:10px;color:#888">${l.descripcion.split(" — ")[0]}</span><br>${l.descripcion.split(" — ").slice(1).join(" — ")}`
+            : (l.descripcion || l.tipo || "")
+        }</td>
         <td style="padding:7px 12px;text-align:center;color:#555">${qty}</td>
         <td style="padding:7px 12px;text-align:right;color:#555">$${(l.precioFinal||0).toLocaleString("en-US",{minimumFractionDigits:2})}</td>
         <td style="padding:7px 12px;text-align:right;font-weight:600;color:#1B2A4A">$${subtotal.toLocaleString("en-US",{minimumFractionDigits:2})}</td>
