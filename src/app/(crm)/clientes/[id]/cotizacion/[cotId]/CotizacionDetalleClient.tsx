@@ -459,7 +459,7 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
 
         {/* Footer */}
         <div className="px-6 py-3 border-t border-[var(--border)] flex items-center justify-between" style={{ background: "#F8F9FA" }}>
-          <p className="text-xs text-[var(--text-muted)]">EZENTY ProCare LLC · Atlanta, GA · IICRC Certified · ezentyprocare.com</p>
+          <p className="text-xs text-[var(--text-muted)]">EZENTY ProCare LLC · {(cliente.zona || "").toLowerCase().includes("ga") || (cliente.zona || "").toLowerCase().includes("georgia") ? "Georgia" : "Tennessee"} · IICRC Certified · ezentyprocare.com</p>
           <div className="flex items-center gap-3">
             <img src="/iicrc.png" alt="IICRC Certified Firm" className="w-10 h-10 object-contain flex-shrink-0" />
             <p className="text-xs text-[var(--text-muted)]">{cotizacion.numero} · Confidential · Valid {cotizacion.validezDias || 30} Days</p>
@@ -635,7 +635,10 @@ function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fe
 
     <!-- Footer -->
     <div style="background:#f8f9fa;padding:12px 32px;border-top:1px solid #ddd;display:flex;justify-content:space-between;align-items:center">
-      <span style="font-size:11px;color:#888">EZENTY ProCare LLC · Atlanta, GA · IICRC Certified · ezentyprocare.com</span>
+      <span style="font-size:11px;color:#888">EZENTY ProCare LLC · ${
+        (cliente.zona || "").toLowerCase().includes("ga") || (cliente.zona || "").toLowerCase().includes("georgia")
+          ? "Georgia" : "Tennessee"
+      } · IICRC Certified · ezentyprocare.com</span>
       <div style="display:flex;align-items:center;gap:12px">
         <img src="https://crm-ezenty.vercel.app/iicrc.png" alt="IICRC Certified Firm" style="width:44px;height:44px;object-fit:contain" />
         <span style="font-size:11px;color:#888">${cotizacion.numero} · Confidential. For Client Use Only · Valid ${cotizacion.validezDias||30} Days</span>
