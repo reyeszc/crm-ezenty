@@ -92,6 +92,11 @@ function GruposZona({ grupos, tempConfig }: { grupos: Record<string, any[]>; tem
                             → {c.proximaAccion}
                           </p>
                         )}
+                        {c.objecion && (
+                          <p className="text-xs truncate text-amber-600 dark:text-amber-400">
+                            ⚠️ {c.objecion}
+                          </p>
+                        )}
                       </div>
                       <div className="text-right flex-shrink-0">
                         {c.valorEstimado && <p className="text-xs font-semibold text-[var(--text-primary)]">{formatearDinero(c.valorEstimado)}</p>}
