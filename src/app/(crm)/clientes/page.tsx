@@ -345,6 +345,11 @@ export default function ClientesPage() {
                         → {c.proximaAccion}
                       </p>
                     )}
+                    {c.objecion && (
+                      <p className="text-xs mt-0.5 truncate text-amber-600 dark:text-amber-400">
+                        ⚠️ {c.objecion}
+                      </p>
+                    )}
                   </div>
 
                   {/* Right side */}

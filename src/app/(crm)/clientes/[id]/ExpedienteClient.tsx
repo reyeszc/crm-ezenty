@@ -263,6 +263,74 @@ function ContactoCard({ contacto, clienteId, clienteNombre, onUpdate, onDelete, 
 }
 
 
+function CampoEditableSelect({ clienteId, label, campo, valor, opcionesUrl }: {
+  clienteId: string; label: string; campo: string; valor?: string | null; opcionesUrl?: string;
+}) {
+  const [editando, setEditando] = useState(false);
+  const [val, setVal] = useState(valor || "");
+  const [guardando, setGuardando] = useState(false);
+  const [opciones, setOpciones] = useState<string[]>([]);
+  const { success, error } = useToast();
+  const inputId = `datalist-${campo}-${clienteId}`;
+
+  useEffect(() => {
+    if (editando && opcionesUrl) {
+      fetch(opcionesUrl).then(r => r.json()).then(d => {
+        const items = d.zonas || d.ciudades || d.items || [];
+        setOpciones(items);
+      }).catch(() => {});
+    }
+  }, [editando, opcionesUrl]);
+
+  async function guardar() {
+    setGuardando(true);
+    try {
+      const res = await fetch(`/api/clientes/${clienteId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [campo]: val || null }),
+      });
+      if (!res.ok) throw new Error();
+      success(`${label} guardado ✓`);
+      setEditando(false);
+    } catch { error("No se pudo guardar"); } finally { setGuardando(false); }
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-[var(--text-muted)]">{label}</p>
+        {!editando && (
+          <button onClick={() => setEditando(true)} className="text-xs text-marca-500 hover:underline">
+            {val ? "Editar" : "+ Agregar"}
+          </button>
+        )}
+      </div>
+      {editando ? (
+        <div className="mt-1 flex gap-1">
+          <input list={inputId} className="input text-xs !py-1 flex-1" value={val}
+            onChange={e => setVal(e.target.value)} autoFocus
+            onKeyDown={e => { if (e.key === "Enter") guardar(); if (e.key === "Escape") setEditando(false); }} />
+          <datalist id={inputId}>
+            {opciones.map(o => <option key={o} value={o} />)}
+          </datalist>
+          <button onClick={guardar} disabled={guardando}
+            className="px-2 py-1 rounded-lg bg-marca-300 text-white text-xs hover:bg-marca-400">
+            {guardando ? "..." : "✓"}
+          </button>
+          <button onClick={() => { setEditando(false); setVal(valor || ""); }}
+            className="px-2 py-1 rounded-lg bg-gray-200 text-gray-600 text-xs">✕</button>
+        </div>
+      ) : val ? (
+        <p className="text-sm text-[var(--text-primary)]">{val}</p>
+      ) : (
+        <p className="text-sm text-[var(--text-muted)] italic">Sin {label.toLowerCase()}</p>
+      )}
+    </div>
+  );
+}
+
+
 function CampoEditable({ clienteId, label, campo, valor, tipo = "text" }: {
   clienteId: string; label: string; campo: string; valor?: string | null; tipo?: string;
 }) {
@@ -967,8 +1035,8 @@ export function ExpedienteClient({ clienteInicial, config, etiquetasDisponibles,
             <CampoEditable clienteId={cliente.id} label="Origen" campo="origen" valor={cliente.origen} />
             <CampoEditable clienteId={cliente.id} label="Tipo" campo="tipoPropiedad" valor={cliente.tipoPropiedad} />
             <CampoEditable clienteId={cliente.id} label="Management" campo="management" valor={cliente.management} />
-            <CampoEditable clienteId={cliente.id} label="Zona" campo="zona" valor={cliente.zona} />
-            <CampoEditable clienteId={cliente.id} label="Ciudad / Cluster" campo="ciudadCluster" valor={cliente.ciudadCluster} />
+            <CampoEditableSelect clienteId={cliente.id} label="Zona" campo="zona" valor={cliente.zona} opcionesUrl="/api/clientes/zonas" />
+            <CampoEditableSelect clienteId={cliente.id} label="Ciudad / Cluster" campo="ciudadCluster" valor={cliente.ciudadCluster} opcionesUrl="/api/clientes/ciudades" />
             <CampoEditable clienteId={cliente.id} label="Habitaciones" campo="cantidadHabitaciones" valor={cliente.cantidadHabitaciones?.toString()} tipo="number" />
             {[
         ].map(({ label, val }) => val ? (
@@ -1064,9 +1132,9 @@ export function ExpedienteClient({ clienteInicial, config, etiquetasDisponibles,
 }
 
 const ACCIONES_RAPIDAS = [
-  "Schedule site visit", "Follow up on proposal", "Send quote",
-  "Demo programada", "Send contract", "Confirm signature",
-  "Re-engage — send case study", "Request referral",
+  "Schedule site visit", "Send Info", "Go Back", "Send Txt FU",
+  "Send Email", "Schedule a Demo", "Follow up on proposal", "Send quote",
+  "Send contract", "Confirm signature", "Re-engage — send case study", "Request referral",
 ];
 
 function ProximaAccionEditor({ accion, fecha, onGuardar }: {
