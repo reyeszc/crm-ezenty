@@ -207,24 +207,43 @@ export default function CalendarioPage() {
         <div className="grid grid-cols-7 border-b border-[var(--border)]">
           {dias.map((d, i) => {
             const esHoy = d.toDateString() === hoy.toDateString();
-            return (
-              <div key={i} className="py-2 text-center cursor-pointer hover:bg-[var(--bg-secondary)]"
-                onClick={() => { setDiaSeleccionado(d); setVista("dia"); }}>
-                <p className="text-xs text-[var(--text-muted)]">{DIAS[d.getDay()]}</p>
-                <div className={`w-7 h-7 mx-auto flex items-center justify-center text-sm font-semibold rounded-full ${esHoy ? "bg-marca-300 text-white" : "text-[var(--text-primary)]"}`}>
-                  {d.getDate()}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-        <div className="grid grid-cols-7 divide-x divide-[var(--border)]">
-          {dias.map((d, i) => {
             const evs = eventosDelDia(d);
             return (
-              <div key={i} className="min-h-[300px] p-1.5 space-y-1">
-                {evs.length === 0 && <p className="text-xs text-[var(--text-muted)] text-center mt-4">—</p>}
-                {evs.map(ev => <EventoBadge key={ev.id} ev={ev} />)}
+              <div key={i} className="cursor-pointer hover:bg-[var(--bg-secondary)] transition-colors"
+                onClick={() => { setDiaSeleccionado(d); setVista("dia"); }}>
+                {/* Day header */}
+                <div className="py-2 text-center border-b border-[var(--border)]">
+                  <p className="text-xs text-[var(--text-muted)]">{DIAS[d.getDay()]}</p>
+                  <div className={`w-7 h-7 mx-auto flex items-center justify-center text-sm font-semibold rounded-full ${esHoy ? "bg-marca-300 text-white" : "text-[var(--text-primary)]"}`}>
+                    {d.getDate()}
+                  </div>
+                  {evs.length > 0 && (
+                    <span className="text-xs text-marca-500 font-medium">{evs.length} evento{evs.length !== 1 ? "s" : ""}</span>
+                  )}
+                </div>
+                {/* Events */}
+                <div className="p-1.5 space-y-1.5 min-h-[200px]" onClick={e => e.stopPropagation()}>
+                  {evs.length === 0 && <p className="text-xs text-[var(--text-muted)] text-center mt-4 opacity-50">—</p>}
+                  {evs.map(ev => {
+                    const cfg = getEvConfig(ev);
+                    const hora = new Date(ev.fecha).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+                    return (
+                      <Link key={ev.id} href={ev.clienteId ? `/clientes/${ev.clienteId}` : "#"}
+                        className={`block rounded-lg p-1.5 ${cfg.bg} hover:opacity-80 transition-opacity`}>
+                        <div className="flex items-center gap-1 mb-0.5">
+                          <span className="text-xs">{cfg.emoji}</span>
+                          <span className="text-xs font-semibold opacity-70">{hora}</span>
+                        </div>
+                        <p className="text-xs font-medium leading-tight break-words">
+                          {ev.clienteNombre || ev.titulo || cfg.label}
+                        </p>
+                        {ev.titulo && ev.clienteNombre && (
+                          <p className="text-xs opacity-60 leading-tight mt-0.5 break-words">{ev.titulo}</p>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
               </div>
             );
           })}
