@@ -4,58 +4,91 @@ import Link from "next/link";
 import { CalendarDays, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 
 const DIAS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const DIAS_FULL = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 const MESES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
 interface Evento {
-  id: string;
-  tipo: "cita" | "demo" | "servicio";
-  fecha: string;
-  titulo?: string;
-  clienteNombre?: string;
-  clienteId?: string;
-  estado?: string;
+  id: string; tipo: "cita"|"demo"|"servicio";
+  fecha: string; titulo?: string;
+  clienteNombre?: string; clienteId?: string; estado?: string;
 }
 
 const TIPO_CONFIG = {
   cita:     { emoji: "📅", label: "Cita",     bg: "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300" },
   demo:     { emoji: "🎯", label: "Demo",     bg: "bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300" },
-  servicio: { emoji: "🧹", label: "Servicio", bg: "" }, // dynamic
+  servicio: { emoji: "🧹", label: "Servicio", bg: "" },
 };
-
 function servicioColor(estado?: string) {
   return estado === "COMPLETADO"
     ? "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300"
     : "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300";
 }
 
+function EventoBadge({ ev }: { ev: Evento }) {
+  const cfg = TIPO_CONFIG[ev.tipo];
+  const bg = ev.tipo === "servicio" ? servicioColor(ev.estado) : cfg.bg;
+  const hora = new Date(ev.fecha).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+  return (
+    <Link href={ev.clienteId ? `/clientes/${ev.clienteId}` : "#"}
+      className={`block text-xs rounded px-1 py-0.5 truncate ${bg} hover:opacity-80`}>
+      {cfg.emoji} {ev.clienteNombre || ev.titulo || cfg.label}
+    </Link>
+  );
+}
+
+function EventoRow({ ev }: { ev: Evento }) {
+  const cfg = TIPO_CONFIG[ev.tipo];
+  const bg = ev.tipo === "servicio" ? servicioColor(ev.estado) : cfg.bg;
+  const hora = new Date(ev.fecha).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+  return (
+    <Link href={ev.clienteId ? `/clientes/${ev.clienteId}` : "#"}
+      className={`flex items-center gap-2 p-2 rounded-lg ${bg} hover:opacity-80 transition-opacity`}>
+      <span className="text-base flex-shrink-0">{cfg.emoji}</span>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium truncate">{ev.clienteNombre || ev.titulo || cfg.label}</p>
+        <p className="text-xs opacity-70">{hora} · {ev.titulo || cfg.label}</p>
+      </div>
+    </Link>
+  );
+}
+
 export default function CalendarioPage() {
   const [hoy] = useState(new Date());
-  const [mes, setMes] = useState(new Date(hoy.getFullYear(), hoy.getMonth(), 1));
+  const [cursor, setCursor] = useState(new Date(hoy.getFullYear(), hoy.getMonth(), 1));
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [loading, setLoading] = useState(true);
-  const [vistaActiva, setVistaActiva] = useState<"mes" | "semana">("mes");
+  const [vista, setVista] = useState<"mes"|"semana"|"dia">("mes");
+  const [diaSeleccionado, setDiaSeleccionado] = useState<Date>(hoy);
 
   const cargar = useCallback(async () => {
     setLoading(true);
-    const inicio = new Date(mes.getFullYear(), mes.getMonth(), 1).toISOString();
-    const fin = new Date(mes.getFullYear(), mes.getMonth() + 1, 0, 23, 59).toISOString();
+    let inicio: Date, fin: Date;
+    if (vista === "mes") {
+      inicio = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+      fin = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0, 23, 59);
+    } else if (vista === "semana") {
+      const dow = cursor.getDay();
+      inicio = new Date(cursor); inicio.setDate(cursor.getDate() - dow);
+      fin = new Date(inicio); fin.setDate(inicio.getDate() + 6); fin.setHours(23, 59);
+    } else {
+      inicio = new Date(diaSeleccionado); inicio.setHours(0, 0, 0);
+      fin = new Date(diaSeleccionado); fin.setHours(23, 59, 59);
+    }
     try {
       const [calRes, citasRes] = await Promise.all([
-        fetch(`/api/calendario?inicio=${inicio}&fin=${fin}`),
-        fetch(`/api/citas?inicio=${inicio}&fin=${fin}`),
+        fetch(`/api/calendario?inicio=${inicio.toISOString()}&fin=${fin.toISOString()}`),
+        fetch(`/api/citas?inicio=${inicio.toISOString()}&fin=${fin.toISOString()}`),
       ]);
       const calData = await calRes.json();
       const citasData = citasRes.ok ? await citasRes.json() : { citas: [] };
-
       const todos: Evento[] = [
         ...(citasData.citas || []).map((c: any) => ({
           id: c.id, tipo: "cita" as const, fecha: c.inicio,
           titulo: c.titulo, clienteNombre: c.clienteNombre, clienteId: c.clienteId, estado: c.estado,
         })),
-        // Visitas programadas (proxima_accion_fecha en clientes)
         ...(calData.citas || []).map((c: any) => ({
           id: `visita-${c.id}`, tipo: "cita" as const, fecha: c.fecha,
-          titulo: c.proximaAccion || "Schedule site visit",
+          titulo: c.proximaAccion || "Site visit",
           clienteNombre: c.clienteNombre, clienteId: c.clienteId, estado: "PENDIENTE",
         })),
         ...(calData.demos || []).map((d: any) => ({
@@ -69,175 +102,189 @@ export default function CalendarioPage() {
       ];
       setEventos(todos);
     } finally { setLoading(false); }
-  }, [mes]);
+  }, [cursor, vista, diaSeleccionado]);
 
   useEffect(() => { cargar(); }, [cargar]);
 
-  function prevMes() { setMes(m => new Date(m.getFullYear(), m.getMonth() - 1, 1)); }
-  function nextMes() { setMes(m => new Date(m.getFullYear(), m.getMonth() + 1, 1)); }
-
-  const primerDia = mes.getDay();
-  const diasEnMes = new Date(mes.getFullYear(), mes.getMonth() + 1, 0).getDate();
-  const celdas = Array.from({ length: primerDia + diasEnMes }, (_, i) => i < primerDia ? null : i - primerDia + 1);
-  while (celdas.length % 7 !== 0) celdas.push(null);
-
-  function eventosDelDia(dia: number | null): Evento[] {
-    if (!dia) return [];
-    return eventos.filter(e => {
-      const f = new Date(e.fecha);
-      return f.getDate() === dia && f.getMonth() === mes.getMonth() && f.getFullYear() === mes.getFullYear();
-    }).sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
+  function eventosDelDia(d: Date) {
+    return eventos.filter(e => new Date(e.fecha).toDateString() === d.toDateString())
+      .sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
   }
 
-  const esHoy = (dia: number | null) => dia !== null && dia === hoy.getDate() &&
-    mes.getMonth() === hoy.getMonth() && mes.getFullYear() === hoy.getFullYear();
+  function navAnterior() {
+    const n = new Date(cursor);
+    if (vista === "mes") n.setMonth(n.getMonth() - 1);
+    else if (vista === "semana") n.setDate(n.getDate() - 7);
+    else { const d = new Date(diaSeleccionado); d.setDate(d.getDate() - 1); setDiaSeleccionado(d); return; }
+    setCursor(n);
+  }
+  function navSiguiente() {
+    const n = new Date(cursor);
+    if (vista === "mes") n.setMonth(n.getMonth() + 1);
+    else if (vista === "semana") n.setDate(n.getDate() + 7);
+    else { const d = new Date(diaSeleccionado); d.setDate(d.getDate() + 1); setDiaSeleccionado(d); return; }
+    setCursor(n);
+  }
 
-  // Upcoming events (next 14 days)
-  const proximos = eventos
-    .filter(e => new Date(e.fecha) >= new Date())
-    .sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
-    .slice(0, 15);
+  function tituloNav() {
+    if (vista === "mes") return `${MESES[cursor.getMonth()]} ${cursor.getFullYear()}`;
+    if (vista === "semana") {
+      const dow = cursor.getDay();
+      const lun = new Date(cursor); lun.setDate(cursor.getDate() - dow);
+      const dom = new Date(lun); dom.setDate(lun.getDate() + 6);
+      return `${lun.toLocaleDateString("en-US",{month:"short",day:"numeric"})} – ${dom.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}`;
+    }
+    return diaSeleccionado.toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric",year:"numeric"});
+  }
+
+  // ── VISTA MES ─────────────────────────────────────────────────────────────
+  function VistaMes() {
+    const primerDia = new Date(cursor.getFullYear(), cursor.getMonth(), 1).getDay();
+    const diasMes = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 0).getDate();
+    const celdas: (Date | null)[] = [
+      ...Array(primerDia).fill(null),
+      ...Array.from({ length: diasMes }, (_, i) => new Date(cursor.getFullYear(), cursor.getMonth(), i + 1)),
+    ];
+    while (celdas.length % 7 !== 0) celdas.push(null);
+
+    return (
+      <div>
+        <div className="grid grid-cols-7 border-b border-[var(--border)]">
+          {DIAS.map(d => <div key={d} className="py-2 text-center text-xs font-semibold text-[var(--text-muted)]">{d}</div>)}
+        </div>
+        <div className="grid grid-cols-7">
+          {celdas.map((dia, i) => {
+            if (!dia) return <div key={i} className="min-h-[80px] border-b border-r border-[var(--border)] bg-[var(--bg-secondary)]" />;
+            const evs = eventosDelDia(dia);
+            const esHoy = dia.toDateString() === hoy.toDateString();
+            return (
+              <div key={i} className="min-h-[80px] p-1 border-b border-r border-[var(--border)] cursor-pointer hover:bg-[var(--bg-secondary)] transition-colors"
+                onClick={() => { setDiaSeleccionado(dia); setVista("dia"); }}>
+                <div className={`w-6 h-6 flex items-center justify-center text-xs font-semibold rounded-full mb-1 ${esHoy ? "bg-marca-300 text-white" : "text-[var(--text-secondary)]"}`}>
+                  {dia.getDate()}
+                </div>
+                <div className="space-y-0.5">
+                  {evs.slice(0, 3).map(ev => <EventoBadge key={ev.id} ev={ev} />)}
+                  {evs.length > 3 && <p className="text-xs text-[var(--text-muted)] pl-1">+{evs.length - 3} más</p>}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  // ── VISTA SEMANA ───────────────────────────────────────────────────────────
+  function VistaSemana() {
+    const dow = cursor.getDay();
+    const dias = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(cursor); d.setDate(cursor.getDate() - dow + i); return d;
+    });
+    return (
+      <div>
+        <div className="grid grid-cols-7 border-b border-[var(--border)]">
+          {dias.map((d, i) => {
+            const esHoy = d.toDateString() === hoy.toDateString();
+            return (
+              <div key={i} className="py-2 text-center cursor-pointer hover:bg-[var(--bg-secondary)]"
+                onClick={() => { setDiaSeleccionado(d); setVista("dia"); }}>
+                <p className="text-xs text-[var(--text-muted)]">{DIAS[d.getDay()]}</p>
+                <div className={`w-7 h-7 mx-auto flex items-center justify-center text-sm font-semibold rounded-full ${esHoy ? "bg-marca-300 text-white" : "text-[var(--text-primary)]"}`}>
+                  {d.getDate()}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div className="grid grid-cols-7 divide-x divide-[var(--border)]">
+          {dias.map((d, i) => {
+            const evs = eventosDelDia(d);
+            return (
+              <div key={i} className="min-h-[300px] p-1.5 space-y-1">
+                {evs.length === 0 && <p className="text-xs text-[var(--text-muted)] text-center mt-4">—</p>}
+                {evs.map(ev => <EventoBadge key={ev.id} ev={ev} />)}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  // ── VISTA DÍA ──────────────────────────────────────────────────────────────
+  function VistaDia() {
+    const evs = eventosDelDia(diaSeleccionado);
+    return (
+      <div className="p-4 space-y-3">
+        {loading ? (
+          <p className="text-sm text-[var(--text-muted)] text-center py-8">Cargando…</p>
+        ) : evs.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-4xl mb-2">📅</p>
+            <p className="text-sm text-[var(--text-muted)]">No hay eventos este día</p>
+          </div>
+        ) : (
+          evs.map(ev => <EventoRow key={ev.id} ev={ev} />)
+        )}
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-4 pb-20 lg:pb-0">
+    <div className="max-w-4xl mx-auto pb-20 lg:pb-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center">
             <CalendarDays className="w-5 h-5 text-green-500" />
           </div>
           <div>
             <h1 className="text-xl font-semibold text-[var(--text-primary)]">Calendario</h1>
-            <p className="text-sm text-[var(--text-secondary)]">Citas, demos y servicios — todo en un lugar</p>
+            <p className="text-sm text-[var(--text-secondary)]">Visitas, demos y servicios</p>
           </div>
         </div>
-        <Link href="/clientes/nuevo" className="btn-primary !py-2 !px-3 text-sm">
-          <Plus className="w-4 h-4" /> Nueva cita
-        </Link>
+        <div className="flex items-center gap-2">
+          {/* Vista switcher */}
+          <div className="flex rounded-lg border border-[var(--border)] overflow-hidden text-xs">
+            {(["mes","semana","dia"] as const).map(v => (
+              <button key={v} onClick={() => setVista(v)}
+                className={`px-3 py-1.5 font-medium capitalize transition-colors ${vista === v ? "bg-marca-300 text-white" : "text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]"}`}>
+                {v === "dia" ? "Day" : v === "semana" ? "Week" : "Month"}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Nav */}
+      <div className="flex items-center gap-3 mb-4">
+        <button onClick={navAnterior} className="p-1.5 rounded-lg hover:bg-[var(--bg-secondary)]">
+          <ChevronLeft className="w-4 h-4" />
+        </button>
+        <h2 className="flex-1 text-center text-sm font-semibold text-[var(--text-primary)]">{tituloNav()}</h2>
+        <button onClick={navSiguiente} className="p-1.5 rounded-lg hover:bg-[var(--bg-secondary)]">
+          <ChevronRight className="w-4 h-4" />
+        </button>
+        <button onClick={() => { setCursor(new Date(hoy.getFullYear(), hoy.getMonth(), 1)); setDiaSeleccionado(hoy); }}
+          className="text-xs text-marca-500 hover:underline">Today</button>
+      </div>
+
+      {/* Calendar grid */}
+      <div className="card overflow-hidden">
+        {loading && vista !== "dia" && (
+          <div className="h-64 flex items-center justify-center text-sm text-[var(--text-muted)]">Cargando…</div>
+        )}
+        {!loading && vista === "mes" && <VistaMes />}
+        {!loading && vista === "semana" && <VistaSemana />}
+        {vista === "dia" && <VistaDia />}
       </div>
 
       {/* Legend */}
-      <div className="flex flex-wrap items-center gap-3 text-xs">
-        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-blue-400"></span>📅 Cita con cliente</span>
-        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-purple-500"></span>🎯 Demo programada</span>
-        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-green-500"></span>🧹 Servicio completado</span>
-        <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-amber-400"></span>🧹 Servicio próximo</span>
-      </div>
-
-      {/* Calendar */}
-      <div className="card overflow-hidden">
-        {/* Nav */}
-        <div className="flex items-center justify-between p-4 border-b border-[var(--border)]">
-          <button onClick={prevMes} className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] transition-colors">
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <div className="flex items-center gap-3">
-            <h2 className="text-sm font-semibold text-[var(--text-primary)]">
-              {MESES[mes.getMonth()]} {mes.getFullYear()}
-            </h2>
-            <button onClick={() => setMes(new Date(hoy.getFullYear(), hoy.getMonth(), 1))}
-              className="text-xs px-2 py-1 rounded-full bg-[var(--bg-secondary)] text-[var(--text-muted)] hover:bg-[var(--bg-tertiary)] transition-colors">
-              Hoy
-            </button>
-          </div>
-          <button onClick={nextMes} className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)] transition-colors">
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* Day headers */}
-        <div className="grid grid-cols-7 border-b border-[var(--border)]">
-          {DIAS.map(d => (
-            <div key={d} className="py-2 text-center text-xs font-semibold text-[var(--text-muted)]">{d}</div>
-          ))}
-        </div>
-
-        {/* Grid */}
-        {loading ? (
-          <div className="p-8 text-center text-sm text-[var(--text-muted)]">Cargando calendario…</div>
-        ) : (
-          <div className="grid grid-cols-7">
-            {celdas.map((dia, idx) => {
-              const evs = eventosDelDia(dia);
-              return (
-                <div key={idx} className={`min-h-[80px] p-1 border-b border-r border-[var(--border)] last:border-r-0 ${!dia ? "bg-[var(--bg-secondary)] opacity-30" : ""} ${esHoy(dia) ? "bg-marca-50 dark:bg-marca-900/10" : ""}`}>
-                  {dia && (
-                    <>
-                      <p className={`text-xs font-medium mb-1 w-6 h-6 rounded-full flex items-center justify-center mx-auto ${esHoy(dia) ? "bg-marca-300 text-white" : "text-[var(--text-secondary)]"}`}>
-                        {dia}
-                      </p>
-                      <div className="space-y-0.5">
-                        {evs.slice(0, 3).map(e => {
-                          const cfg = TIPO_CONFIG[e.tipo];
-                          const bgClass = e.tipo === "servicio" ? servicioColor(e.estado) : cfg.bg;
-                          return (
-                            <Link key={e.id} href={e.clienteId ? `/clientes/${e.clienteId}` : "#"}
-                              className={`block text-[10px] leading-tight px-1 py-0.5 rounded truncate hover:opacity-80 ${bgClass}`}>
-                              {cfg.emoji} {e.titulo || e.clienteNombre || cfg.label}
-                            </Link>
-                          );
-                        })}
-                        {evs.length > 3 && (
-                          <p className="text-[10px] text-[var(--text-muted)] text-center">+{evs.length - 3} más</p>
-                        )}
-                      </div>
-                    </>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* Upcoming list */}
-      <div className="card p-4">
-        <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-3">Próximos eventos</h2>
-        {proximos.length === 0 ? (
-          <div className="text-center py-6">
-            <p className="text-sm text-[var(--text-muted)]">No hay eventos próximos en este mes</p>
-            <p className="text-xs text-[var(--text-muted)] mt-1">Las citas, demos y servicios aparecerán aquí</p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {proximos.map(e => {
-              const cfg = TIPO_CONFIG[e.tipo];
-              const bgClass = e.tipo === "servicio" ? servicioColor(e.estado) : cfg.bg;
-              const fecha = new Date(e.fecha);
-              return (
-                <Link key={e.id} href={e.clienteId ? `/clientes/${e.clienteId}` : "#"}
-                  className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm flex-shrink-0 ${bgClass}`}>
-                    {cfg.emoji}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[var(--text-primary)] truncate">
-                      {e.titulo || e.clienteNombre || cfg.label}
-                    </p>
-                    <p className="text-xs text-[var(--text-muted)]">
-                      {cfg.label} · {fecha.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
-                      {" · "}{fecha.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
-                    </p>
-                  </div>
-                  {/* Conflict warning — only citas and demos require YOUR presence */}
-                  {(() => {
-                    const mismoMomento = proximos.filter(x => {
-                      if (x.id === e.id) return false;
-                      if (e.tipo === "servicio" || x.tipo === "servicio") return false; // servicios no requieren tu presencia
-                      const diff = Math.abs(new Date(x.fecha).getTime() - fecha.getTime());
-                      return diff < 60 * 60 * 1000; // dentro de 1 hora
-                    });
-                    return mismoMomento.length > 0 ? (
-                      <span className="text-xs text-red-600 bg-red-50 dark:bg-red-900/20 px-1.5 py-0.5 rounded flex-shrink-0 font-medium">
-                        ⚠️ Conflicto
-                      </span>
-                    ) : null;
-                  })()}
-                </Link>
-              );
-            })}
-          </div>
-        )}
+      <div className="flex gap-4 mt-3 text-xs text-[var(--text-muted)] justify-center flex-wrap">
+        <span>📅 Site visit / Appointment</span>
+        <span>🎯 Demo</span>
+        <span>🧹 Service</span>
       </div>
     </div>
   );
