@@ -129,11 +129,14 @@ export default function ClientesPage() {
   const [zona, setZona] = useState("");
   const [agruparZona, setAgruparZona] = useState(false);
   const [zonasDisponibles, setZonasDisponibles] = useState<string[]>([]);
+  const [managementsDisponibles, setManagementsDisponibles] = useState<string[]>([]);
+  const [management, setManagement] = useState("");
 
   const busquedaDebounced = useDebounce(busqueda, 300);
 
   useEffect(() => {
     fetch("/api/clientes/zonas").then(r => r.json()).then(d => setZonasDisponibles(d.zonas || [])).catch(() => {});
+    fetch("/api/clientes/managements").then(r => r.json()).then(d => setManagementsDisponibles(d.managements || [])).catch(() => {});
   }, []);
 
   const cargar = useCallback(async () => {
@@ -157,10 +160,10 @@ export default function ClientesPage() {
     } finally {
       setLoading(false);
     }
-  }, [pagina, busquedaDebounced, estado, temperatura, etapa, orden, zona]);
+  }, [pagina, busquedaDebounced, estado, temperatura, etapa, orden, zona, management]);
 
   useEffect(() => { cargar(); }, [cargar]);
-  useEffect(() => { setPagina(1); }, [busquedaDebounced, estado, temperatura, etapa, zona]);
+  useEffect(() => { setPagina(1); }, [busquedaDebounced, estado, temperatura, etapa, zona, management]);
 
   const tempConfig: Record<string, { cls: string; label: string }> = {
     CALIENTE: { cls: "temp-caliente", label: "🔥" },
@@ -254,6 +257,13 @@ export default function ClientesPage() {
               {zonasDisponibles.map(z => <option key={z} value={z}>{z}</option>)}
             </select>
           </div>
+          <div className="min-w-[140px] flex-1">
+            <label className="label text-xs">Management</label>
+            <select value={management} onChange={(e) => setManagement(e.target.value)} className="input text-sm !py-1.5">
+              <option value="">Todos</option>
+              {managementsDisponibles.map(m => <option key={m} value={m}>{m}</option>)}
+            </select>
+          </div>
           <div className="min-w-[120px] flex-1">
             <label className="label text-xs">Ordenar</label>
             <select value={orden} onChange={(e) => setOrden(e.target.value)} className="input text-sm !py-1.5">
@@ -270,9 +280,9 @@ export default function ClientesPage() {
             </button>
             <span className="text-xs text-[var(--text-secondary)] whitespace-nowrap">Por zona</span>
           </div>
-          {(estado || temperatura || etapa) && (
+          {(estado || temperatura || etapa || management) && (
             <button
-              onClick={() => { setEstado("OPERATIVOS"); setTemperatura(""); setEtapa(""); setZona(""); }}
+              onClick={() => { setEstado("OPERATIVOS"); setTemperatura(""); setEtapa(""); setZona(""); setManagement(""); }}
               className="text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] underline col-span-2 sm:col-span-4 text-left"
             >
               Limpiar filtros

@@ -30,6 +30,7 @@ export async function GET(req: NextRequest) {
   if (etapa) conditions.push(eq(schema.clientes.etapa, etapa));
   if (temperatura) conditions.push(eq(schema.clientes.temperatura, temperatura));
   if (sp.get("zona")) conditions.push(eq(schema.clientes.zona, sp.get("zona")!));
+  if (sp.get("management")) conditions.push(eq(schema.clientes.management, sp.get("management")!));
   if (q) conditions.push(or(
     ilike(schema.clientes.nombre, `%${q}%`),
     ilike(schema.clientes.correo, `%${q}%`),
