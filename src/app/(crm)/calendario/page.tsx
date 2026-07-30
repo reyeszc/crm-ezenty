@@ -24,29 +24,43 @@ function servicioColor(estado?: string) {
     : "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300";
 }
 
+function getEvConfig(ev: Evento) {
+  const tipo = (ev.tipo as string);
+  if (tipo === "service_scheduled" || (tipo === "cita" && ev.titulo?.toLowerCase().includes("service scheduled"))) {
+    return { emoji: "🧹", label: "Service Scheduled", bg: "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300" };
+  }
+  if (tipo === "demo_scheduled" || (tipo === "cita" && ev.titulo?.toLowerCase().includes("demo scheduled"))) {
+    return { emoji: "🎯", label: "Demo Scheduled", bg: "bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300" };
+  }
+  if (tipo === "demo" || (tipo === "cita" && ev.titulo?.toLowerCase().includes("demo"))) {
+    return { emoji: "🎯", label: "Demo", bg: "bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300" };
+  }
+  if (tipo === "servicio") {
+    return { emoji: "🧹", label: "Service", bg: servicioColor(ev.estado) };
+  }
+  return { emoji: "📅", label: "Site Visit", bg: "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300" };
+}
+
 function EventoBadge({ ev }: { ev: Evento }) {
-  const cfg = TIPO_CONFIG[ev.tipo];
-  const bg = ev.tipo === "servicio" ? servicioColor(ev.estado) : cfg.bg;
-  const hora = new Date(ev.fecha).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+  const cfg = getEvConfig(ev);
   return (
     <Link href={ev.clienteId ? `/clientes/${ev.clienteId}` : "#"}
-      className={`block text-xs rounded px-1 py-0.5 truncate ${bg} hover:opacity-80`}>
+      className={`block text-xs rounded px-1 py-0.5 truncate ${cfg.bg} hover:opacity-80`}>
       {cfg.emoji} {ev.clienteNombre || ev.titulo || cfg.label}
     </Link>
   );
 }
 
 function EventoRow({ ev }: { ev: Evento }) {
-  const cfg = TIPO_CONFIG[ev.tipo];
-  const bg = ev.tipo === "servicio" ? servicioColor(ev.estado) : cfg.bg;
+  const cfg = getEvConfig(ev);
   const hora = new Date(ev.fecha).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
   return (
     <Link href={ev.clienteId ? `/clientes/${ev.clienteId}` : "#"}
-      className={`flex items-center gap-2 p-2 rounded-lg ${bg} hover:opacity-80 transition-opacity`}>
+      className={`flex items-center gap-2 p-2 rounded-lg ${cfg.bg} hover:opacity-80 transition-opacity`}>
       <span className="text-base flex-shrink-0">{cfg.emoji}</span>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">{ev.clienteNombre || ev.titulo || cfg.label}</p>
-        <p className="text-xs opacity-70">{hora} · {ev.titulo || cfg.label}</p>
+        <p className="text-xs opacity-70">{hora} · {cfg.label}</p>
       </div>
     </Link>
   );
@@ -86,11 +100,18 @@ export default function CalendarioPage() {
           id: c.id, tipo: "cita" as const, fecha: c.inicio,
           titulo: c.titulo, clienteNombre: c.clienteNombre, clienteId: c.clienteId, estado: c.estado,
         })),
-        ...(calData.citas || []).map((c: any) => ({
-          id: `visita-${c.id}`, tipo: "cita" as const, fecha: c.fecha,
-          titulo: c.proximaAccion || "Site visit",
-          clienteNombre: c.clienteNombre, clienteId: c.clienteId, estado: "PENDIENTE",
-        })),
+        ...(calData.citas || []).map((c: any) => {
+          const accion = c.proximaAccion || "Site visit";
+          const t = accion.toLowerCase();
+          const tipo = t.includes("service scheduled") ? "service_scheduled"
+            : t.includes("demo scheduled") ? "demo_scheduled"
+            : t.includes("demo") ? "demo"
+            : "cita";
+          return {
+            id: `visita-${c.id}`, tipo: tipo as any, fecha: c.fecha,
+            titulo: accion, clienteNombre: c.clienteNombre, clienteId: c.clienteId, estado: "PENDIENTE",
+          };
+        }),
         ...(calData.demos || []).map((d: any) => ({
           id: d.id, tipo: "demo" as const, fecha: d.fecha,
           clienteNombre: d.clienteNombre, clienteId: d.clienteId, estado: d.estado,
@@ -282,9 +303,9 @@ export default function CalendarioPage() {
 
       {/* Legend */}
       <div className="flex gap-4 mt-3 text-xs text-[var(--text-muted)] justify-center flex-wrap">
-        <span>📅 Site visit / Appointment</span>
-        <span>🎯 Demo</span>
-        <span>🧹 Service</span>
+        <span>📅 Site Visit</span>
+        <span>🎯 Demo / Demo Scheduled</span>
+        <span>🧹 Service / Service Scheduled</span>
       </div>
     </div>
   );
