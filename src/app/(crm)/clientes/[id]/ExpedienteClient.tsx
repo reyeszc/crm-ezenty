@@ -1133,7 +1133,8 @@ export function ExpedienteClient({ clienteInicial, config, etiquetasDisponibles,
 
 const ACCIONES_RAPIDAS = [
   "Schedule site visit", "Send Info", "Go Back", "Send Txt FU",
-  "Send Email", "Schedule a Demo", "Follow up on proposal", "Send quote",
+  "Send Email", "Schedule a Demo", "Demo Scheduled", "Service Scheduled",
+  "Follow up on proposal", "Send quote",
   "Send contract", "Confirm signature", "Re-engage — send case study", "Request referral",
 ];
 
@@ -1143,9 +1144,21 @@ function ProximaAccionEditor({ accion, fecha, onGuardar }: {
   const [editando, setEditando] = useState(false);
   const [valAccion, setValAccion] = useState(accion);
   const [valFecha, setValFecha] = useState(fecha ? new Date(fecha).toISOString().split("T")[0] : "");
+  const [valFechaFin, setValFechaFin] = useState("");
   const vencido = fecha && new Date(fecha) < new Date();
+  const esServicio = valAccion === "Service Scheduled";
 
-  function guardar() { onGuardar(valAccion, valFecha); setEditando(false); }
+  function guardar() {
+    const fechaGuardar = esServicio && valFechaFin
+      ? `${valFecha}|${valFechaFin}`
+      : valFecha;
+    onGuardar(valAccion, fechaGuardar);
+    setEditando(false);
+  }
+
+  // Parse stored date range
+  const fechaInicio = fecha?.includes("|") ? fecha.split("|")[0] : fecha;
+  const fechaFin = fecha?.includes("|") ? fecha.split("|")[1] : null;
 
   if (!editando) {
     return (
@@ -1155,10 +1168,11 @@ function ProximaAccionEditor({ accion, fecha, onGuardar }: {
             <span className={`text-sm group-hover:underline ${vencido ? "text-red-600 dark:text-red-400 font-medium" : "text-[var(--text-primary)]"}`}>
               {accion}
             </span>
-            {fecha && (
+            {fechaInicio && (
               <span className="block text-xs text-[var(--text-muted)] mt-0.5">
-                📅 {new Date(fecha).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}
-                {vencido && <span className="text-red-500 ml-1">— Vencida</span>}
+                📅 {new Date(fechaInicio).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}
+                {fechaFin && ` — ${new Date(fechaFin).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}`}
+                {vencido && !fechaFin && <span className="text-red-500 ml-1">— Vencida</span>}
               </span>
             )}
           </div>
@@ -1174,21 +1188,34 @@ function ProximaAccionEditor({ accion, fecha, onGuardar }: {
       <div className="flex flex-wrap gap-1 mb-1">
         {ACCIONES_RAPIDAS.map(a => (
           <button key={a} type="button" onClick={() => setValAccion(a)}
-            className="text-xs px-2 py-1 rounded-full bg-marca-50 dark:bg-marca-900/20 text-marca-600 dark:text-marca-400 hover:bg-marca-100 transition-colors">
+            className={`text-xs px-2 py-1 rounded-full transition-colors ${
+              valAccion === a
+                ? "bg-marca-300 text-white"
+                : "bg-marca-50 dark:bg-marca-900/20 text-marca-600 dark:text-marca-400 hover:bg-marca-100"
+            }`}>
             {a}
           </button>
         ))}
       </div>
       <input className="input text-sm" value={valAccion} onChange={e => setValAccion(e.target.value)}
         placeholder="Describe la próxima acción…" />
-      <div>
-        <label className="label text-xs">Fecha</label>
-        <input type="date" className="input text-sm" value={valFecha} onChange={e => setValFecha(e.target.value)}
-          min={new Date().toISOString().split("T")[0]} />
+      <div className={`grid gap-2 ${esServicio ? "grid-cols-2" : "grid-cols-1"}`}>
+        <div>
+          <label className="label text-xs">{esServicio ? "Fecha inicio" : "Fecha"}</label>
+          <input type="date" className="input text-sm" value={valFecha} onChange={e => setValFecha(e.target.value)}
+            min={new Date().toISOString().split("T")[0]} />
+        </div>
+        {esServicio && (
+          <div>
+            <label className="label text-xs">Fecha fin</label>
+            <input type="date" className="input text-sm" value={valFechaFin} onChange={e => setValFechaFin(e.target.value)}
+              min={valFecha || new Date().toISOString().split("T")[0]} />
+          </div>
+        )}
       </div>
       <div className="flex gap-2">
         <button onClick={guardar} className="btn-primary !py-1 !px-3 text-xs">Guardar</button>
-        <button onClick={() => { setValAccion(accion); setValFecha(fecha ? new Date(fecha).toISOString().split("T")[0] : ""); setEditando(false); }}
+        <button onClick={() => { setValAccion(accion); setValFecha(fechaInicio ? new Date(fechaInicio).toISOString().split("T")[0] : ""); setValFechaFin(""); setEditando(false); }}
           className="btn-secondary !py-1 !px-3 text-xs">Cancelar</button>
       </div>
     </div>
