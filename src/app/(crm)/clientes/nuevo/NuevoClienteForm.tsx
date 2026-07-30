@@ -49,6 +49,13 @@ export function NuevoClienteForm() {
   const router = useRouter();
   const { success, error, toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [zonasDB, setZonasDB] = useState<string[]>([]);
+  const [ciudadesDB, setCiudadesDB] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetch("/api/clientes/zonas").then(r => r.json()).then(d => setZonasDB(d.zonas || [])).catch(() => {});
+    fetch("/api/clientes/ciudades").then(r => r.json()).then(d => setCiudadesDB(d.ciudades || [])).catch(() => {});
+  }, []);
   const [managements, setManagements] = useState<string[]>([]);
   const [mgmtInput, setMgmtInput] = useState("");
   const [mgmtSuggestions, setMgmtSuggestions] = useState<string[]>([]);
@@ -187,17 +194,21 @@ export function NuevoClienteForm() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="label">Ciudad / Cluster</label>
-                <select className="input" value={form.ciudadCluster} onChange={e => set("ciudadCluster", e.target.value)}>
-                  <option value="">Seleccionar…</option>
-                  {CIUDAD_CLUSTERS.map(c => <option key={c}>{c}</option>)}
-                </select>
+                <input list="ciudades-list" className="input" value={form.ciudadCluster}
+                  onChange={e => set("ciudadCluster", e.target.value)}
+                  placeholder="Nashville Downtown / Knoxville Airport…" />
+                <datalist id="ciudades-list">
+                  {ciudadesDB.map(c => <option key={c} value={c} />)}
+                </datalist>
               </div>
               <div>
                 <label className="label">Zona</label>
-                <select className="input" value={form.zona} onChange={e => set("zona", e.target.value)}>
-                  <option value="">Seleccionar…</option>
-                  {ZONAS.map(z => <option key={z}>{z}</option>)}
-                </select>
+                <input list="zonas-list" className="input" value={form.zona}
+                  onChange={e => set("zona", e.target.value)}
+                  placeholder="Nashville, TN / Atlanta, GA…" />
+                <datalist id="zonas-list">
+                  {zonasDB.map(z => <option key={z} value={z} />)}
+                </datalist>
               </div>
             </div>
             <div>
