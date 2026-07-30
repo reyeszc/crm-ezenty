@@ -150,6 +150,7 @@ export default function ClientesPage() {
       ...(temperatura ? { temperatura } : {}),
       ...(etapa ? { etapa } : {}),
       ...(zona ? { zona } : {}),
+      ...(management ? { management } : {}),
     });
     try {
       const res = await fetch(`/api/clientes?${params}`);
