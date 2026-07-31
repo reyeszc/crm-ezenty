@@ -23,6 +23,20 @@ const PRECIOS_DEFAULT: Record<string, { precio: number; unidad: string; label: s
 interface Linea {
   id: string; descripcion: string; tipo: string; unidad: string;
   cantidad: string; precioUnitario: string; precioFinal: string; area: string;
+  frecuencia?: string;
+}
+
+const FRECUENCIAS: Record<string, { label: string; veces: number }> = {
+  "quarterly":    { label: "Quarterly (4x/year)",   veces: 4 },
+  "semi-annual":  { label: "Semi-Annual (2x/year)", veces: 2 },
+  "3x-year":      { label: "3x / Year",             veces: 3 },
+  "one-time":     { label: "One-Time",              veces: 1 },
+};
+
+function calcAnual(l: Linea): number {
+  const subtotal = calcSubtotal(l);
+  const freq = l.frecuencia ? FRECUENCIAS[l.frecuencia] : null;
+  return freq ? subtotal * freq.veces : subtotal;
 }
 
 function calcSubtotal(l: Linea): number {
@@ -42,6 +56,7 @@ function newLinea(tipo?: string, area?: string, cantidad?: number): Linea {
     precioUnitario: preset ? String(preset.precio) : "0",
     precioFinal: preset ? String(preset.precio) : "0",
     area: area || "",
+    frecuencia: "quarterly",
   };
 }
 
@@ -80,6 +95,7 @@ Acceptance: This quotation becomes a binding Service Agreement upon execution of
   const [detalleCot, setDetalleCot] = useState<{cot: any, lineas: any[]} | null>(null);
   const [loadingDetalle, setLoadingDetalle] = useState(false);
   const [mostrarPrecios, setMostrarPrecios] = useState(false);
+  const [modoContrato, setModoContrato] = useState(false);
   // Contact selection
   const contactoPrincipal = contactos?.find((c: any) => c.principal) || contactos?.[0];
   const [contactoSeleccionadoId, setContactoSeleccionadoId] = useState<string>(contactoPrincipal?.id || "");
@@ -255,8 +271,16 @@ Acceptance: This quotation becomes a binding Service Agreement upon execution of
             precioUnitario: parseFloat(l.precioUnitario) || 0,
             precioFinal: parseFloat(l.precioFinal) || 0,
             subtotal: calcSubtotal(l), area: l.area, orden: i,
+            frecuencia: modoContrato ? (l.frecuencia || "quarterly") : null,
+            veces: modoContrato && l.frecuencia ? (FRECUENCIAS[l.frecuencia]?.veces || 1) : null,
+            subtotalAnual: modoContrato ? calcAnual(l) : null,
           })),
-          subtotal, descuento: descuentoVal, total,
+          subtotal,
+          descuento: descuentoVal,
+          total: modoContrato ? lineas.reduce((s, l) => s + calcAnual(l), 0) - descuentoVal : total,
+          totalAnual: modoContrato ? lineas.reduce((s, l) => s + calcAnual(l), 0) - descuentoVal : null,
+          totalMensual: modoContrato ? (lineas.reduce((s, l) => s + calcAnual(l), 0) - descuentoVal) / 12 : null,
+          modoContrato,
           notas, validezDias: parseInt(validez) || 30,
           medidaId: medidaSeleccionada || null,
         }),
@@ -339,6 +363,32 @@ Acceptance: This quotation becomes a binding Service Agreement upon execution of
           </div>
         </div>
       )}
+
+      {/* Quote / Contract toggle */}
+      <div className="card p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-sm font-semibold text-[var(--text-primary)]">
+              {modoContrato ? "📋 Contract Mode" : "📄 Quote Mode"}
+            </h2>
+            <p className="text-xs text-[var(--text-muted)] mt-0.5">
+              {modoContrato
+                ? "Set service frequency to calculate monthly & annual value"
+                : "Standard one-time quotation"}
+            </p>
+          </div>
+          <button onClick={() => setModoContrato(p => !p)}
+            className={`w-12 h-6 rounded-full transition-colors flex items-center px-0.5 ${modoContrato ? "bg-marca-300" : "bg-gray-300 dark:bg-gray-600"}`}>
+            <div className={`w-5 h-5 rounded-full bg-white shadow transition-transform ${modoContrato ? "translate-x-6" : ""}`} />
+          </button>
+        </div>
+        {modoContrato && (
+          <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl text-xs text-blue-700 dark:text-blue-300">
+            💡 Each service line will show a frequency selector. The system calculates:
+            Annual Value = Unit Price × Qty × Times/Year → Monthly = Annual ÷ 12
+          </div>
+        )}
+      </div>
 
       {/* Previous quotes */}
       {cotizacionesPrevias.length > 0 && (
@@ -534,10 +584,34 @@ Acceptance: This quotation becomes a binding Service Agreement upon execution of
                   {editado && <p className="text-xs text-emerald-500 text-center">Editado</p>}
                 </div>
 
+                {/* Frequency selector in contract mode */}
+                {modoContrato && (
+                  <div className="col-span-10 col-start-2 sm:col-span-4 sm:col-start-auto">
+                    <select className="input text-xs !py-1"
+                      value={l.frecuencia || "quarterly"}
+                      onChange={e => updateLinea(l.id, { frecuencia: e.target.value })}>
+                      {Object.entries(FRECUENCIAS).map(([k, v]) => (
+                        <option key={k} value={k}>{v.label}</option>
+                      ))}
+                    </select>
+                    {l.frecuencia && FRECUENCIAS[l.frecuencia] && (
+                      <p className="text-xs text-[var(--text-muted)] mt-0.5">
+                        Annual: ${calcAnual(l).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                        <span className="ml-1 text-marca-500 font-semibold">
+                          · Monthly: ${(calcAnual(l) / 12).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                        </span>
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 <div className="col-span-11 sm:col-span-1 text-right pt-1 col-start-2 sm:col-start-auto">
                   <p className="text-sm font-bold text-[var(--text-primary)]">
                     ${sub.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                   </p>
+                  {modoContrato && l.frecuencia && FRECUENCIAS[l.frecuencia]?.veces > 1 && (
+                    <p className="text-xs text-marca-500">×{FRECUENCIAS[l.frecuencia].veces}/yr</p>
+                  )}
                 </div>
 
                 <div className="col-span-1 flex justify-end pt-1">
@@ -552,22 +626,54 @@ Acceptance: This quotation becomes a binding Service Agreement upon execution of
 
         {/* Totals */}
         <div className="border-t border-[var(--border)] p-4 space-y-2 bg-[var(--bg-secondary)]">
-          <div className="flex justify-between text-sm">
-            <span className="text-[var(--text-secondary)]">Subtotal</span>
-            <span className="font-medium">${subtotal.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
-          </div>
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-[var(--text-secondary)]">Descuento ($)</span>
-            <div className="relative w-32">
-              <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-[var(--text-muted)]">$</span>
-              <input type="number" className="input text-sm !py-1 pl-5 text-right" value={descuento}
-                onChange={e => setDescuento(e.target.value)} min="0" step="0.01" />
-            </div>
-          </div>
-          <div className="flex justify-between text-lg font-bold border-t border-[var(--border)] pt-2">
-            <span>TOTAL</span>
-            <span className="text-emerald-600">${total.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
-          </div>
+          {modoContrato ? (() => {
+            const totalAnual = lineas.reduce((s, l) => s + calcAnual(l), 0) - (parseFloat(descuento) || 0);
+            const totalMensual = totalAnual / 12;
+            return (
+              <>
+                <div className="flex justify-between text-sm">
+                  <span className="text-[var(--text-secondary)]">Subtotal (per visit)</span>
+                  <span className="font-medium">${subtotal.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-[var(--text-secondary)]">Discount ($)</span>
+                  <div className="relative w-32">
+                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-[var(--text-muted)]">$</span>
+                    <input type="number" className="input text-sm !py-1 pl-5 text-right" value={descuento}
+                      onChange={e => setDescuento(e.target.value)} min="0" step="0.01" />
+                  </div>
+                </div>
+                <div className="flex justify-between text-sm border-t border-[var(--border)] pt-2">
+                  <span className="text-[var(--text-secondary)]">Annual Value</span>
+                  <span className="font-semibold">${totalAnual.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+                </div>
+                <div className="flex justify-between text-lg font-bold">
+                  <span>Monthly Value</span>
+                  <span className="text-emerald-600">${totalMensual.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+                </div>
+                <p className="text-xs text-[var(--text-muted)] text-right">Annual ÷ 12 months</p>
+              </>
+            );
+          })() : (
+            <>
+              <div className="flex justify-between text-sm">
+                <span className="text-[var(--text-secondary)]">Subtotal</span>
+                <span className="font-medium">${subtotal.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-[var(--text-secondary)]">Descuento ($)</span>
+                <div className="relative w-32">
+                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-[var(--text-muted)]">$</span>
+                  <input type="number" className="input text-sm !py-1 pl-5 text-right" value={descuento}
+                    onChange={e => setDescuento(e.target.value)} min="0" step="0.01" />
+                </div>
+              </div>
+              <div className="flex justify-between text-lg font-bold border-t border-[var(--border)] pt-2">
+                <span>TOTAL</span>
+                <span className="text-emerald-600">${total.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
