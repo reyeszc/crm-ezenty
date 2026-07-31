@@ -105,8 +105,12 @@ Acceptance: This quotation becomes a binding Service Agreement upon execution of
     Object.fromEntries(Object.entries(PRECIOS_DEFAULT).map(([k, v]) => [k, String(v.precio)]))
   );
 
-  const subtotal = lineas.reduce((s, l) => s + calcSubtotal(l), 0);
+  const totalAnualContrato = lineas.reduce((s, l) => s + calcAnual(l), 0);
+  const descuentoVal2 = parseFloat(descuento) || 0;
+  const totalAnualFinal = totalAnualContrato - descuentoVal2;
+  const totalMensualFinal = totalAnualFinal / 12;
   const descuentoVal = parseFloat(descuento) || 0;
+  const subtotal = lineas.reduce((s, l) => s + calcSubtotal(l), 0);
   const total = subtotal - descuentoVal;
 
   // Drag-to-reorder state
@@ -626,35 +630,31 @@ Acceptance: This quotation becomes a binding Service Agreement upon execution of
 
         {/* Totals */}
         <div className="border-t border-[var(--border)] p-4 space-y-2 bg-[var(--bg-secondary)]">
-          {modoContrato ? (() => {
-            const totalAnual = lineas.reduce((s, l) => s + calcAnual(l), 0) - (parseFloat(descuento) || 0);
-            const totalMensual = totalAnual / 12;
-            return (
-              <>
-                <div className="flex justify-between text-sm">
-                  <span className="text-[var(--text-secondary)]">Subtotal (per visit)</span>
-                  <span className="font-medium">${subtotal.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+          {modoContrato ? (
+            <>
+              <div className="flex justify-between text-sm">
+                <span className="text-[var(--text-secondary)]">Subtotal (per visit)</span>
+                <span className="font-medium">${subtotal.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-[var(--text-secondary)]">Discount ($)</span>
+                <div className="relative w-32">
+                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-[var(--text-muted)]">$</span>
+                  <input type="number" className="input text-sm !py-1 pl-5 text-right" value={descuento}
+                    onChange={e => setDescuento(e.target.value)} min="0" step="0.01" />
                 </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-[var(--text-secondary)]">Discount ($)</span>
-                  <div className="relative w-32">
-                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-[var(--text-muted)]">$</span>
-                    <input type="number" className="input text-sm !py-1 pl-5 text-right" value={descuento}
-                      onChange={e => setDescuento(e.target.value)} min="0" step="0.01" />
-                  </div>
-                </div>
-                <div className="flex justify-between text-sm border-t border-[var(--border)] pt-2">
-                  <span className="text-[var(--text-secondary)]">Annual Value</span>
-                  <span className="font-semibold">${totalAnual.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
-                </div>
-                <div className="flex justify-between text-lg font-bold">
-                  <span>Monthly Value</span>
-                  <span className="text-emerald-600">${totalMensual.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
-                </div>
-                <p className="text-xs text-[var(--text-muted)] text-right">Annual ÷ 12 months</p>
-              </>
-            );
-          })() : (
+              </div>
+              <div className="flex justify-between text-sm border-t border-[var(--border)] pt-2">
+                <span className="text-[var(--text-secondary)]">Annual Value</span>
+                <span className="font-semibold">${totalAnualFinal.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+              </div>
+              <div className="flex justify-between text-lg font-bold">
+                <span>Monthly Value</span>
+                <span className="text-emerald-600">${totalMensualFinal.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+              </div>
+              <p className="text-xs text-[var(--text-muted)] text-right">Annual ÷ 12 months</p>
+            </>
+          ) : (
             <>
               <div className="flex justify-between text-sm">
                 <span className="text-[var(--text-secondary)]">Subtotal</span>
