@@ -472,6 +472,9 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
 
 // ── PDF HTML Generator ────────────────────────────────────────────────────────
 function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fechaValidez, estado }: any) {
+  const isContrato = !!(cotizacion as any).modoContrato;
+  const totalAnualPDF = (cotizacion as any).totalAnual || 0;
+  const totalMensualPDF = (cotizacion as any).totalMensual || 0;
   const fc = fechaCreacion instanceof Date ? fechaCreacion : new Date(fechaCreacion || cotizacion.creadoEn);
   const fv = fechaValidez instanceof Date ? fechaValidez : new Date(fechaValidez || new Date(cotizacion.creadoEn).getTime() + (cotizacion.validezDias || 30) * 86400000);
   const contacto = cotizacion.contactoPrincipal || null;
@@ -492,7 +495,7 @@ function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fe
 
   let rowNum = 0;
   const rows = Object.entries(grupos).map(([grupo, items]) => {
-    const groupHeader = `<tr style="background:#e8eef5"><td colspan="5" style="padding:6px 12px;font-weight:700;font-size:11px;color:#1B2A4A;text-transform:uppercase;letter-spacing:0.5px">${grupo}</td></tr>`;
+    const groupHeader = `<tr style="background:#e8eef5"><td colspan="${isContrato ? 6 : 5}" style="padding:6px 12px;font-weight:700;font-size:11px;color:#1B2A4A;text-transform:uppercase;letter-spacing:0.5px">${grupo}</td></tr>`;
     const itemRows = (items as any[]).map((l: any) => {
       rowNum++;
       const subtotal = (l.precioFinal || 0) * (l.cantidad || 1);
@@ -515,9 +518,9 @@ function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fe
   }).join("");
 
   const totalHTML = cotizacion.descuento > 0 ? `
-    <tr><td colspan="4" style="text-align:right;padding:4px 12px;color:#666">Subtotal:</td>
+    <tr><td colspan="${isContrato ? 5 : 4}" style="text-align:right;padding:4px 12px;color:#666">Subtotal:</td>
       <td style="text-align:right;padding:4px 12px">$${(cotizacion.subtotal||0).toLocaleString("en-US",{minimumFractionDigits:2})}</td></tr>
-    <tr><td colspan="4" style="text-align:right;padding:4px 12px;color:#c00">Discount:</td>
+    <tr><td colspan="${isContrato ? 5 : 4}" style="text-align:right;padding:4px 12px;color:#c00">Discount:</td>
       <td style="text-align:right;padding:4px 12px;color:#c00">-$${cotizacion.descuento.toLocaleString("en-US",{minimumFractionDigits:2})}</td></tr>` : "";
 
   return `<!DOCTYPE html><html><head><meta charset="utf-8">
@@ -585,9 +588,9 @@ function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fe
             <th style="padding:8px 12px;text-align:center;color:white;width:40px">#</th>
             <th style="padding:8px 12px;text-align:left;color:white">Service Description</th>
             <th style="padding:8px 12px;text-align:center;color:white;width:60px">Qty</th>
-            ${(cotizacion as any).modoContrato ? '<th style="padding:8px 12px;text-align:center;color:white;width:90px">Frequency</th>' : ""}
+            ${isContrato ? '<th style="padding:8px 12px;text-align:center;color:white;width:90px">Frequency</th>' : ""}
             <th style="padding:8px 12px;text-align:right;color:white;width:100px">Unit Price ($)</th>
-            <th style="padding:8px 12px;text-align:right;color:white;width:100px">${(cotizacion as any).modoContrato ? "Per Visit ($)" : "Total ($)"}</th>
+            <th style="padding:8px 12px;text-align:right;color:white;width:100px">${isContrato ? "Per Visit ($)" : "Total ($)"}</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>

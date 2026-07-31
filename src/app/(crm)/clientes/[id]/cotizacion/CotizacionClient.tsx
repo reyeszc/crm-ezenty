@@ -96,6 +96,14 @@ Acceptance: This quotation becomes a binding Service Agreement upon execution of
   const [loadingDetalle, setLoadingDetalle] = useState(false);
   const [mostrarPrecios, setMostrarPrecios] = useState(false);
   const [modoContrato, setModoContrato] = useState(false);
+
+  function toggleContrato(val: boolean) {
+    setModoContrato(val);
+    if (val) {
+      // Initialize frecuencia on all lines that don't have one
+      setLineas(prev => prev.map(l => ({ ...l, frecuencia: l.frecuencia || "quarterly" })));
+    }
+  }
   // Contact selection
   const contactoPrincipal = contactos?.find((c: any) => c.principal) || contactos?.[0];
   const [contactoSeleccionadoId, setContactoSeleccionadoId] = useState<string>(contactoPrincipal?.id || "");
@@ -382,7 +390,7 @@ Acceptance: This quotation becomes a binding Service Agreement upon execution of
                 : "Standard one-time quotation"}
             </p>
           </div>
-          <button onClick={() => setModoContrato(p => !p)}
+          <button onClick={() => toggleContrato(!modoContrato)}
             className={`w-12 h-6 rounded-full transition-colors flex items-center px-0.5 ${modoContrato ? "bg-marca-300" : "bg-gray-300 dark:bg-gray-600"}`}>
             <div className={`w-5 h-5 rounded-full bg-white shadow transition-transform ${modoContrato ? "translate-x-6" : ""}`} />
           </button>
