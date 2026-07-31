@@ -23,7 +23,7 @@ const PRECIOS_DEFAULT: Record<string, { precio: number; unidad: string; label: s
 interface Linea {
   id: string; descripcion: string; tipo: string; unidad: string;
   cantidad: string; precioUnitario: string; precioFinal: string; area: string;
-  frecuencia?: string;
+  frecuencia?: string; sqft?: number;
 }
 
 const FRECUENCIAS: Record<string, { label: string; veces: number }> = {
@@ -239,6 +239,7 @@ Acceptance: This quotation becomes a binding Service Agreement upon execution of
           precioUnitario: totalArea.toFixed(2),
           precioFinal: totalArea.toFixed(2),
           area: area.area,
+          sqft: area.subtotalSqFt,
         });
       }
     });
@@ -496,14 +497,19 @@ Acceptance: This quotation becomes a binding Service Agreement upon execution of
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-[var(--text-muted)]">$</span>
                   <input type="number" className="input text-sm pl-6" value={precios[key]}
                     onChange={e => {
-                      const newPrecio = e.target.value;
-                      setPrecios(p => ({ ...p, [key]: newPrecio }));
-                      // Update all existing lines of this type
-                      setLineas(prev => prev.map(l =>
-                        l.tipo === key
-                          ? { ...l, precioUnitario: newPrecio, precioFinal: newPrecio }
-                          : l
-                      ));
+                      const newPrecio = parseFloat(e.target.value) || 0;
+                      setPrecios(p => ({ ...p, [key]: String(newPrecio) }));
+                      setLineas(prev => prev.map(l => {
+                        if (l.tipo !== key) return l;
+                        const unidad = PRECIOS_DEFAULT[key]?.unidad;
+                        if (unidad === "sqft" && l.sqft) {
+                          // Recalculate total from stored sqft count × new price/sqft
+                          const newTotal = (l.sqft * newPrecio).toFixed(2);
+                          return { ...l, precioUnitario: newTotal, precioFinal: newTotal };
+                        }
+                        // flat_fee, habitacion, bano: update unit price directly
+                        return { ...l, precioUnitario: String(newPrecio), precioFinal: String(newPrecio) };
+                      }));
                     }}
                     step="0.01" min="0" />
                 </div>
