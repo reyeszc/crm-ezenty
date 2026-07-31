@@ -290,9 +290,10 @@ Acceptance: This quotation becomes a binding Service Agreement upon execution of
           })),
           subtotal,
           descuento: descuentoVal,
-          total: modoContrato ? lineas.reduce((s, l) => s + calcAnual(l), 0) - descuentoVal : total,
-          totalAnual: modoContrato ? lineas.reduce((s, l) => s + calcAnual(l), 0) - descuentoVal : null,
-          totalMensual: modoContrato ? (lineas.reduce((s, l) => s + calcAnual(l), 0) - descuentoVal) / 12 : null,
+          total: total, // always per-visit total
+          subtotalPerVisit: subtotal,
+          totalAnual: modoContrato ? totalAnualFinal : null,
+          totalMensual: modoContrato ? totalMensualFinal : null,
           modoContrato,
           notas, validezDias: parseInt(validez) || 30,
           medidaId: medidaSeleccionada || null,
@@ -623,7 +624,8 @@ Acceptance: This quotation becomes a binding Service Agreement upon execution of
                     </select>
                     {l.frecuencia && FRECUENCIAS[l.frecuencia] && (
                       <p className="text-xs text-[var(--text-muted)] mt-0.5">
-                        Annual: ${calcAnual(l).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                        Per visit: ${calcSubtotal(l).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                        · Annual: ${calcAnual(l).toLocaleString("en-US", { minimumFractionDigits: 2 })}
                         <span className="ml-1 text-marca-500 font-semibold">
                           · Monthly: ${(calcAnual(l) / 12).toLocaleString("en-US", { minimumFractionDigits: 2 })}
                         </span>
@@ -676,6 +678,10 @@ Acceptance: This quotation becomes a binding Service Agreement upon execution of
                 <span className="text-emerald-600">${totalMensualFinal.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
               </div>
               <p className="text-xs text-[var(--text-muted)] text-right">Annual ÷ 12 months</p>
+              <div className="flex justify-between text-sm text-[var(--text-secondary)] border-t border-[var(--border)] pt-2 mt-1">
+                <span>Per Visit Total</span>
+                <span>${total.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+              </div>
             </>
           ) : (
             <>
