@@ -349,8 +349,9 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
                 <th className="text-white text-left py-2 px-3 w-8">#</th>
                 <th className="text-white text-left py-2 px-3">Service Description</th>
                 <th className="text-white text-center py-2 px-3 w-16">Qty</th>
+                {(cotizacion as any).modoContrato && <th className="text-white text-center py-2 px-3 w-24">Frequency</th>}
                 <th className="text-white text-right py-2 px-3 w-24">Unit Price ($)</th>
-                <th className="text-white text-right py-2 px-3 w-24">Total ($)</th>
+                <th className="text-white text-right py-2 px-3 w-24">{(cotizacion as any).modoContrato ? "Per Visit ($)" : "Total ($)"}</th>
               </tr>
             </thead>
             <tbody>
@@ -372,7 +373,7 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
                 return Object.entries(grupos).map(([grupo, items]) => (
                   <>
                     <tr key={`g-${grupo}`} style={{ background: "#E8EEF5" }}>
-                      <td colSpan={5} className="py-1.5 px-3 text-xs font-bold uppercase tracking-wide" style={{ color: "#1B2A4A" }}>{grupo}</td>
+                      <td colSpan={(cotizacion as any).modoContrato ? 6 : 5} className="py-1.5 px-3 text-xs font-bold uppercase tracking-wide" style={{ color: "#1B2A4A" }}>{grupo}</td>
                     </tr>
                     {items.map((l: any) => {
                       num++;
@@ -382,13 +383,15 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
                           <td className="py-2 pl-5 pr-3 text-center text-[var(--text-muted)] font-mono text-xs">{String(num).padStart(2,"0")}</td>
                           <td className="py-2 px-3 text-[var(--text-primary)]">
                             {l.descripcion}
-                            {(l.unidad === "habitacion" || l.unidad === "bano" || l.unidad === "pieza") && (l.cantidad || 1) > 1 && (
-                              <span className="text-xs text-[var(--text-muted)] ml-1">(${(l.precioFinal||0).toLocaleString("en-US",{minimumFractionDigits:2})} each)</span>
-                            )}
                           </td>
                           <td className="py-2 px-3 text-center text-[var(--text-secondary)]">
-                            {(l.unidad === "habitacion" || l.unidad === "bano" || l.unidad === "pieza") ? (l.cantidad || 1) : (l.cantidad || 1)}
+                            {(l.cantidad || 1)}
                           </td>
+                          {(cotizacion as any).modoContrato && (
+                            <td className="py-2 px-3 text-center text-[var(--text-secondary)] text-xs">
+                              {({"quarterly":"Quarterly","semi-annual":"Semi-Annual","3x-year":"3x/Year","one-time":"One-Time"} as any)[(l as any).frecuencia || "quarterly"] || "Quarterly"}
+                            </td>
+                          )}
                           <td className="py-2 px-3 text-right text-[var(--text-secondary)]">
                             ${(l.precioFinal || 0).toLocaleString("en-US",{minimumFractionDigits:2})}
                           </td>
@@ -420,9 +423,21 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
                 </>
               )}
               <div className="flex justify-between text-base font-bold border-t border-[var(--border)] pt-2" style={{ color: "#1B2A4A" }}>
-                <span>TOTAL</span>
+                <span>{(cotizacion as any).modoContrato ? "Per Visit Total" : "TOTAL"}</span>
                 <span>${(cotizacion.total || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
               </div>
+              {(cotizacion as any).modoContrato && (cotizacion as any).totalAnual && (
+                <>
+                  <div className="flex justify-between text-sm pt-1" style={{ color: "#1B2A4A" }}>
+                    <span className="font-semibold">Annual Contract Value</span>
+                    <span className="font-semibold">${((cotizacion as any).totalAnual || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  <div className="flex justify-between text-base font-bold pt-1" style={{ color: "#15803d" }}>
+                    <span>Monthly Value (Annual ÷ 12)</span>
+                    <span>${((cotizacion as any).totalMensual || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
