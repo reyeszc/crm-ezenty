@@ -585,8 +585,9 @@ function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fe
             <th style="padding:8px 12px;text-align:center;color:white;width:40px">#</th>
             <th style="padding:8px 12px;text-align:left;color:white">Service Description</th>
             <th style="padding:8px 12px;text-align:center;color:white;width:60px">Qty</th>
+            ${(cotizacion as any).modoContrato ? '<th style="padding:8px 12px;text-align:center;color:white;width:90px">Frequency</th>' : ""}
             <th style="padding:8px 12px;text-align:right;color:white;width:100px">Unit Price ($)</th>
-            <th style="padding:8px 12px;text-align:right;color:white;width:100px">Total ($)</th>
+            <th style="padding:8px 12px;text-align:right;color:white;width:100px">${(cotizacion as any).modoContrato ? "Per Visit ($)" : "Total ($)"}</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>

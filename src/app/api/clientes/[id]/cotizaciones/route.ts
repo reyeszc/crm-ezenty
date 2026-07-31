@@ -51,6 +51,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     total: body.total || 0,
     notas: body.notas || null,
     validezDias: body.validezDias || 30,
+    modoContrato: body.modoContrato || false,
+    totalAnual: body.totalAnual || null,
+    totalMensual: body.totalMensual || null,
     medidaId: body.medidaId || null,
     contactoNombre: body.contactoNombre || null,
     contactoPuesto: body.contactoPuesto || null,
@@ -75,6 +78,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         precioFinal: linea.precioFinal || linea.precioUnitario || 0,
         subtotal,
         area: linea.area || null,
+        frecuencia: linea.frecuencia || null,
+        veces: linea.veces || null,
+        subtotalAnual: linea.subtotalAnual || null,
         orden: i,
       });
     }

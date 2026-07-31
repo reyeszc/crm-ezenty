@@ -30,7 +30,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const body = await req.json().catch(() => ({}));
 
   const data: any = { actualizadoEn: new Date() };
-  const allowed = ["estado", "notas", "validezDias", "descuento", "total", "subtotal"];
+  const allowed = ["estado", "notas", "validezDias", "descuento", "total", "subtotal", "modoContrato", "totalAnual", "totalMensual"];
   for (const k of allowed) { if (k in body) data[k] = body[k]; }
   await db.update(schema.cotizaciones).set(data).where(eq(schema.cotizaciones.id, cotId));
 
@@ -49,6 +49,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         precioFinal: linea.precioFinal || linea.precioUnitario || 0,
         subtotal: (linea.precioFinal || 0) * (linea.cantidad || 1),
         area: linea.area || null,
+        frecuencia: linea.frecuencia || null,
+        veces: linea.veces || null,
+        subtotalAnual: linea.subtotalAnual || null,
         orden: i,
       });
     }

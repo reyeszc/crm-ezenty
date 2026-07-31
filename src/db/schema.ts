@@ -49,6 +49,7 @@ export const clientes = pgTable("clientes", {
   valorEstimado: real("valor_estimado"),
   proximaAccion: text("proxima_accion"),
   proximaAccionFecha: timestamp("proxima_accion_fecha"),
+  proximaAccionFechaFin: timestamp("proxima_accion_fecha_fin"),
   ultimoContacto: timestamp("ultimo_contacto"),
   motivoPerdida: text("motivo_perdida"),
   titulo: text("titulo"),
@@ -317,6 +318,9 @@ export const cotizaciones = pgTable("cotizaciones", {
   numero: text("numero").notNull(), // EZPC-Q-XXXXX
   estado: text("estado").notNull().default("BORRADOR"), // BORRADOR, ENVIADA, APROBADA, RECHAZADA
   validezDias: integer("validez_dias").default(30),
+  modoContrato: boolean("modo_contrato").default(false),
+  totalAnual: real("total_anual"),
+  totalMensual: real("total_mensual"),
   notas: text("notas"),
   subtotal: real("subtotal").default(0),
   descuento: real("descuento").default(0),
@@ -343,6 +347,9 @@ export const cotizacionLineas = pgTable("cotizacion_lineas", {
   precioFinal: real("precio_final").notNull(), // editable override
   subtotal: real("subtotal").notNull().default(0),
   area: text("area"), // nombre del área de donde vino
+  frecuencia: text("frecuencia"), // quarterly, semi-annual, 3x-year, one-time
+  veces: real("veces"), // number of times per year
+  subtotalAnual: real("subtotal_anual"),
   orden: integer("orden").default(0),
   cotizacionId: text("cotizacion_id").notNull().references(() => cotizaciones.id),
 });
