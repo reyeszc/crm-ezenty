@@ -495,7 +495,21 @@ Acceptance: This quotation becomes a binding Service Agreement upon execution of
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-[var(--text-muted)]">$</span>
                   <input type="number" className="input text-sm pl-6" value={precios[key]}
-                    onChange={e => setPrecios(p => ({ ...p, [key]: e.target.value }))}
+                    onChange={e => {
+                      const newPrecio = e.target.value;
+                      setPrecios(p => ({ ...p, [key]: newPrecio }));
+                      // Update existing lines that use this tipo and haven't been manually edited
+                      setLineas(prev => prev.map(l => {
+                        if (l.tipo === key) {
+                          const precioOriginal = PRECIOS_DEFAULT[key]?.precio;
+                          const noEditado = parseFloat(l.precioFinal) === parseFloat(l.precioUnitario);
+                          if (noEditado) {
+                            return { ...l, precioUnitario: newPrecio, precioFinal: newPrecio };
+                          }
+                        }
+                        return l;
+                      }));
+                    }}
                     step="0.01" min="0" />
                 </div>
               </div>
