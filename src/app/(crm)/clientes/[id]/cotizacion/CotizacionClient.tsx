@@ -498,17 +498,12 @@ Acceptance: This quotation becomes a binding Service Agreement upon execution of
                     onChange={e => {
                       const newPrecio = e.target.value;
                       setPrecios(p => ({ ...p, [key]: newPrecio }));
-                      // Update existing lines that use this tipo and haven't been manually edited
-                      setLineas(prev => prev.map(l => {
-                        if (l.tipo === key) {
-                          const precioOriginal = PRECIOS_DEFAULT[key]?.precio;
-                          const noEditado = parseFloat(l.precioFinal) === parseFloat(l.precioUnitario);
-                          if (noEditado) {
-                            return { ...l, precioUnitario: newPrecio, precioFinal: newPrecio };
-                          }
-                        }
-                        return l;
-                      }));
+                      // Update all existing lines of this type
+                      setLineas(prev => prev.map(l =>
+                        l.tipo === key
+                          ? { ...l, precioUnitario: newPrecio, precioFinal: newPrecio }
+                          : l
+                      ));
                     }}
                     step="0.01" min="0" />
                 </div>
