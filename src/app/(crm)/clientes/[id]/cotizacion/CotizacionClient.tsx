@@ -224,7 +224,11 @@ Acceptance: This quotation becomes a binding Service Agreement upon execution of
     const nuevas: Linea[] = [];
     areas.forEach((area: any) => {
       if (area.flatFee > 0) {
-        const tipo = area.esTipoBano ? "Tile & Grout - Flat Fee/Bath" : "Carpet - Flat Fee/Room";
+        // Determine tipo based on floor type AND bath/room type
+        let tipo = "Carpet - Flat Fee/Room"; // default
+        if (area.esTipoBano) tipo = "Tile & Grout - Flat Fee/Bath";
+        else if (area.tipoPiso === "Tile") tipo = "Tile & Grout - Flat Fee/Bath";
+        else if (area.tipoPiso === "Carpet") tipo = "Carpet - Flat Fee/Room";
         nuevas.push({
           id: crypto.randomUUID(),
           descripcion: `${area.area} — ${PRECIOS_DEFAULT[tipo]?.label || tipo}`,
