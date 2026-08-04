@@ -81,6 +81,13 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   if (!await puedeAccederCliente(session.user.id, (session.user as any).rol, id)) {
     return NextResponse.json({ error: "Acceso denegado" }, { status: 403 });
   }
+
+  // Null out any cotizaciones that reference this medida (FK constraint)
+  await db.update(schema.cotizaciones)
+    .set({ medidaId: null })
+    .where(eq(schema.cotizaciones.medidaId, medidaId));
+
+  // Delete lineas → areas → medida
   const areas = await db.select({ id: schema.medidasAreas.id }).from(schema.medidasAreas).where(eq(schema.medidasAreas.medidaId, medidaId));
   for (const a of areas) {
     await db.delete(schema.medidasLineas).where(eq(schema.medidasLineas.areaId, a.id));
