@@ -125,32 +125,27 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
 
       const html = buildPDFHTML(pdfData);
 
-      // Create hidden iframe to render HTML, then use html2canvas + jsPDF
-      const iframe = document.createElement("iframe");
-      iframe.style.cssText = "position:fixed;left:-9999px;top:-9999px;width:816px;height:1056px;border:none;";
-      document.body.appendChild(iframe);
+      // Render HTML in a hidden div in the same page (avoids iframe cross-origin issues)
+      const container = document.createElement("div");
+      container.style.cssText = "position:fixed;left:-9999px;top:0;width:816px;background:white;z-index:-1;";
+      container.innerHTML = html.replace(/<script[\s\S]*?<\/script>/gi, ""); // strip scripts
+      document.body.appendChild(container);
 
-      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-      if (!iframeDoc) throw new Error("No iframe doc");
-      iframeDoc.open();
-      iframeDoc.write(html);
-      iframeDoc.close();
-
-      await new Promise(r => setTimeout(r, 800));
+      await new Promise(r => setTimeout(r, 600));
 
       const { default: html2canvas } = await import("html2canvas");
       const { jsPDF } = await import("jspdf");
 
-      const body = iframeDoc.body;
-      const canvas = await html2canvas(body, {
+      const canvas = await html2canvas(container, {
         scale: 2,
         useCORS: true,
         allowTaint: true,
         width: 816,
         windowWidth: 816,
+        backgroundColor: "#ffffff",
       });
 
-      document.body.removeChild(iframe);
+      document.body.removeChild(container);
 
       const imgData = canvas.toDataURL("image/jpeg", 0.95);
       const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "letter" });
