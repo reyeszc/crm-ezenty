@@ -16,7 +16,7 @@ const PRECIOS_DEFAULT: Record<string, { precio: number; unidad: string; label: s
   "Odor Control":                 { precio: 300.00, unidad: "flat_fee", label: "Odor Control" },
   "Decontamination - Sq Ft": { precio: 1.50, unidad: "sqft",     label: "Decontamination & Odor Control Treatment ($/sq ft)" },
   "Decontamination - Flat":  { precio: 450.00, unidad: "flat_fee", label: "Decontamination & Odor Control Treatment (Flat Fee)" },
-  "Guest Rooms":                  { precio: 22.00,  unidad: "habitacion", label: "Guest Rooms" },
+  "Complimentary":            { precio: 0.00,  unidad: "flat_fee", label: "Complimentary (No Charge)" },
   "Guest Bathrooms":              { precio: 20.00,  unidad: "bano",     label: "Guest Bathrooms" },
 };
 
@@ -250,15 +250,26 @@ Acceptance: This quotation becomes a binding Service Agreement upon execution of
           sqft: area.subtotalSqFt,
         });
       }
+      // Area with no measurements — add as Complimentary
+      if (area.flatFee === 0 && area.subtotalSqFt === 0) {
+        nuevas.push({
+          id: crypto.randomUUID(),
+          descripcion: area.area,
+          tipo: "Complimentary", unidad: "flat_fee",
+          cantidad: "1",
+          precioUnitario: "0",
+          precioFinal: "0",
+          area: area.area,
+        });
+      }
     });
     if (nuevas.length > 0) {
-      // Keep the Guest Rooms/Bathrooms lines and add area lines
       const guestLines = lineas.filter(l => l.tipo === "Guest Rooms" || l.tipo === "Guest Bathrooms");
       setLineas([...guestLines, ...nuevas]);
       setMostrarAreas(false);
-      success(`${nuevas.length} líneas cargadas ✓`);
+      success(`${nuevas.length} línea${nuevas.length !== 1 ? "s" : ""} cargadas ✓`);
     } else {
-      error("Las áreas seleccionadas no tienen datos suficientes");
+      error("Selecciona al menos un área");
     }
   }
 
