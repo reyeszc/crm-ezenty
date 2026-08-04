@@ -558,13 +558,18 @@ function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fe
     window.addEventListener("load", function() {
       var el = document.getElementById("contenido");
       if (!el) return;
-      var scaleX = window.innerWidth / el.scrollWidth;
-      var scaleY = window.innerHeight / el.scrollHeight;
-      var scale = Math.min(scaleX, scaleY, 1);
+      var pageW = 816;  // Letter at 96dpi
+      var pageH = 1056;
+      var elW = el.scrollWidth;
+      var elH = el.scrollHeight;
+      var scale = Math.min(pageW / elW, pageH / elH, 1);
       if (scale < 1) {
         el.style.transform = "scale(" + scale + ")";
-        el.style.transformOrigin = "top left";
-        el.style.width = (100 / scale) + "%";
+        el.style.transformOrigin = "top center";
+        el.style.marginLeft = "auto";
+        el.style.marginRight = "auto";
+        document.body.style.display = "flex";
+        document.body.style.justifyContent = "center";
       }
     });
   </script>
