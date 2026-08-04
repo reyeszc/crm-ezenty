@@ -515,16 +515,17 @@ function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fe
       rowNum++;
       const subtotal = (l.precioFinal || 0) * (l.cantidad || 1);
       const qty = l.cantidad || 1;
-      const eachLabel = qty > 1
-        ? `` : ``;
+      const freqLabels: Record<string,string> = {"quarterly":"Quarterly","semi-annual":"Semi-Annual","3x-year":"3x/Year","one-time":"One-Time"};
+      const freqCell = isContrato ? `<td style="padding:4px 8px;text-align:center;color:#555;font-size:10px">${freqLabels[l.frecuencia||"quarterly"]||"Quarterly"}</td>` : "";
       return `<tr style="background:${rowNum % 2 === 0 ? "#ffffff" : "#f8f9fa"}">
-        <td style="padding:4px 8px 4px 14px;text-align:center;color:#666;font-family:monospace;font-size:11px">${String(rowNum).padStart(2,"0")}</td>
-        <td style="padding:7px 12px">${
+        <td style="padding:4px 8px 4px 14px;text-align:center;color:#666;font-family:monospace;font-size:10px">${String(rowNum).padStart(2,"0")}</td>
+        <td style="padding:4px 8px">${
           l.descripcion && l.descripcion.includes(" — ")
-            ? `<span style="font-size:10px;color:#888">${l.descripcion.split(" — ")[0]}</span><br>${l.descripcion.split(" — ").slice(1).join(" — ")}`
+            ? `<span style="font-size:10px;color:#888">${l.descripcion.split(" — ")[0]}</span> — ${l.descripcion.split(" — ").slice(1).join(" — ")}`
             : (l.descripcion || l.tipo || "")
         }</td>
         <td style="padding:4px 8px;text-align:center;color:#555">${qty}</td>
+        ${freqCell}
         <td style="padding:4px 8px;text-align:right;color:#555">$${(l.precioFinal||0).toLocaleString("en-US",{minimumFractionDigits:2})}</td>
         <td style="padding:4px 8px;text-align:right;font-weight:600;color:#1B2A4A">$${subtotal.toLocaleString("en-US",{minimumFractionDigits:2})}</td>
       </tr>`;
