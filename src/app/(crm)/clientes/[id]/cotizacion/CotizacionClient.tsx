@@ -214,10 +214,13 @@ Acceptance: This quotation becomes a binding Service Agreement upon execution of
   }
 
   function cargarAreasSeleccionadas() {
-    if (!medidaActual) return;
-    const areas = medidaActual.areas.filter((a: any) =>
-      areasSeleccionadas.size === 0 || areasSeleccionadas.has(a.id)
-    );
+    // Collect areas from ALL medidas that are selected
+    const todasLasAreas = medidas.flatMap((m: any) => m.areas || []);
+    const areas = todasLasAreas.filter((a: any) => areasSeleccionadas.has(a.id));
+    if (areas.length === 0) return;
+    // Temporarily wrap in medidaActual-like structure
+    const medidaActual = { areas };
+    {
     const nuevas: Linea[] = [];
     areas.forEach((area: any) => {
       if (area.flatFee > 0) {
@@ -266,10 +269,11 @@ Acceptance: This quotation becomes a binding Service Agreement upon execution of
     if (nuevas.length > 0) {
       const guestLines = lineas.filter(l => l.tipo === "Guest Rooms" || l.tipo === "Guest Bathrooms");
       setLineas([...guestLines, ...nuevas]);
-      setMostrarAreas(false);
+      setAreasSeleccionadas(new Set());
       success(`${nuevas.length} línea${nuevas.length !== 1 ? "s" : ""} cargadas ✓`);
     } else {
       error("Selecciona al menos un área");
+    }
     }
   }
 
@@ -445,59 +449,70 @@ Acceptance: This quotation becomes a binding Service Agreement upon execution of
         </div>
       )}
 
-      {/* Load from medidas with area selection */}
+      {/* Load from medidas — all medidas expanded with their areas */}
       {medidas.length > 0 && (
         <div className="card p-4 mb-4">
-          <p className="text-sm font-semibold text-[var(--text-primary)] mb-3">📐 Cargar desde medidas</p>
-          <div className="flex gap-2 mb-3">
-            <select className="input text-sm flex-1" value={medidaSeleccionada}
-              onChange={e => { setMedidaSeleccionada(e.target.value); setAreasSeleccionadas(new Set()); setMostrarAreas(true); }}>
-              <option value="">Seleccionar medida…</option>
-              {medidas.map((m: any) => (
-                <option key={m.id} value={m.id}>
-                  {new Date(m.fecha).toLocaleDateString("en-US", { month: "short", day: "numeric" })} — {(m.sqFtTotal || 0).toFixed(0)} sq ft · {m.areas?.length || 0} áreas
-                </option>
-              ))}
-            </select>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-sm font-semibold text-[var(--text-primary)]">📐 Cargar desde medidas</p>
+            {areasSeleccionadas.size > 0 && (
+              <span className="text-xs text-marca-500 font-medium">{areasSeleccionadas.size} área(s) seleccionada(s)</span>
+            )}
           </div>
 
-          {/* Area selector */}
-          {medidaActual && mostrarAreas && (
-            <div className="bg-[var(--bg-secondary)] rounded-lg p-3 mb-3">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs font-semibold text-[var(--text-primary)]">Selecciona las áreas a cotizar:</p>
-                <button onClick={() => {
-                  if (areasSeleccionadas.size === medidaActual.areas.length) setAreasSeleccionadas(new Set());
-                  else setAreasSeleccionadas(new Set(medidaActual.areas.map((a: any) => a.id)));
-                }} className="text-xs text-marca-500 hover:underline">
-                  {areasSeleccionadas.size === medidaActual.areas.length ? "Deseleccionar todas" : "Seleccionar todas"}
-                </button>
+          <div className="space-y-3">
+            {medidas.map((m: any) => (
+              <div key={m.id} className="bg-[var(--bg-secondary)] rounded-xl overflow-hidden">
+                {/* Medida header */}
+                <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--border)]">
+                  <div>
+                    <p className="text-xs font-semibold text-[var(--text-primary)]">
+                      {new Date(m.fecha).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}
+                    </p>
+                    <p className="text-xs text-[var(--text-muted)]">
+                      {(m.sqFtTotal || 0).toFixed(0)} sq ft · {m.areas?.length || 0} áreas
+                    </p>
+                  </div>
+                  <button onClick={() => {
+                    const allIds = (m.areas?.map((a: any) => a.id as string) || []) as string[];
+                    const allSelected = m.areas?.every((a: any) => areasSeleccionadas.has(a.id));
+                    setAreasSeleccionadas(prev => {
+                      const next = new Set(prev);
+                      if (allSelected) allIds.forEach((id: string) => next.delete(id));
+                      else allIds.forEach((id: string) => next.add(id));
+                      return next;
+                    });
+                  }} className="text-xs text-marca-500 hover:underline">
+                    {m.areas?.every((a: any) => areasSeleccionadas.has(a.id)) ? "Quitar todas" : "Seleccionar todas"}
+                  </button>
+                </div>
+                {/* Areas */}
+                <div className="divide-y divide-[var(--border)]">
+                  {m.areas?.map((area: any) => (
+                    <label key={area.id} className="flex items-center gap-2 cursor-pointer px-3 py-2 hover:bg-[var(--bg-tertiary)] transition-colors">
+                      <input type="checkbox"
+                        checked={areasSeleccionadas.has(area.id)}
+                        onChange={() => toggleArea(area.id)}
+                        className="rounded flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <span className="text-sm text-[var(--text-primary)] font-medium">{area.area}</span>
+                        <span className="text-xs text-[var(--text-muted)] ml-2">
+                          {area.tipoPiso}
+                          {area.subtotalSqFt > 0 ? ` · ${area.subtotalSqFt.toFixed(0)} sq ft` : ""}
+                          {area.flatFee > 0 ? ` · flat fee` : ""}
+                          {area.esTipoHabitacion ? " 🛏️" : area.esTipoBano ? " 🚿" : ""}
+                        </span>
+                      </div>
+                    </label>
+                  ))}
+                </div>
               </div>
-              <div className="space-y-1.5">
-                {medidaActual.areas.map((area: any) => (
-                  <label key={area.id} className="flex items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition-colors">
-                    <input type="checkbox"
-                      checked={areasSeleccionadas.has(area.id)}
-                      onChange={() => toggleArea(area.id)}
-                      className="rounded" />
-                    <div className="flex-1 min-w-0">
-                      <span className="text-sm text-[var(--text-primary)] font-medium">{area.area}</span>
-                      <span className="text-xs text-[var(--text-muted)] ml-2">
-                        {area.tipoPiso}
-                        {area.subtotalSqFt > 0 ? ` · ${area.subtotalSqFt.toFixed(0)} sq ft` : ""}
-                        {area.flatFee > 0 ? ` · $${area.flatFee} flat` : ""}
-                        {area.esTipoHabitacion ? " 🛏️" : area.esTipoBano ? " 🚿" : ""}
-                      </span>
-                    </div>
-                  </label>
-                ))}
-              </div>
-              <button onClick={cargarAreasSeleccionadas} disabled={areasSeleccionadas.size === 0 && medidaActual.areas.length > 0}
-                className="btn-primary w-full justify-center mt-3 text-sm disabled:opacity-40">
-                Cargar {areasSeleccionadas.size > 0 ? `${areasSeleccionadas.size} área(s) seleccionada(s)` : "todas las áreas"}
-              </button>
-            </div>
-          )}
+            ))}
+          </div>
+
+          <button onClick={cargarAreasSeleccionadas} disabled={areasSeleccionadas.size === 0}
+            className="btn-primary w-full justify-center mt-3 text-sm disabled:opacity-40">
+            Cargar {areasSeleccionadas.size > 0 ? `${areasSeleccionadas.size} área(s)` : "áreas seleccionadas"}
+          </button>
         </div>
       )}
 
