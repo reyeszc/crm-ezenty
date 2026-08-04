@@ -510,7 +510,7 @@ function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fe
 
   let rowNum = 0;
   const rows = Object.entries(grupos).map(([grupo, items]) => {
-    const groupHeader = `<tr style="background:#e8eef5"><td colspan="${isContrato ? 6 : 5}" style="padding:6px 12px;font-weight:700;font-size:11px;color:#1B2A4A;text-transform:uppercase;letter-spacing:0.5px">${grupo}</td></tr>`;
+    const groupHeader = `<tr style="background:#e8eef5"><td colspan="${isContrato ? 6 : 5}" style="padding:3px 8px;font-weight:700;font-size:11px;color:#1B2A4A;text-transform:uppercase;letter-spacing:0.5px">${grupo}</td></tr>`;
     const itemRows = (items as any[]).map((l: any) => {
       rowNum++;
       const subtotal = (l.precioFinal || 0) * (l.cantidad || 1);
@@ -518,15 +518,15 @@ function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fe
       const eachLabel = qty > 1
         ? `` : ``;
       return `<tr style="background:${rowNum % 2 === 0 ? "#ffffff" : "#f8f9fa"}">
-        <td style="padding:7px 12px 7px 20px;text-align:center;color:#666;font-family:monospace;font-size:11px">${String(rowNum).padStart(2,"0")}</td>
+        <td style="padding:4px 8px 4px 14px;text-align:center;color:#666;font-family:monospace;font-size:11px">${String(rowNum).padStart(2,"0")}</td>
         <td style="padding:7px 12px">${
           l.descripcion && l.descripcion.includes(" — ")
             ? `<span style="font-size:10px;color:#888">${l.descripcion.split(" — ")[0]}</span><br>${l.descripcion.split(" — ").slice(1).join(" — ")}`
             : (l.descripcion || l.tipo || "")
         }</td>
-        <td style="padding:7px 12px;text-align:center;color:#555">${qty}</td>
-        <td style="padding:7px 12px;text-align:right;color:#555">$${(l.precioFinal||0).toLocaleString("en-US",{minimumFractionDigits:2})}</td>
-        <td style="padding:7px 12px;text-align:right;font-weight:600;color:#1B2A4A">$${subtotal.toLocaleString("en-US",{minimumFractionDigits:2})}</td>
+        <td style="padding:4px 8px;text-align:center;color:#555">${qty}</td>
+        <td style="padding:4px 8px;text-align:right;color:#555">$${(l.precioFinal||0).toLocaleString("en-US",{minimumFractionDigits:2})}</td>
+        <td style="padding:4px 8px;text-align:right;font-weight:600;color:#1B2A4A">$${subtotal.toLocaleString("en-US",{minimumFractionDigits:2})}</td>
       </tr>`;
     }).join("");
     return groupHeader + itemRows;
@@ -541,27 +541,29 @@ function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fe
   return `<!DOCTYPE html><html><head><meta charset="utf-8">
   <title>${cotizacion.numero} — Ezenty ProCare</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 0; color: #333; font-size: 13px; }
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; color: #333; font-size: 11px; }
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
-    @media print { 
-      body { margin: 0; } 
+    @media print {
+      @page { size: Letter portrait; margin: 0.3in; }
+      html, body { width: 100%; height: 100%; }
+      body { margin: 0; transform-origin: top left; }
       .no-print { display: none; }
     }
     table { width: 100%; border-collapse: collapse; }
   </style></head><body>
-  <div style="max-width:800px;margin:0 auto;padding:0">
+  <div style="max-width:750px;margin:0 auto;padding:0">
     <!-- Header -->
-    <div style="background:#1B2A4A;padding:24px 32px;display:flex;justify-content:space-between;align-items:flex-start">
+    <div style="background:#1B2A4A;padding:14px 24px;display:flex;justify-content:space-between;align-items:flex-start">
       <div style="display:flex;align-items:flex-start;gap:16px">
         <img src="https://crm-ezenty.vercel.app/logo.png" alt="Ezenty" style="height:70px;width:70px;object-fit:contain;background:white;border-radius:8px;padding:4px" onerror="this.style.display='none'" />
         <div>
-          <div style="color:white;font-size:20px;font-weight:900;letter-spacing:1px;margin-bottom:2px">SERVICE QUOTATION</div>
+          <div style="color:white;font-size:16px;font-weight:900;letter-spacing:1px;margin-bottom:2px">SERVICE QUOTATION</div>
           <div style="color:#90c4e8;font-size:11px">Floor, Surface &amp; Odor Care · IICRC Certified</div>
           <div style="color:#a8d0ec;font-size:10px;font-style:italic;margin-top:2px">We Protect the Surfaces That Protect Your Brand™</div>
         </div>
       </div>
       <div style="text-align:right;color:white">
-        <div style="font-size:16px;font-weight:bold">${cotizacion.numero}</div>
+        <div style="font-size:13px;font-weight:bold">${cotizacion.numero}</div>
         <div style="color:#90c4e8;font-size:12px">${fc.toLocaleDateString("en-US",{month:"2-digit",day:"2-digit",year:"numeric"})}</div>
         <div style="color:#90c4e8;font-size:11px;margin-top:6px">Valid Through:</div>
         <div style="color:#FFD700;font-weight:bold">${fv.toLocaleDateString("en-US",{month:"2-digit",day:"2-digit",year:"numeric"})}</div>
@@ -570,7 +572,7 @@ function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fe
 
     <!-- Property Info -->
     <div style="background:#FFF8E7;padding:16px 32px">
-      <div style="font-size:11px;font-weight:900;color:#1B2A4A;letter-spacing:1px;margin-bottom:10px">PROPERTY INFORMATION</div>
+      <div style="font-size:10px;font-weight:900;color:#1B2A4A;letter-spacing:1px;margin-bottom:6px">PROPERTY INFORMATION</div>
       <table><tbody>
         <tr>
           <td style="padding:3px 0;width:50%"><span style="font-weight:700;color:#1B2A4A">Management: </span>${cliente.management||"—"}</td>
@@ -596,31 +598,31 @@ function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fe
 
     <!-- Services -->
     <div style="padding:16px 32px">
-      <div style="font-size:11px;font-weight:900;color:#1B2A4A;letter-spacing:1px;margin-bottom:10px">SECTION 1 — QUOTED SERVICES &amp; PRICING</div>
+      <div style="font-size:10px;font-weight:900;color:#1B2A4A;letter-spacing:1px;margin-bottom:6px">SECTION 1 — QUOTED SERVICES &amp; PRICING</div>
       <table>
         <thead>
           <tr style="background:#1B2A4A">
-            <th style="padding:8px 12px;text-align:center;color:white;width:40px">#</th>
-            <th style="padding:8px 12px;text-align:left;color:white">Service Description</th>
-            <th style="padding:8px 12px;text-align:center;color:white;width:60px">Qty</th>
-            ${isContrato ? '<th style="padding:8px 12px;text-align:center;color:white;width:90px">Frequency</th>' : ""}
-            <th style="padding:8px 12px;text-align:right;color:white;width:100px">Unit Price ($)</th>
-            <th style="padding:8px 12px;text-align:right;color:white;width:100px">${isContrato ? "Per Visit ($)" : "Total ($)"}</th>
+            <th style="padding:5px 8px;text-align:center;color:white;width:40px">#</th>
+            <th style="padding:5px 8px;text-align:left;color:white">Service Description</th>
+            <th style="padding:5px 8px;text-align:center;color:white;width:60px">Qty</th>
+            ${isContrato ? '<th style="padding:5px 8px;text-align:center;color:white;width:90px">Frequency</th>' : ""}
+            <th style="padding:5px 8px;text-align:right;color:white;width:100px">Unit Price ($)</th>
+            <th style="padding:5px 8px;text-align:right;color:white;width:100px">${isContrato ? "Per Visit ($)" : "Total ($)"}</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
         <tfoot>
           ${totalHTML}
           <tr style="border-top:2px solid #1B2A4A">
-            <td colspan="4" style="text-align:right;padding:8px 12px;font-weight:900;font-size:15px;color:#1B2A4A">TOTAL</td>
-            <td style="text-align:right;padding:8px 12px;font-weight:900;font-size:15px;color:#1B2A4A">$${(cotizacion.total||0).toLocaleString("en-US",{minimumFractionDigits:2})}</td>
+            <td colspan="4" style="text-align:right;padding:5px 8px;font-weight:900;font-size:12px;color:#1B2A4A">TOTAL</td>
+            <td style="text-align:right;padding:5px 8px;font-weight:900;font-size:12px;color:#1B2A4A">$${(cotizacion.total||0).toLocaleString("en-US",{minimumFractionDigits:2})}</td>
           </tr>
         </tfoot>
       </table>
     </div>
 
     <!-- Signatures -->
-    <div style="padding:16px 32px;border-top:1px solid #ddd">
+    <div style="padding:10px 24px;border-top:1px solid #ddd">
       <table><tbody><tr>
         <td style="width:50%;vertical-align:top;padding-right:24px">
           <div style="font-size:11px;font-weight:900;color:#1B2A4A;margin-bottom:10px">AUTHORIZED BY CLIENT</div>
@@ -653,13 +655,13 @@ function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fe
         </div>` : ""}
 
     <!-- Footer -->
-    <div style="background:#f8f9fa;padding:12px 32px;border-top:1px solid #ddd;display:flex;justify-content:space-between;align-items:center">
+    <div style="background:#f8f9fa;padding:8px 24px;border-top:1px solid #ddd;display:flex;justify-content:space-between;align-items:center">
       <span style="font-size:11px;color:#888">EZENTY ProCare LLC · ${
         (cliente.zona || "").toLowerCase().includes("ga") || (cliente.zona || "").toLowerCase().includes("georgia")
           ? "Georgia" : "Tennessee"
       } · IICRC Certified</span>
       <div style="display:flex;align-items:center;gap:12px">
-        <img src="https://crm-ezenty.vercel.app/iicrc.png" alt="IICRC Certified Firm" style="width:44px;height:44px;object-fit:contain" />
+        <img src="https://crm-ezenty.vercel.app/iicrc.png" alt="IICRC Certified Firm" style="width:32px;height:32px;object-fit:contain" />
         <span style="font-size:11px;color:#888">${cotizacion.numero} · Confidential. For Client Use Only · Valid ${cotizacion.validezDias||30} Days</span>
       </div>
     </div>
