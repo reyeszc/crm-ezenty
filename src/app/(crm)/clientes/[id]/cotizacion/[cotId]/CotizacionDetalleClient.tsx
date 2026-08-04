@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { ArrowLeft, FileText, Download, Send, CheckCircle, XCircle, Printer, Edit2, Save, Plus, Trash2, GripVertical } from "lucide-react";
 import { useToast } from "@/components/providers/ToastProvider";
@@ -107,7 +108,6 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
   async function generateAndPrintPDF() {
     setGeneratingPdf(true);
     try {
-      // Always fetch fresh data so edits are reflected in PDF
       const res = await fetch(`/api/cotizaciones/${cotizacion.id}/pdf`);
       if (!res.ok) throw new Error("API error");
       const data = await res.json();
@@ -125,31 +125,48 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
 
       const html = buildPDFHTML(pdfData);
 
-      const printWindow = window.open("", "_blank");
-      if (!printWindow) {
-        error("El navegador bloqueó la ventana emergente. Permite pop-ups para este sitio.");
-        setGeneratingPdf(false);
-        return;
-      }
+      // Create hidden iframe to render HTML, then use html2canvas + jsPDF
+      const iframe = document.createElement("iframe");
+      iframe.style.cssText = "position:fixed;left:-9999px;top:-9999px;width:816px;height:1056px;border:none;";
+      document.body.appendChild(iframe);
 
-      printWindow.document.open();
-      printWindow.document.write(html);
-      printWindow.document.close();
-      setTimeout(() => {
-        // Add a visible tip in the print window before the dialog opens
-        const tip = printWindow.document.createElement("div");
-        tip.id = "print-tip";
-        tip.style.cssText = "position:fixed;top:0;left:0;right:0;background:#1B2A4A;color:white;text-align:center;padding:10px;font-family:Arial;font-size:13px;z-index:9999";
-        tip.innerHTML = "💡 En el diálogo de impresión → <b>Más opciones</b> → desactiva <b>\"Encabezados y pies de página\"</b> → haz clic en Imprimir";
-        printWindow.document.body.prepend(tip);
-        const style = printWindow.document.createElement("style");
-        style.textContent = "#print-tip { display: block; } @media print { #print-tip { display: none !important; } }";
-        printWindow.document.head.appendChild(style);
-        printWindow.print();
-        setGeneratingPdf(false);
-      }, 1200);
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+      if (!iframeDoc) throw new Error("No iframe doc");
+      iframeDoc.open();
+      iframeDoc.write(html);
+      iframeDoc.close();
+
+      await new Promise(r => setTimeout(r, 800));
+
+      const { default: html2canvas } = await import("html2canvas");
+      const { jsPDF } = await import("jspdf");
+
+      const body = iframeDoc.body;
+      const canvas = await html2canvas(body, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        width: 816,
+        windowWidth: 816,
+      });
+
+      document.body.removeChild(iframe);
+
+      const imgData = canvas.toDataURL("image/jpeg", 0.95);
+      const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "letter" });
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+      const imgW = canvas.width;
+      const imgH = canvas.height;
+      const ratio = Math.min(pageW / imgW, pageH / imgH);
+      const x = (pageW - imgW * ratio) / 2;
+      const y = 0;
+      pdf.addImage(imgData, "JPEG", x, y, imgW * ratio, imgH * ratio);
+      pdf.save(`${(data.cotizacion || cotizacion).numero || "cotizacion"}.pdf`);
+      success("PDF descargado ✓");
     } catch (e: any) {
       error("No se pudo generar el PDF: " + (e.message || "error desconocido"));
+    } finally {
       setGeneratingPdf(false);
     }
   }
