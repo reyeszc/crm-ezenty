@@ -138,7 +138,7 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
       setTimeout(() => {
         printWindow.print();
         setGeneratingPdf(false);
-      }, 800);
+      }, 1200);
     } catch (e: any) {
       error("No se pudo generar el PDF: " + (e.message || "error desconocido"));
       setGeneratingPdf(false);
@@ -544,14 +544,32 @@ function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fe
     body { font-family: Arial, sans-serif; margin: 0; padding: 0; color: #333; font-size: 11px; }
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
     @media print {
-      @page { size: Letter portrait; margin: 0.3in; }
-      html, body { width: 100%; height: 100%; }
-      body { margin: 0; transform-origin: top left; }
+      @page { size: Letter portrait; margin: 0; }
+      html, body { margin: 0; padding: 0; }
       .no-print { display: none; }
+      #contenido {
+        transform-origin: top left;
+        width: 100vw;
+      }
     }
     table { width: 100%; border-collapse: collapse; }
-  </style></head><body>
-  <div style="max-width:750px;margin:0 auto;padding:0">
+  </style>
+  <script>
+    window.addEventListener("load", function() {
+      var el = document.getElementById("contenido");
+      if (!el) return;
+      var scaleX = window.innerWidth / el.scrollWidth;
+      var scaleY = window.innerHeight / el.scrollHeight;
+      var scale = Math.min(scaleX, scaleY, 1);
+      if (scale < 1) {
+        el.style.transform = "scale(" + scale + ")";
+        el.style.transformOrigin = "top left";
+        el.style.width = (100 / scale) + "%";
+      }
+    });
+  </script>
+  </head><body>
+  <div id="contenido" style="max-width:750px;margin:0 auto;padding:0">
     <!-- Header -->
     <div style="background:#1B2A4A;padding:14px 24px;display:flex;justify-content:space-between;align-items:flex-start">
       <div style="display:flex;align-items:flex-start;gap:16px">
