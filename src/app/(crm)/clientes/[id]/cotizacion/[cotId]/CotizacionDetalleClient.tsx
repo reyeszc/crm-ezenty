@@ -136,6 +136,15 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
       printWindow.document.write(html);
       printWindow.document.close();
       setTimeout(() => {
+        // Add a visible tip in the print window before the dialog opens
+        const tip = printWindow.document.createElement("div");
+        tip.id = "print-tip";
+        tip.style.cssText = "position:fixed;top:0;left:0;right:0;background:#1B2A4A;color:white;text-align:center;padding:10px;font-family:Arial;font-size:13px;z-index:9999";
+        tip.innerHTML = "💡 En el diálogo de impresión → <b>Más opciones</b> → desactiva <b>\"Encabezados y pies de página\"</b> → haz clic en Imprimir";
+        printWindow.document.body.prepend(tip);
+        const style = printWindow.document.createElement("style");
+        style.textContent = "#print-tip { display: block; } @media print { #print-tip { display: none !important; } }";
+        printWindow.document.head.appendChild(style);
         printWindow.print();
         setGeneratingPdf(false);
       }, 1200);
