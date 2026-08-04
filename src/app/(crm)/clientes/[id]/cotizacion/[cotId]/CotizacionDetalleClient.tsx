@@ -542,15 +542,12 @@ function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fe
   <title>${cotizacion.numero} — Ezenty ProCare</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 0; padding: 0; color: #333; font-size: 11px; }
-    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; box-sizing: border-box; }
     @media print {
       @page { size: Letter portrait; margin: 0; }
-      html, body { margin: 0; padding: 0; }
+      html { margin: 0; padding: 0; }
+      body { margin: 0; padding: 0; }
       .no-print { display: none; }
-      #contenido {
-        transform-origin: top left;
-        width: 100vw;
-      }
     }
     table { width: 100%; border-collapse: collapse; }
   </style>
@@ -558,23 +555,26 @@ function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fe
     window.addEventListener("load", function() {
       var el = document.getElementById("contenido");
       if (!el) return;
-      var pageW = 816;  // Letter at 96dpi
+      // Use print dimensions: Letter = 8.5in x 11in at 96dpi = 816 x 1056px
+      var pageW = 816;
       var pageH = 1056;
-      var elW = el.scrollWidth;
-      var elH = el.scrollHeight;
+      var elH = el.offsetHeight;
+      var elW = el.offsetWidth;
       var scale = Math.min(pageW / elW, pageH / elH, 1);
       if (scale < 1) {
         el.style.transform = "scale(" + scale + ")";
-        el.style.transformOrigin = "top center";
-        el.style.marginLeft = "auto";
-        el.style.marginRight = "auto";
-        document.body.style.display = "flex";
-        document.body.style.justifyContent = "center";
+        el.style.transformOrigin = "top left";
+        el.style.width = Math.round(elW) + "px";
+        // Compensate body width so page doesn't scroll
+        document.body.style.width = Math.round(elW * scale) + "px";
+        document.body.style.height = Math.round(elH * scale) + "px";
+        document.body.style.overflow = "hidden";
       }
     });
   </script>
   </head><body>
-  <div id="contenido" style="max-width:750px;margin:0 auto;padding:0">
+  <div id="wrapper" style="width:750px;margin:0 auto;">
+  <div id="contenido" style="width:750px;">
     <!-- Header -->
     <div style="background:#1B2A4A;padding:14px 24px;display:flex;justify-content:space-between;align-items:flex-start">
       <div style="display:flex;align-items:flex-start;gap:16px">
