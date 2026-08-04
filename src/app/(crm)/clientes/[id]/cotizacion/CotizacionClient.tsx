@@ -229,8 +229,8 @@ Acceptance: This quotation becomes a binding Service Agreement upon execution of
           id: crypto.randomUUID(),
           descripcion: `${area.area} — ${PRECIOS_DEFAULT[tipo]?.label || tipo}`,
           tipo, unidad: "flat_fee", cantidad: "1",
-          precioUnitario: precios[tipo] || String(PRECIOS_DEFAULT[tipo]?.precio || 0),
-          precioFinal: precios[tipo] || String(PRECIOS_DEFAULT[tipo]?.precio || 0),
+          precioUnitario: String(area.flatFee),
+          precioFinal: String(area.flatFee),
           area: area.area,
         });
       }
