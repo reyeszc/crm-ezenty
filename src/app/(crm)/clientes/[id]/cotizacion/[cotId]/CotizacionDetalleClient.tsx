@@ -681,9 +681,18 @@ function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fe
         <tfoot>
           ${totalHTML}
           <tr style="border-top:2px solid #1B2A4A">
-            <td colspan="4" style="text-align:right;padding:5px 8px;font-weight:900;font-size:12px;color:#1B2A4A">TOTAL</td>
-            <td style="text-align:right;padding:5px 8px;font-weight:900;font-size:12px;color:#1B2A4A">$${(cotizacion.total||0).toLocaleString("en-US",{minimumFractionDigits:2})}</td>
+            <td colspan="${isContrato ? 5 : 4}" style="text-align:right;padding:5px 8px;font-weight:900;font-size:12px;color:#1B2A4A">${isContrato ? "Per Visit Total" : "TOTAL"}</td>
+            <td style="text-align:right;padding:5px 8px;font-weight:900;font-size:12px;color:#16a34a">$${(cotizacion.total||0).toLocaleString("en-US",{minimumFractionDigits:2})}</td>
           </tr>
+          ${isContrato ? `
+          <tr style="background:#f0fdf4">
+            <td colspan="5" style="text-align:right;padding:4px 8px;font-weight:700;color:#1B2A4A">Annual Contract Value</td>
+            <td style="text-align:right;padding:4px 8px;font-weight:700;color:#1B2A4A">$${totalAnualPDF.toLocaleString("en-US",{minimumFractionDigits:2})}</td>
+          </tr>
+          <tr style="background:#dcfce7">
+            <td colspan="5" style="text-align:right;padding:5px 8px;font-weight:900;font-size:13px;color:#15803d">Monthly Value (Annual ÷ 12)</td>
+            <td style="text-align:right;padding:5px 8px;font-weight:900;font-size:13px;color:#15803d">$${totalMensualPDF.toLocaleString("en-US",{minimumFractionDigits:2})}</td>
+          </tr>` : ""}
         </tfoot>
       </table>
     </div>
