@@ -26,6 +26,9 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
   const [updatingEstado, setUpdatingEstado] = useState(false);
   const [generatingPdf, setGeneratingPdf] = useState(false);
 
+  // Detect contract mode — fallback to checking lineas if modoContrato not saved
+  const isContratoScreen = !!(cotizacion as any).modoContrato || lineas.some((l: any) => l.frecuencia && l.frecuencia !== "one-time");
+
   // Edit mode
   const [editando, setEditando] = useState(false);
   const [editLineas, setEditLineas] = useState<any[]>(lineas.map(l => ({ ...l })));
@@ -370,9 +373,9 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
                 <th className="text-white text-left py-2 px-3 w-8">#</th>
                 <th className="text-white text-left py-2 px-3">Service Description</th>
                 <th className="text-white text-center py-2 px-3 w-16">Qty</th>
-                {(cotizacion as any).modoContrato && <th className="text-white text-center py-2 px-3 w-24">Frequency</th>}
+                {isContratoScreen && <th className="text-white text-center py-2 px-3 w-24">Frequency</th>}
                 <th className="text-white text-right py-2 px-3 w-24">Unit Price ($)</th>
-                <th className="text-white text-right py-2 px-3 w-24">{(cotizacion as any).modoContrato ? "Per Visit ($)" : "Total ($)"}</th>
+                <th className="text-white text-right py-2 px-3 w-24">{isContratoScreen ? "Per Visit ($)" : "Total ($)"}</th>
               </tr>
             </thead>
             <tbody>
@@ -394,7 +397,7 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
                 return Object.entries(grupos).map(([grupo, items]) => (
                   <>
                     <tr key={`g-${grupo}`} style={{ background: "#E8EEF5" }}>
-                      <td colSpan={(cotizacion as any).modoContrato ? 6 : 5} className="py-1.5 px-3 text-xs font-bold uppercase tracking-wide" style={{ color: "#1B2A4A" }}>{grupo}</td>
+                      <td colSpan={isContratoScreen ? 6 : 5} className="py-1.5 px-3 text-xs font-bold uppercase tracking-wide" style={{ color: "#1B2A4A" }}>{grupo}</td>
                     </tr>
                     {items.map((l: any) => {
                       num++;
@@ -408,7 +411,7 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
                           <td className="py-2 px-3 text-center text-[var(--text-secondary)]">
                             {(l.cantidad || 1)}
                           </td>
-                          {(cotizacion as any).modoContrato && (
+                          {isContratoScreen && (
                             <td className="py-2 px-3 text-center text-[var(--text-secondary)] text-xs">
                               {({"quarterly":"Quarterly","semi-annual":"Semi-Annual","3x-year":"3x/Year","one-time":"One-Time"} as any)[(l as any).frecuencia || "quarterly"] || "Quarterly"}
                             </td>
@@ -444,18 +447,32 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
                 </>
               )}
               <div className="flex justify-between text-base font-bold border-t border-[var(--border)] pt-2" style={{ color: "#1B2A4A" }}>
-                <span>{(cotizacion as any).modoContrato ? "Per Visit Total" : "TOTAL"}</span>
+                <span>{isContratoScreen ? "Per Visit Total" : "TOTAL"}</span>
                 <span>${(cotizacion.total || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
               </div>
-              {(cotizacion as any).modoContrato && (cotizacion as any).totalAnual && (
+              {isContratoScreen && (
                 <>
                   <div className="flex justify-between text-sm pt-1" style={{ color: "#1B2A4A" }}>
                     <span className="font-semibold">Annual Contract Value</span>
-                    <span className="font-semibold">${((cotizacion as any).totalAnual || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+                    <span className="font-semibold">${(
+                      (cotizacion as any).totalAnual ||
+                      lineas.reduce((s: number, l: any) => {
+                        const sub = (l.precioFinal || 0) * (l.cantidad || 1);
+                        const v = ({"quarterly":4,"semi-annual":2,"3x-year":3,"one-time":1} as Record<string,number>)[l.frecuencia||"quarterly"]||4;
+                        return s + sub * v;
+                      }, 0)
+                    ).toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
                   </div>
                   <div className="flex justify-between text-base font-bold pt-1" style={{ color: "#15803d" }}>
                     <span>Monthly Value (Annual ÷ 12)</span>
-                    <span>${((cotizacion as any).totalMensual || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+                    <span>${(
+                      (cotizacion as any).totalMensual ||
+                      lineas.reduce((s: number, l: any) => {
+                        const sub = (l.precioFinal || 0) * (l.cantidad || 1);
+                        const v = ({"quarterly":4,"semi-annual":2,"3x-year":3,"one-time":1} as Record<string,number>)[l.frecuencia||"quarterly"]||4;
+                        return s + sub * v;
+                      }, 0) / 12
+                    ).toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
                   </div>
                 </>
               )}
@@ -508,9 +525,14 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
 
 // ── PDF HTML Generator ────────────────────────────────────────────────────────
 function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fechaValidez, estado }: any) {
-  const isContrato = !!(cotizacion as any).modoContrato;
-  const totalAnualPDF = (cotizacion as any).totalAnual || 0;
-  const totalMensualPDF = (cotizacion as any).totalMensual || 0;
+  const isContrato = !!(cotizacion as any).modoContrato || lineas.some((l: any) => l.frecuencia && l.frecuencia !== "one-time");
+  const freqVeces: Record<string,number> = {"quarterly":4,"semi-annual":2,"3x-year":3,"one-time":1};
+  const totalAnualPDF = (cotizacion as any).totalAnual || (isContrato ? lineas.reduce((s: number, l: any) => {
+    const sub = (l.precioFinal || 0) * (l.cantidad || 1);
+    const veces = freqVeces[l.frecuencia || "quarterly"] || 4;
+    return s + sub * veces;
+  }, 0) : 0);
+  const totalMensualPDF = (cotizacion as any).totalMensual || (isContrato ? totalAnualPDF / 12 : 0);
   const fc = fechaCreacion instanceof Date ? fechaCreacion : new Date(fechaCreacion || cotizacion.creadoEn);
   const fv = fechaValidez instanceof Date ? fechaValidez : new Date(fechaValidez || new Date(cotizacion.creadoEn).getTime() + (cotizacion.validezDias || 30) * 86400000);
   const contacto = cotizacion.contactoPrincipal || null;
