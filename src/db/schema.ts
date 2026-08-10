@@ -319,6 +319,7 @@ export const cotizaciones = pgTable("cotizaciones", {
   estado: text("estado").notNull().default("BORRADOR"), // BORRADOR, ENVIADA, APROBADA, RECHAZADA
   validezDias: integer("validez_dias").default(30),
   modoContrato: boolean("modo_contrato").default(false),
+  notasGenerales: text("notas_generales"),
   totalAnual: real("total_anual"),
   totalMensual: real("total_mensual"),
   notas: text("notas"),

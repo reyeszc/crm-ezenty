@@ -30,7 +30,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const body = await req.json().catch(() => ({}));
 
   const data: any = { actualizadoEn: new Date() };
-  const allowed = ["estado", "notas", "validezDias", "descuento", "total", "subtotal", "modoContrato", "totalAnual", "totalMensual"];
+  const allowed = ["estado", "notas", "notasGenerales", "validezDias", "descuento", "total", "subtotal", "modoContrato", "totalAnual", "totalMensual"];
   for (const k of allowed) { if (k in body) data[k] = body[k]; }
   await db.update(schema.cotizaciones).set(data).where(eq(schema.cotizaciones.id, cotId));
 

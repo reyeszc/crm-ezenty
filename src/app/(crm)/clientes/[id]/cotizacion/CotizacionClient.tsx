@@ -97,6 +97,7 @@ Acceptance: This quotation becomes a binding Service Agreement upon execution of
   const [detalleCot, setDetalleCot] = useState<{cot: any, lineas: any[]} | null>(null);
   const [loadingDetalle, setLoadingDetalle] = useState(false);
   const [mostrarPrecios, setMostrarPrecios] = useState(false);
+  const [notasGenerales, setNotasGenerales] = useState("");
   const [modoContrato, setModoContrato] = useState(false);
 
   function toggleContrato(val: boolean) {
@@ -316,7 +317,7 @@ Acceptance: This quotation becomes a binding Service Agreement upon execution of
           totalAnual: modoContrato ? totalAnualFinal : null,
           totalMensual: modoContrato ? totalMensualFinal : null,
           modoContrato,
-          notas, validezDias: parseInt(validez) || 30,
+          notas, notasGenerales: notasGenerales || null, validezDias: parseInt(validez) || 30,
           medidaId: medidaSeleccionada || null,
         }),
       });
@@ -745,7 +746,14 @@ Acceptance: This quotation becomes a binding Service Agreement upon execution of
           <input type="number" className="input" value={validez} onChange={e => setValidez(e.target.value)} min="1" />
         </div>
         <div className="col-span-2">
-          <label className="label text-sm">Notas / condiciones</label>
+          <div className="mb-4">
+            <label className="label text-sm">📝 Service Notes</label>
+            <p className="text-xs text-[var(--text-muted)] mb-1">What's included, special treatments, scope details…</p>
+            <textarea className="input resize-y" rows={3} value={notasGenerales}
+              onChange={e => setNotasGenerales(e.target.value)}
+              placeholder="e.g. Includes spot treatment and stain removal. Odor encapsulation applied to all carpet areas for a fresh environment." />
+          </div>
+          <label className="label text-sm">Terms & Conditions</label>
           <textarea className="input resize-y" rows={10} value={notas} onChange={e => setNotas(e.target.value)}
             placeholder="Materiales, tiempos de entrega, condiciones de pago…" />
         </div>

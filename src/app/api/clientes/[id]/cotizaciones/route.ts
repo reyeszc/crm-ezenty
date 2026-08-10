@@ -52,6 +52,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     notas: body.notas || null,
     validezDias: body.validezDias || 30,
     modoContrato: body.modoContrato || false,
+    notasGenerales: body.notasGenerales || null,
     totalAnual: body.totalAnual || null,
     totalMensual: body.totalMensual || null,
     medidaId: body.medidaId || null,
