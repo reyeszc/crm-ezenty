@@ -35,6 +35,7 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
   const [editando, setEditando] = useState(false);
   const [editLineas, setEditLineas] = useState<any[]>(lineas.map(l => ({ ...l })));
   const [editNotas, setEditNotas] = useState(cotizacion.notas || "");
+  const [editNotasGenerales, setEditNotasGenerales] = useState((cotizacion as any).notasGenerales || "");
   const [savingEdit, setSavingEdit] = useState(false);
   const dragItem = useRef<number | null>(null);
   const dragOver = useRef<number | null>(null);
@@ -78,6 +79,7 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
         body: JSON.stringify({
           lineas: lineasActualizadas,
           notas: editNotas,
+          notasGenerales: editNotasGenerales || null,
           total: nuevoTotal,
           subtotal: nuevoTotal,
           estado: "BORRADOR",
@@ -307,9 +309,18 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
             </span>
           </div>
 
-          {/* Notes */}
+          {/* Service Notes */}
           <div>
-            <label className="label text-sm">Notas / Terms & Conditions</label>
+            <label className="label text-sm">📝 Service Notes</label>
+            <p className="text-xs text-[var(--text-muted)] mb-1">What's included, special treatments, scope details…</p>
+            <textarea className="input resize-y" rows={3} value={editNotasGenerales}
+              onChange={e => setEditNotasGenerales(e.target.value)}
+              placeholder="e.g. Includes spot treatment and odor encapsulation..." />
+          </div>
+
+          {/* Notes / Terms */}
+          <div>
+            <label className="label text-sm">Terms & Conditions</label>
             <textarea className="input resize-y" rows={8} value={editNotas}
               onChange={e => setEditNotas(e.target.value)} />
           </div>
