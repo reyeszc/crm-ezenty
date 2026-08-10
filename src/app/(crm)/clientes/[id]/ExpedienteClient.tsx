@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft, Phone, Mail, Building2, MapPin, Flame, Thermometer, Tag,
@@ -145,6 +146,7 @@ function ContactoCard({ contacto, clienteId, clienteNombre, onUpdate, onDelete, 
   const [form, setForm] = useState({ nombre: contacto.nombre || "", cargo: contacto.cargo || "", telefono: contacto.telefono || "", correo: contacto.correo || "", notas: contacto.notas || "" });
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const router = useRouter();
   const { success, error } = useToast();
 
   async function guardar() {
@@ -270,6 +272,7 @@ function CampoEditableSelect({ clienteId, label, campo, valor, opcionesUrl }: {
   const [val, setVal] = useState(valor || "");
   const [guardando, setGuardando] = useState(false);
   const [opciones, setOpciones] = useState<string[]>([]);
+  const router = useRouter();
   const { success, error } = useToast();
   const inputId = `datalist-${campo}-${clienteId}`;
 
@@ -337,6 +340,7 @@ function CampoEditable({ clienteId, label, campo, valor, tipo = "text" }: {
   const [editando, setEditando] = useState(false);
   const [val, setVal] = useState(valor || "");
   const [guardando, setGuardando] = useState(false);
+  const router = useRouter();
   const { success, error } = useToast();
 
   async function guardar() {
@@ -391,6 +395,7 @@ function DireccionEditable({ clienteId, direccionInicial }: { clienteId: string;
   const [editando, setEditando] = useState(false);
   const [direccion, setDireccion] = useState(direccionInicial || "");
   const [guardando, setGuardando] = useState(false);
+  const router = useRouter();
   const { success, error } = useToast();
 
   async function guardar() {
@@ -447,6 +452,7 @@ function DireccionEditable({ clienteId, direccionInicial }: { clienteId: string;
 }
 
 export function ExpedienteClient({ clienteInicial, config, etiquetasDisponibles, plantillas, usuarioActualId, rolActual }: any) {
+  const router = useRouter();
   const [cliente, setCliente] = useState(clienteInicial);
   const [contactos, setContactos] = useState<any[]>([]);
   const [nuevoContacto, setNuevoContacto] = useState(false);
@@ -611,10 +617,10 @@ export function ExpedienteClient({ clienteInicial, config, etiquetasDisponibles,
       )}
 
       {/* Back */}
-      <Link href="/clientes" className="inline-flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors mb-4">
+      <button onClick={() => router.back()} className="inline-flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors mb-4">
         <ArrowLeft className="w-4 h-4" aria-hidden="true" />
-        Volver a Clientes
-      </Link>
+        Volver
+      </button>
 
       {/* Header del expediente */}
       <div className="card p-5 mb-4">
