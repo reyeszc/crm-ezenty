@@ -88,7 +88,7 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
           estado: "BORRADOR",
         }),
       });
-      if (!res.ok) throw new Error();
+      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error || `HTTP ${res.status}`); }
       // Update local display state
       setCotLocal((p: any) => ({ ...p, notas: editNotas, notasGenerales: editNotasGenerales, total: nuevoTotal, estado: "BORRADOR" }));
       setLineasLocal(lineasActualizadas);
@@ -114,7 +114,7 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ estado: nuevoEstado }),
       });
-      if (!res.ok) throw new Error();
+      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.error || `HTTP ${res.status}`); }
       setEstado(nuevoEstado);
       success(`Cotización marcada como ${ESTADO_CONFIG[nuevoEstado]?.label} ✓`);
     } catch { error("No se pudo actualizar"); } finally { setUpdatingEstado(false); }
@@ -211,7 +211,7 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
         {/* Actions */}
         <div className="flex items-center gap-2 flex-wrap">
           {!editando ? (
-            <button onClick={() => { setEditLineas(lineas.map(l => ({ ...l }))); setEditNotas(cotizacion.notas || ""); setEditando(true); }}
+            <button onClick={() => { setEditLineas(lineas.map(l => ({ ...l }))); setEditNotas(cotizacion.notas || ""); setEditNotasGenerales((cotizacion as any).notasGenerales || ""); setEditando(true); }}
               className="btn-secondary !py-2 !px-3 text-sm">
               <Edit2 className="w-3.5 h-3.5" /> Editar
             </button>
