@@ -114,9 +114,9 @@ export function MedidaDetalleClient({ cliente, medida, areasIniciales }: {
 
   return (
     <div className="max-w-2xl mx-auto pb-20 lg:pb-6">
-      <Link href={`/clientes/${cliente.id}/medidas`} className="inline-flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] mb-4">
-        <ArrowLeft className="w-4 h-4" /> {cliente.nombre} — Historial de medidas
-      </Link>
+      <button onClick={() => router.back()} className="inline-flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] mb-4">
+        <ArrowLeft className="w-4 h-4" /> Volver
+      </button>
 
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
