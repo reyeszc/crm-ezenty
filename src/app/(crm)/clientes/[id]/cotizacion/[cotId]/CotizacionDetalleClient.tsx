@@ -520,10 +520,32 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
           </div>
         </div>
 
-        {/* Notes */}
+        {/* Service Notes */}
+        {(cotLocal as any).notasGenerales && (
+          <div className="px-6 py-3 border-t border-[var(--border)] bg-blue-50 dark:bg-blue-900/10">
+            <p className="text-xs font-semibold text-blue-700 dark:text-blue-400 mb-1">📝 Service Notes</p>
+            <p className="text-xs text-[var(--text-secondary)] whitespace-pre-line">{(cotLocal as any).notasGenerales}</p>
+          </div>
+        )}
+
+        {/* Notes / Terms */}
         {cotLocal.notas && (
           <div className="px-6 py-3 border-t border-[var(--border)]">
-            <p className="text-xs text-[var(--text-secondary)] italic">Note: {cotizacion.notas}</p>
+            <p className="text-xs font-bold text-[#1B2A4A] uppercase tracking-wide mb-2">Terms & Conditions</p>
+            <div className="space-y-2">
+              {cotLocal.notas.split("\n\n").map((para: string, i: number) => {
+                const colonIdx = para.indexOf(":");
+                if (colonIdx > 0 && colonIdx < 20) {
+                  return (
+                    <p key={i} className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                      <span className="font-bold text-[#1B2A4A]">{para.slice(0, colonIdx)}: </span>
+                      {para.slice(colonIdx + 1).trim()}
+                    </p>
+                  );
+                }
+                return <p key={i} className="text-xs text-[var(--text-secondary)] leading-relaxed">{para}</p>;
+              })}
+            </div>
           </div>
         )}
 
