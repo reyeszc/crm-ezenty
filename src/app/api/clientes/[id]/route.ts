@@ -63,6 +63,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if ("proximaAccionFecha" in body) {
     updateData.proximaAccionFecha = body.proximaAccionFecha ? new Date(body.proximaAccionFecha) : null;
   }
+  if ("proximaAccionFechaFin" in body) {
+    updateData.proximaAccionFechaFin = body.proximaAccionFechaFin ? new Date(body.proximaAccionFechaFin) : null;
+  }
 
   // Log state changes
   if (body.estado) {

@@ -1086,14 +1086,23 @@ export function ExpedienteClient({ clienteInicial, config, etiquetasDisponibles,
               <ProximaAccionEditor
                 accion={cliente.proximaAccion || ""}
                 fecha={cliente.proximaAccionFecha || ""}
+                fechaFin={cliente.proximaAccionFechaFin || ""}
                 onGuardar={async (accion, fecha) => {
+                  // Parse range: "2026-08-10|2026-08-15"
+                  const [fechaInicio, fechaFin] = fecha?.includes("|")
+                    ? fecha.split("|")
+                    : [fecha, null];
                   const res = await fetch(`/api/clientes/${cliente.id}`, {
                     method: "PATCH",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ proximaAccion: accion, proximaAccionFecha: fecha || null }),
+                    body: JSON.stringify({
+                      proximaAccion: accion,
+                      proximaAccionFecha: fechaInicio || null,
+                      proximaAccionFechaFin: fechaFin || null,
+                    }),
                   });
                   if (res.ok) {
-                    setCliente((p: any) => ({ ...p, proximaAccion: accion, proximaAccionFecha: fecha }));
+                    setCliente((p: any) => ({ ...p, proximaAccion: accion, proximaAccionFecha: fechaInicio, proximaAccionFechaFin: fechaFin }));
                     success("Próxima acción guardada ✓");
                   }
                 }}
@@ -1144,13 +1153,13 @@ const ACCIONES_RAPIDAS = [
   "Send contract", "Confirm signature", "Re-engage — send case study", "Request referral",
 ];
 
-function ProximaAccionEditor({ accion, fecha, onGuardar }: {
-  accion: string; fecha: string; onGuardar: (a: string, f: string) => void;
+function ProximaAccionEditor({ accion, fecha, fechaFin: fechaFinProp, onGuardar }: {
+  accion: string; fecha: string; fechaFin?: string; onGuardar: (a: string, f: string) => void;
 }) {
   const [editando, setEditando] = useState(false);
   const [valAccion, setValAccion] = useState(accion);
   const [valFecha, setValFecha] = useState(fecha ? new Date(fecha).toISOString().split("T")[0] : "");
-  const [valFechaFin, setValFechaFin] = useState("");
+  const [valFechaFin, setValFechaFin] = useState(fechaFinProp ? new Date(fechaFinProp).toISOString().split("T")[0] : "");
   const vencido = fecha && new Date(fecha) < new Date();
   const esServicio = valAccion === "Service Scheduled";
 
@@ -1162,9 +1171,8 @@ function ProximaAccionEditor({ accion, fecha, onGuardar }: {
     setEditando(false);
   }
 
-  // Parse stored date range
-  const fechaInicio = fecha?.includes("|") ? fecha.split("|")[0] : fecha;
-  const fechaFin = fecha?.includes("|") ? fecha.split("|")[1] : null;
+  const fechaInicio = fecha || null;
+  const fechaFin = fechaFinProp || null;
 
   if (!editando) {
     return (

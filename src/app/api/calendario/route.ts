@@ -14,10 +14,11 @@ export async function GET(req: NextRequest) {
   const fin = sp.get("fin") ? new Date(sp.get("fin")!) : new Date(Date.now() + 60 * 86400000);
 
   const [citas, demos, servicios] = await Promise.all([
-    // Citas = proxima_accion_fecha from clientes
+    // Citas = proxima_accion_fecha from clientes (including service scheduled with date range)
     db.select({
       id: schema.clientes.id,
       fecha: schema.clientes.proximaAccionFecha,
+      fechaFin: schema.clientes.proximaAccionFechaFin,
       clienteNombre: schema.clientes.nombre,
       clienteId: schema.clientes.id,
       proximaAccion: schema.clientes.proximaAccion,
@@ -55,5 +56,22 @@ export async function GET(req: NextRequest) {
       )),
   ]);
 
-  return NextResponse.json({ citas, demos, servicios });
+  // Expand Service Scheduled events across their date range
+  const citasExpandidas: any[] = [];
+  for (const c of citas) {
+    if (c.proximaAccion === "Service Scheduled" && c.fechaFin && c.fecha) {
+      // Add one entry per day in the range
+      const start = new Date(c.fecha);
+      const end = new Date(c.fechaFin);
+      const current = new Date(start);
+      while (current <= end) {
+        citasExpandidas.push({ ...c, fecha: new Date(current) });
+        current.setDate(current.getDate() + 1);
+      }
+    } else {
+      citasExpandidas.push(c);
+    }
+  }
+
+  return NextResponse.json({ citas: citasExpandidas, demos, servicios });
 }
