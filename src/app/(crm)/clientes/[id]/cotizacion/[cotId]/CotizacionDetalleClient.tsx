@@ -36,6 +36,9 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
   const [editLineas, setEditLineas] = useState<any[]>(lineas.map(l => ({ ...l })));
   const [editNotas, setEditNotas] = useState(cotizacion.notas || "");
   const [editNotasGenerales, setEditNotasGenerales] = useState((cotizacion as any).notasGenerales || "");
+  // Local state to reflect saved changes without page reload
+  const [cotLocal, setCotLocal] = useState<any>(cotizacion);
+  const [lineasLocal, setLineasLocal] = useState<any[]>(lineas);
   const [savingEdit, setSavingEdit] = useState(false);
   const dragItem = useRef<number | null>(null);
   const dragOver = useRef<number | null>(null);
@@ -86,6 +89,9 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
         }),
       });
       if (!res.ok) throw new Error();
+      // Update local display state
+      setCotLocal((p: any) => ({ ...p, notas: editNotas, notasGenerales: editNotasGenerales, total: nuevoTotal, estado: "BORRADOR" }));
+      setLineasLocal(lineasActualizadas);
       success("Cotización actualizada ✓");
       setEditando(false);
       setEstado("BORRADOR");
@@ -443,7 +449,7 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
           {/* Totals */}
           <div className="mt-3 flex justify-end">
             <div className="w-56 space-y-1">
-              {cotizacion.descuento > 0 && (
+              {cotLocal.descuento > 0 && (
                 <>
                   <div className="flex justify-between text-sm">
                     <span className="text-[var(--text-secondary)]">Subtotal</span>
@@ -451,20 +457,20 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
                   </div>
                   <div className="flex justify-between text-sm text-red-600">
                     <span>Descuento</span>
-                    <span>-${cotizacion.descuento.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+                    <span>-${cotLocal.descuento.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
                   </div>
                 </>
               )}
               <div className="flex justify-between text-base font-bold border-t border-[var(--border)] pt-2" style={{ color: "#1B2A4A" }}>
                 <span>{isContratoScreen ? "Per Visit Total" : "TOTAL"}</span>
-                <span>${(cotizacion.total || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+                <span>${(cotLocal.total || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
               </div>
               {isContratoScreen && (
                 <>
                   <div className="flex justify-between text-sm pt-1" style={{ color: "#1B2A4A" }}>
                     <span className="font-semibold">Annual Contract Value</span>
                     <span className="font-semibold">${(
-                      (cotizacion as any).totalAnual ||
+                      (cotLocal as any).totalAnual ||
                       lineas.reduce((s: number, l: any) => {
                         const sub = (l.precioFinal || 0) * (l.cantidad || 1);
                         const v = ({"quarterly":4,"semi-annual":2,"3x-year":3,"one-time":1} as Record<string,number>)[l.frecuencia||"quarterly"]||4;
@@ -475,7 +481,7 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
                   <div className="flex justify-between text-base font-bold pt-1" style={{ color: "#15803d" }}>
                     <span>Monthly Value (Annual ÷ 12)</span>
                     <span>${(
-                      (cotizacion as any).totalMensual ||
+                      (cotLocal as any).totalMensual ||
                       lineas.reduce((s: number, l: any) => {
                         const sub = (l.precioFinal || 0) * (l.cantidad || 1);
                         const v = ({"quarterly":4,"semi-annual":2,"3x-year":3,"one-time":1} as Record<string,number>)[l.frecuencia||"quarterly"]||4;
@@ -513,7 +519,7 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
         </div>
 
         {/* Notes */}
-        {cotizacion.notas && (
+        {cotLocal.notas && (
           <div className="px-6 py-3 border-t border-[var(--border)]">
             <p className="text-xs text-[var(--text-secondary)] italic">Note: {cotizacion.notas}</p>
           </div>
@@ -728,7 +734,7 @@ function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fe
     ${cotizacion.notas ? `
         <div style="padding:16px 32px 20px;border-top:1px solid #eee">
           <p style="font-size:11px;font-weight:900;color:#1B2A4A;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Terms &amp; Conditions</p>
-          ${cotizacion.notas.split("\n\n").map((para: string) => {
+          ${(cotizacion.notas || "").split("\n\n").map((para: string) => {
             const ci = para.indexOf(":");
             if (ci > 0 && ci < 20) {
               const lbl = para.slice(0, ci);
