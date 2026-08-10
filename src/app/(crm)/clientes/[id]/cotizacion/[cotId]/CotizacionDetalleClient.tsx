@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { ArrowLeft, FileText, Download, Send, CheckCircle, XCircle, Printer, Edit2, Save, Plus, Trash2, GripVertical } from "lucide-react";
@@ -21,6 +22,7 @@ const UNIDAD_LABEL: Record<string, string> = {
 export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor }: {
   cotizacion: any; cliente: any; lineas: any[]; vendedor: any;
 }) {
+  const router = useRouter();
   const { success, error } = useToast();
   const [estado, setEstado] = useState(cotizacion.estado);
   const [updatingEstado, setUpdatingEstado] = useState(false);
@@ -173,13 +175,9 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
     <div className="max-w-3xl mx-auto pb-20 lg:pb-6">
       {/* Nav */}
       <div className="flex items-center gap-2 mb-4 flex-wrap">
-        <Link href={`/clientes/${cliente.id}`} className="inline-flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
-          <ArrowLeft className="w-4 h-4" /> {cliente.nombre}
-        </Link>
-        <span className="text-[var(--text-muted)]">/</span>
-        <Link href="/cotizaciones" className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
-          Cotizaciones
-        </Link>
+        <button onClick={() => router.back()} className="inline-flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
+          <ArrowLeft className="w-4 h-4" /> Volver
+        </button>
       </div>
 
       {/* Header */}

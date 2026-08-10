@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { ArrowLeft, Plus, Trash2, Ruler, Save, Loader2, ChevronDown, ChevronUp, Camera, DollarSign, ChevronRight } from "lucide-react";
@@ -46,6 +47,7 @@ function newArea(tipo?: "habitacion" | "bano"): Area {
 }
 
 export function MedidasClient({ clienteId, clienteNombre }: { clienteId: string; clienteNombre: string }) {
+  const router = useRouter();
   const [areas, setAreas] = useState<Area[]>([newArea()]);
   const [notas, setNotas] = useState("");
   const [saving, setSaving] = useState(false);
@@ -134,9 +136,9 @@ export function MedidasClient({ clienteId, clienteNombre }: { clienteId: string;
 
   return (
     <div className="max-w-2xl mx-auto pb-20 lg:pb-6">
-      <Link href={`/clientes/${clienteId}`} className="inline-flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] mb-4">
-        <ArrowLeft className="w-4 h-4" /> {clienteNombre}
-      </Link>
+      <button onClick={() => router.back()} className="inline-flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] mb-4">
+        <ArrowLeft className="w-4 h-4" /> Volver
+      </button>
 
       <div className="flex items-center gap-3 mb-4">
         <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">

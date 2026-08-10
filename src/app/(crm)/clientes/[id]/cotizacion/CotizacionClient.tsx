@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { ArrowLeft, FileText, Plus, Trash2, Save, Loader2, ChevronDown, ChevronUp, GripVertical } from "lucide-react";
@@ -70,6 +71,7 @@ const ESTADO_CONFIG: Record<string, { label: string; cls: string }> = {
 export function CotizacionClient({ cliente, medidas, cotizacionesPrevias, contactos = [] }: {
   cliente: any; medidas: any[]; cotizacionesPrevias: any[]; contactos: any[]; vendedorId: string;
 }) {
+  const router = useRouter();
   const { success, error } = useToast();
   const [lineas, setLineas] = useState<Linea[]>([
     newLinea("Guest Rooms"),
@@ -327,9 +329,9 @@ Acceptance: This quotation becomes a binding Service Agreement upon execution of
 
   return (
     <div className="max-w-3xl mx-auto pb-20 lg:pb-6">
-      <Link href={`/clientes/${cliente.id}`} className="inline-flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] mb-4">
-        <ArrowLeft className="w-4 h-4" /> {cliente.nombre}
-      </Link>
+      <button onClick={() => router.back()} className="inline-flex items-center gap-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] mb-4">
+        <ArrowLeft className="w-4 h-4" /> Volver
+      </button>
 
       <div className="flex items-center gap-3 mb-4">
         <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
