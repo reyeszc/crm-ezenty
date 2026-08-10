@@ -95,6 +95,8 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
       success("Cotización actualizada ✓");
       setEditando(false);
       setEstado("BORRADOR");
+      // Reload to show all updated data
+      setTimeout(() => window.location.reload(), 800);
     } catch { error("No se pudo guardar"); } finally { setSavingEdit(false); }
   }
 
