@@ -62,8 +62,12 @@ export async function GET() {
     db.select({ total: sum(schema.clientes.valorEstimado) }).from(schema.clientes)
       .where(and(cVendedor, eq(schema.clientes.estado, "ACTIVO"), isNotNull(schema.clientes.valorEstimado))),
 
-    // Cotizaciones aprobadas este mes
-    db.select({ total: sum(schema.cotizaciones.total), cnt: count() })
+    // Cotizaciones aprobadas este mes — usar totalAnual para contratos
+    db.select({
+      total: sum(schema.cotizaciones.total),
+      totalAnual: sum(schema.cotizaciones.totalAnual),
+      cnt: count(),
+    })
       .from(schema.cotizaciones)
       .where(and(
         eq(schema.cotizaciones.estado, "APROBADA"),
@@ -94,7 +98,8 @@ export async function GET() {
 
   const meta = config[0]?.metaMensual || 10000;
   const pagosReales = Number(pagosAgg[0]?.total || 0);
-  const cotAprobadoTotal = Number(cotAprobadas[0]?.total || 0);
+  // For contracts use totalAnual, for quotes use total
+  const cotAprobadoTotal = Number(cotAprobadas[0]?.totalAnual || cotAprobadas[0]?.total || 0);
   const cobradoMes = pagosReales + cotAprobadoTotal;
 
   // Crecimiento 6 meses
