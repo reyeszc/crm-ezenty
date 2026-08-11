@@ -36,10 +36,47 @@ export default function RutaPage() {
   const [tiempoTotal, setTiempoTotal] = useState<number | null>(null);
   const [distanciaTotal, setDistanciaTotal] = useState<number | null>(null);
   const [modo, setModo] = useState<"cercano" | "lejano">("cercano");
+  const [seguimientoHoy, setSeguimientoHoy] = useState<Cliente[]>([]);
+  const [loadingSeguimiento, setLoadingSeguimiento] = useState(true);
+  const [busquedaExtra, setBusquedaExtra] = useState("");
+  const [clientesBusqueda, setClientesBusqueda] = useState<Cliente[]>([]);
+  const [buscando, setBuscando] = useState(false);
 
   useEffect(() => {
     fetch("/api/clientes/zonas").then(r => r.json()).then(d => setZonasDisponibles(d.zonas || [])).catch(() => {});
   }, []);
+
+  // Load today's seguimiento clients
+  useEffect(() => {
+    setLoadingSeguimiento(true);
+    const hoy = new Date().toDateString();
+    fetch("/api/clientes?estado=OPERATIVOS&orden=fecha&por_pagina=200")
+      .then(r => r.json())
+      .then(({ clientes: todos = [] }) => {
+        const deHoy = todos.filter((c: any) =>
+          c.proximaAccionFecha &&
+          new Date(c.proximaAccionFecha).toDateString() === hoy &&
+          c.direccionPropiedad
+        );
+        setSeguimientoHoy(deHoy);
+        // Auto-select if no preselected
+        if (preseleccionados.length === 0 && deHoy.length > 0) {
+          setSeleccionados(new Set(deHoy.map((c: any) => c.id)));
+        }
+      })
+      .finally(() => setLoadingSeguimiento(false));
+  }, []);
+
+  // Search extra clients
+  async function buscarClientes(q: string) {
+    if (!q.trim()) { setClientesBusqueda([]); return; }
+    setBuscando(true);
+    try {
+      const res = await fetch(`/api/clientes?q=${encodeURIComponent(q)}&por_pagina=10&estado=OPERATIVOS`);
+      const { clientes = [] } = await res.json();
+      setClientesBusqueda(clientes.filter((c: any) => c.direccionPropiedad));
+    } finally { setBuscando(false); }
+  }
 
   useEffect(() => {
     if (usarGPS && navigator.geolocation) {
@@ -94,8 +131,13 @@ export default function RutaPage() {
     setCalculando(true);
     setRuta(null);
     try {
-      const pool = preseleccionados.length > 0 ? clientesPreseleccionados : clientesZona;
-    const clientesSeleccionados = pool.filter(c => seleccionados.has(c.id));
+      // Combine all available clients: seguimiento + preselected + zona
+      const todosDisponibles = [
+        ...seguimientoHoy,
+        ...clientesPreseleccionados,
+        ...clientesZona,
+      ].filter((c, i, arr) => arr.findIndex(x => x.id === c.id) === i); // dedupe
+      const clientesSeleccionados = todosDisponibles.filter(c => seleccionados.has(c.id));
       const res = await fetch("/api/ruta/calcular", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -160,6 +202,59 @@ export default function RutaPage() {
           {!usarGPS && (
             <input className="input text-sm" placeholder="Hotel, dirección o ciudad de partida…"
               value={puntoPartida} onChange={e => setPuntoPartida(e.target.value)} />
+          )}
+        </div>
+      </div>
+
+      {/* Seguimiento del día */}
+      <div className="card p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-[var(--text-primary)]">📋 Seguimiento de hoy</h2>
+          {seleccionados.size > 0 && (
+            <span className="text-xs text-marca-500">{seleccionados.size} seleccionado(s)</span>
+          )}
+        </div>
+        {loadingSeguimiento ? (
+          <p className="text-xs text-[var(--text-muted)] text-center py-3">Cargando…</p>
+        ) : seguimientoHoy.length === 0 ? (
+          <p className="text-xs text-[var(--text-muted)] text-center py-3">No hay seguimientos para hoy</p>
+        ) : (
+          <div className="space-y-1.5">
+            {seguimientoHoy.map((c: any) => (
+              <label key={c.id} className="flex items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors">
+                <input type="checkbox" checked={seleccionados.has(c.id)}
+                  onChange={() => { setSeleccionados(prev => { const next = new Set(prev); next.has(c.id) ? next.delete(c.id) : next.add(c.id); return next; }); }}
+                  className="rounded flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-[var(--text-primary)] truncate">{c.nombre}</p>
+                  {c.proximaAccion && <p className="text-xs text-[var(--text-muted)] truncate">→ {c.proximaAccion}</p>}
+                </div>
+              </label>
+            ))}
+          </div>
+        )}
+
+        {/* Search extra properties */}
+        <div className="mt-3 pt-3 border-t border-[var(--border)]">
+          <p className="text-xs font-semibold text-[var(--text-primary)] mb-2">➕ Agregar otras propiedades</p>
+          <input className="input text-sm !py-1.5" placeholder="Buscar propiedad…"
+            value={busquedaExtra}
+            onChange={e => { setBusquedaExtra(e.target.value); buscarClientes(e.target.value); }} />
+          {buscando && <p className="text-xs text-[var(--text-muted)] mt-1">Buscando…</p>}
+          {clientesBusqueda.length > 0 && (
+            <div className="mt-2 space-y-1">
+              {clientesBusqueda.filter(c => !seleccionados.has(c.id) && !seguimientoHoy.find(s => s.id === c.id)).map((c: any) => (
+                <label key={c.id} className="flex items-center gap-2 cursor-pointer p-2 rounded-lg hover:bg-[var(--bg-secondary)] transition-colors">
+                  <input type="checkbox" checked={seleccionados.has(c.id)}
+                    onChange={() => { setSeleccionados(prev => { const next = new Set(prev); next.has(c.id) ? next.delete(c.id) : next.add(c.id); return next; }); setClientesBusqueda([]); setBusquedaExtra(""); }}
+                    className="rounded flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-[var(--text-primary)] truncate">{c.nombre}</p>
+                    <p className="text-xs text-[var(--text-muted)] truncate">{c.direccionPropiedad}</p>
+                  </div>
+                </label>
+              ))}
+            </div>
           )}
         </div>
       </div>
