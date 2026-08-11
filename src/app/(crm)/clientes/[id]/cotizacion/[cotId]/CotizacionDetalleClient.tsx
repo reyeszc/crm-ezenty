@@ -755,6 +755,11 @@ function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fe
       </tr></tbody></table>
     </div>
 
+    ${(cotizacion as any).notasGenerales ? `
+        <div style="padding:8px 24px 10px;background:#eff6ff;border-top:1px solid #dbeafe">
+          <p style="font-size:11px;font-weight:700;color:#1d4ed8;margin-bottom:5px">📝 Service Notes</p>
+          <p style="font-size:11px;color:#374151;line-height:1.5;white-space:pre-wrap">${(cotizacion as any).notasGenerales}</p>
+        </div>` : ""}
     ${cotizacion.notas ? `
         <div style="padding:16px 32px 20px;border-top:1px solid #eee">
           <p style="font-size:11px;font-weight:900;color:#1B2A4A;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Terms &amp; Conditions</p>
