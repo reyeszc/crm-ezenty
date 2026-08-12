@@ -406,7 +406,9 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
                             l.tipo?.includes("Concrete") ? "Concrete" :
                             l.tipo?.includes("Upholstery") ? "Upholstery" :
                             l.tipo?.includes("Odor") ? "Odor Control" :
-                            l.tipo?.includes("Decontamination") ? "Decontamination & Odor Control" : "Other Services";
+                            l.tipo?.includes("Sealing") ? "Sealing" :
+                            l.tipo?.includes("Sealing") ? "Sealing" :
+                  l.tipo?.includes("Decontamination") ? "Decontamination & Odor Control" : "Other Services";
                   if (!grupos[g]) grupos[g] = [];
                   grupos[g].push(l);
                 });
@@ -585,6 +587,8 @@ function buildPDFHTML({ cotizacion, cliente, lineas, vendedor, fechaCreacion, fe
                   l.tipo?.includes("Concrete") ? "Concrete" :
                   l.tipo?.includes("Upholstery") ? "Upholstery" :
                   l.tipo?.includes("Odor") ? "Odor Control" :
+                  l.tipo?.includes("Sealing") ? "Sealing" :
+                            l.tipo?.includes("Sealing") ? "Sealing" :
                   l.tipo?.includes("Decontamination") ? "Decontamination & Odor Control" : "Other Services";
     if (!grupos[grupo]) grupos[grupo] = [];
     grupos[grupo].push(l);

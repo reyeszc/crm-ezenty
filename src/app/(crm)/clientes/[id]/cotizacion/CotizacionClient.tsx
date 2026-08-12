@@ -13,6 +13,7 @@ const PRECIOS_DEFAULT: Record<string, { precio: number; unidad: string; label: s
   "Tile & Grout - Sq Ft":         { precio: 0.55,   unidad: "sqft",     label: "Tile & Grout Cleaning ($/sq ft)" },
   "LVT - Sq Ft":                  { precio: 0.55,   unidad: "sqft",     label: "LVT Cleaning ($/sq ft)" },
   "Concrete - Sq Ft":             { precio: 0.55,   unidad: "sqft",     label: "Concrete Cleaning ($/sq ft)" },
+  "Sealing - Sq Ft":              { precio: 0.275,  unidad: "sqft",     label: "Sealing ($/sq ft)" },
   "Upholstery":                   { precio: 45.00,  unidad: "pieza",    label: "Upholstery Cleaning ($/piece)" },
   "Odor Control":                 { precio: 300.00, unidad: "flat_fee", label: "Odor Control" },
   "Decontamination - Sq Ft": { precio: 1.50, unidad: "sqft",     label: "Decontamination & Odor Control Treatment ($/sq ft)" },
@@ -247,6 +248,7 @@ Acceptance: This quotation becomes a binding Service Agreement upon execution of
         if (floorType === "Tile") tipo = "Tile & Grout - Sq Ft";
         else if (floorType === "LVT") tipo = "LVT - Sq Ft";
         else if (floorType === "Concrete") tipo = "Concrete - Sq Ft";
+        else if (floorType === "Sealing") tipo = "Sealing - Sq Ft";
         const precioPorSqFt = parseFloat(precios[tipo] || String(PRECIOS_DEFAULT[tipo]?.precio || 0));
         const totalArea = precioPorSqFt * area.subtotalSqFt;
         nuevas.push({

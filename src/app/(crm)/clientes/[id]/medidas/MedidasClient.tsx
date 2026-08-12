@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, Plus, Trash2, Ruler, Save, Loader2, ChevronDown, ChevronUp, Camera, DollarSign, ChevronRight } from "lucide-react";
 import { useToast } from "@/components/providers/ToastProvider";
 
-const TIPOS_PISO = ["Carpet", "Tile", "LVT", "Concrete", "Pavers", "Hardwood", "Other"];
+const TIPOS_PISO = ["Carpet", "Tile", "LVT", "Concrete", "Sealing", "Pavers", "Hardwood", "Other"];
 
 interface Linea { id: string; descripcion: string; ancho: string; largo: string; }
 interface Area {
