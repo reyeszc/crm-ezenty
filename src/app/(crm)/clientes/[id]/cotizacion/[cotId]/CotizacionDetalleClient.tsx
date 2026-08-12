@@ -74,8 +74,13 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
         ...l,
         subtotal: (l.precioFinal || l.precioUnitario || 0) * (l.cantidad || 1),
         orden: i,
+        frecuencia: l.frecuencia || null,
+        veces: l.frecuencia ? ({"quarterly":4,"semi-annual":2,"3x-year":3,"one-time":1} as Record<string,number>)[l.frecuencia] || 1 : null,
+        subtotalAnual: l.frecuencia ? (l.precioFinal || 0) * (l.cantidad || 1) * (({"quarterly":4,"semi-annual":2,"3x-year":3,"one-time":1} as Record<string,number>)[l.frecuencia] || 1) : null,
       }));
       const nuevoTotal = lineasActualizadas.reduce((s, l) => s + l.subtotal, 0);
+      const nuevoTotalAnual = isContratoScreen ? lineasActualizadas.reduce((s, l) => s + (l.subtotalAnual || l.subtotal), 0) : null;
+      const nuevoTotalMensual = nuevoTotalAnual ? nuevoTotalAnual / 12 : null;
       const res = await fetch(`/api/clientes/${cliente.id}/cotizaciones/${cotizacion.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -85,6 +90,8 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
           notasGenerales: editNotasGenerales || null,
           total: nuevoTotal,
           subtotal: nuevoTotal,
+          totalAnual: nuevoTotalAnual,
+          totalMensual: nuevoTotalMensual,
           estado: "BORRADOR",
         }),
       });
@@ -277,6 +284,16 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
                   <input className="input text-xs !py-1" value={l.tipo || ""}
                     onChange={e => updateEditLinea(l.id, { tipo: e.target.value })}
                     placeholder="Tipo (Carpet Cleaning, Tile...)" />
+                  {isContratoScreen && (
+                    <select className="input text-xs !py-1"
+                      value={l.frecuencia || "quarterly"}
+                      onChange={e => updateEditLinea(l.id, { frecuencia: e.target.value })}>
+                      <option value="quarterly">Quarterly (4x/year)</option>
+                      <option value="semi-annual">Semi-Annual (2x/year)</option>
+                      <option value="3x-year">3x / Year</option>
+                      <option value="one-time">One-Time</option>
+                    </select>
+                  )}
                 </div>
                 <div className="col-span-2">
                   <input type="number" className="input text-sm !py-1 text-center" value={l.cantidad}
