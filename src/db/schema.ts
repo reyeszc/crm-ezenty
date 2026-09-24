@@ -361,6 +361,7 @@ export const invoices = pgTable("invoices", {
   numero: text("numero").notNull().unique(), // EZPC-I-XXXXX
   estado: text("estado").notNull().default("BORRADOR"), // BORRADOR, ENVIADO, PAGADO
   fechaServicio: timestamp("fecha_servicio"),
+  fechaServicioFin: timestamp("fecha_servicio_fin"),
   terminosPago: text("terminos_pago").notNull().default("Net 30"), // Net 30, Net 15, Upon Receipt
   subtotal: real("subtotal").notNull().default(0),
   descuento: real("descuento").notNull().default(0),

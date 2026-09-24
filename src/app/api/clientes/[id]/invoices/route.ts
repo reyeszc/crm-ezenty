@@ -38,6 +38,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   await db.insert(schema.invoices).values({
     id: invoiceId, numero, estado: "BORRADOR",
     fechaServicio: body.fechaServicio ? new Date(body.fechaServicio) : null,
+    fechaServicioFin: body.fechaServicioFin ? new Date(body.fechaServicioFin) : null,
     terminosPago: body.terminosPago || "Net 30",
     subtotal: body.subtotal || 0, descuento: body.descuento || 0, total: body.total || 0,
     notas: body.notas || null,

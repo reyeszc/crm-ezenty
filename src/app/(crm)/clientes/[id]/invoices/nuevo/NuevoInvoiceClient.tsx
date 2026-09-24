@@ -20,6 +20,7 @@ export function NuevoInvoiceClient({ cliente, cotizaciones, contactos, cotizacio
   const [lineasInvoice, setLineasInvoice] = useState<Linea[]>([]);
   const [expandidas, setExpandidas] = useState<Set<string>>(new Set([cotizacionIdInicial || cotizaciones[0]?.id || ""]));
   const [fechaServicio, setFechaServicio] = useState("");
+  const [fechaServicioFin, setFechaServicioFin] = useState("");
   const [terminosPago, setTerminosPago] = useState("Net 30");
   const [notas, setNotas] = useState("");
   const [contactoId, setContactoId] = useState(contactos.find((c: any) => c.principal)?.id || contactos[0]?.id || "");
@@ -97,9 +98,21 @@ export function NuevoInvoiceClient({ cliente, cotizaciones, contactos, cotizacio
       <div className="card p-4 space-y-3">
         <h2 className="text-sm font-semibold text-[var(--text-primary)]">Datos del Invoice</h2>
         <div className="grid grid-cols-2 gap-3">
-          <div>
+          <div className="col-span-2">
             <label className="label text-xs">Fecha de Servicio *</label>
-            <input type="date" className="input text-sm" value={fechaServicio} onChange={e => setFechaServicio(e.target.value)} />
+            <div className="flex items-center gap-2">
+              <input type="date" className="input text-sm flex-1" value={fechaServicio}
+                onChange={e => setFechaServicio(e.target.value)} />
+              <span className="text-xs text-[var(--text-muted)] flex-shrink-0">al</span>
+              <input type="date" className="input text-sm flex-1" value={fechaServicioFin}
+                onChange={e => setFechaServicioFin(e.target.value)}
+                min={fechaServicio} placeholder="Opcional" />
+            </div>
+            {fechaServicioFin && fechaServicio && (
+              <p className="text-xs text-marca-500 mt-1">
+                {Math.round((new Date(fechaServicioFin).getTime() - new Date(fechaServicio).getTime()) / 86400000) + 1} día(s) de servicio
+              </p>
+            )}
           </div>
           <div>
             <label className="label text-xs">Términos de Pago</label>

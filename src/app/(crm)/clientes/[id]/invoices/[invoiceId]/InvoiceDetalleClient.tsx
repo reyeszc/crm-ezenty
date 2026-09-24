@@ -84,7 +84,7 @@ function buildInvoiceHTML({ invoice, cliente, lineas, vendedor }: any) {
         <table style="width:auto;margin-left:auto">
           <tr><td style="font-size:10px;color:#666;padding:1px 6px 1px 0">Invoice #:</td><td style="font-size:10px;font-weight:700;color:#1B2A4A">${invoice.numero}</td></tr>
           <tr><td style="font-size:10px;color:#666;padding:1px 6px 1px 0">Date:</td><td style="font-size:10px;color:#333">${fecha}</td></tr>
-          <tr><td style="font-size:10px;color:#666;padding:1px 6px 1px 0">Service Date:</td><td style="font-size:10px;color:#333">${fechaServicio}</td></tr>
+          <tr><td style="font-size:10px;color:#666;padding:1px 6px 1px 0">Service Date:</td><td style="font-size:10px;color:#333">${fechaServicio}${invoice.fechaServicioFin ? ` — ${new Date(invoice.fechaServicioFin).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}` : ''}</td></tr>
           <tr><td style="font-size:10px;color:#666;padding:1px 6px 1px 0">Payment Terms:</td><td style="font-size:10px;font-weight:700;color:#1B2A4A">${invoice.terminosPago}</td></tr>
           <tr><td style="font-size:10px;color:#666;padding:1px 6px 1px 0">Status:</td><td style="font-size:10px;font-weight:700;color:${invoice.estado === "PAGADO" ? "#16a34a" : "#1B2A4A"}">${invoice.estado}</td></tr>
         </table>
@@ -210,7 +210,12 @@ export function InvoiceDetalleClient({ invoice, cliente, lineas, vendedor }: any
       {/* Invoice info */}
       <div className="card p-4 grid grid-cols-2 gap-3 text-sm">
         <div><p className="text-xs text-[var(--text-muted)]">Fecha Servicio</p>
-          <p className="font-medium">{invoice.fechaServicio ? new Date(invoice.fechaServicio).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}</p></div>
+          <p className="font-medium">
+            {invoice.fechaServicio ? new Date(invoice.fechaServicio).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}
+            {invoice.fechaServicioFin && (
+              <span className="text-[var(--text-muted)]"> — {new Date(invoice.fechaServicioFin).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+            )}
+          </p></div>
         <div><p className="text-xs text-[var(--text-muted)]">Términos de Pago</p>
           <p className="font-medium">{invoice.terminosPago}</p></div>
         <div><p className="text-xs text-[var(--text-muted)]">Contacto</p>
