@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
-  LayoutDashboard, FileText, Route as RouteIcon, Ruler,
+  LayoutDashboard, FileText, Route as RouteIcon, Ruler, FileCheck,
   Users,
   KanbanSquare,
   CalendarDays,
@@ -77,6 +77,13 @@ const navPrincipal = [
     label: "Medidas",
     color: "text-blue-500",
     bgActive: "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
+  },
+  {
+    href: "/invoices",
+    icon: FileCheck,
+    label: "Invoices",
+    color: "text-emerald-500",
+    bgActive: "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300",
   },
   {
     href: "/seguimiento",

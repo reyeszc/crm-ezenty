@@ -3,7 +3,7 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { ArrowLeft, FileText, Download, Send, CheckCircle, XCircle, Printer, Edit2, Save, Plus, Trash2, GripVertical } from "lucide-react";
+import { ArrowLeft, FileText, Download, Send, CheckCircle, XCircle, Printer, Edit2, Save, Plus, Trash2, GripVertical, FileCheck } from "lucide-react";
 import { useToast } from "@/components/providers/ToastProvider";
 import { formatearDinero } from "@/lib/utils";
 

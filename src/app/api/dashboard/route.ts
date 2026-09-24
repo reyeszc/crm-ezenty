@@ -32,6 +32,7 @@ export async function GET() {
     clientesActivos,
     clientesGanados,
     pagosAgg,
+    invoicesPagados,
     embudoAgg,
     cotAprobadas,
     pagosVencidos,
@@ -61,6 +62,16 @@ export async function GET() {
     // Valor embudo
     db.select({ total: sum(schema.clientes.valorEstimado) }).from(schema.clientes)
       .where(and(cVendedor, eq(schema.clientes.estado, "ACTIVO"), isNotNull(schema.clientes.valorEstimado))),
+
+    // Invoices PAGADOS este mes — revenue real
+    db.select({ total: sum(schema.invoices.total), cnt: count() })
+      .from(schema.invoices)
+      .where(and(
+        eq(schema.invoices.estado, "PAGADO"),
+        gte(schema.invoices.creadoEn, inicioMes),
+        lte(schema.invoices.creadoEn, finMes),
+        ...(esAdmin ? [] : [eq(schema.invoices.vendedorId, usuarioId)])
+      )),
 
     // Cotizaciones aprobadas este mes — usar totalAnual para contratos
     db.select({
@@ -98,9 +109,11 @@ export async function GET() {
 
   const meta = config[0]?.metaMensual || 10000;
   const pagosReales = Number(pagosAgg[0]?.total || 0);
+  const invoicesPagadosTotal = Number(invoicesPagados[0]?.total || 0);
   // For contracts use totalAnual, for quotes use total
   const cotAprobadoTotal = Number(cotAprobadas[0]?.totalAnual || cotAprobadas[0]?.total || 0);
-  const cobradoMes = pagosReales + cotAprobadoTotal;
+  // Prefer real invoice payments; fall back to approved quotes if no invoices yet
+  const cobradoMes = pagosReales + (invoicesPagadosTotal > 0 ? invoicesPagadosTotal : cotAprobadoTotal);
 
   // Crecimiento 6 meses
   const crecimiento = await Promise.all(
@@ -190,6 +203,8 @@ export async function GET() {
     seguimientoVencidos: Number(seguimientoVencidos[0]?.cnt || 0),
     cotizacionesAprobadas: Number(cotAprobadas[0]?.cnt || 0),
     valorCotizacionesAprobadas: Number(cotAprobadas[0]?.total || 0),
+    invoicesPagados: Number((invoicesPagados[0] as any)?.cnt || 0),
+    valorInvoicesPagados: invoicesPagadosTotal,
     tasaCierre, pronostico, crecimiento, embudoPorEtapa,
     origenes: origenes.map((o: any) => ({
       canal: o.origen || "Desconocido",

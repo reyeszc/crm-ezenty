@@ -354,3 +354,41 @@ export const cotizacionLineas = pgTable("cotizacion_lineas", {
   orden: integer("orden").default(0),
   cotizacionId: text("cotizacion_id").notNull().references(() => cotizaciones.id),
 });
+
+// ─── INVOICES ─────────────────────────────────────────────────────────────────
+export const invoices = pgTable("invoices", {
+  id: text("id").primaryKey(),
+  numero: text("numero").notNull().unique(), // EZPC-I-XXXXX
+  estado: text("estado").notNull().default("BORRADOR"), // BORRADOR, ENVIADO, PAGADO
+  fechaServicio: timestamp("fecha_servicio"),
+  terminosPago: text("terminos_pago").notNull().default("Net 30"), // Net 30, Net 15, Upon Receipt
+  subtotal: real("subtotal").notNull().default(0),
+  descuento: real("descuento").notNull().default(0),
+  total: real("total").notNull().default(0),
+  notas: text("notas"),
+  contactoNombre: text("contacto_nombre"),
+  contactoPuesto: text("contacto_puesto"),
+  contactoCorreo: text("contacto_correo"),
+  contactoTelefono: text("contacto_telefono"),
+  cotizacionId: text("cotizacion_id").references(() => cotizaciones.id),
+  clienteId: text("cliente_id").notNull().references(() => clientes.id),
+  vendedorId: text("vendedor_id").notNull().references(() => usuarios.id),
+  creadoEn: timestamp("creado_en").notNull().defaultNow(),
+  actualizadoEn: timestamp("actualizado_en").notNull().defaultNow(),
+  eliminadoEn: timestamp("eliminado_en"),
+});
+
+export const invoiceLineas = pgTable("invoice_lineas", {
+  id: text("id").primaryKey(),
+  descripcion: text("descripcion").notNull(),
+  tipo: text("tipo"),
+  unidad: text("unidad").notNull().default("sqft"),
+  cantidad: real("cantidad").default(1),
+  precioUnitario: real("precio_unitario").notNull(),
+  precioFinal: real("precio_final").notNull(),
+  subtotal: real("subtotal").notNull().default(0),
+  area: text("area"),
+  cotizacionLineaId: text("cotizacion_linea_id").references(() => cotizacionLineas.id),
+  orden: integer("orden").default(0),
+  invoiceId: text("invoice_id").notNull().references(() => invoices.id),
+});
