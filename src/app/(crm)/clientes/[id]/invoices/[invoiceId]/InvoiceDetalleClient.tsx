@@ -41,7 +41,9 @@ function esGeorgia(direccion?: string | null): boolean {
 function buildInvoiceHTML({ invoice, cliente, lineas, vendedor }: any) {
   const isGA = esGeorgia(cliente?.direccionPropiedad);
   const fecha = new Date(invoice.creadoEn).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
-  const fechaServicio = invoice.fechaServicio ? new Date(invoice.fechaServicio).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "—";
+  const fechaServicio = invoice.fechasServicio
+    ? JSON.parse(invoice.fechasServicio).map((f: string) => new Date(f + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })).join(", ")
+    : invoice.fechaServicio ? new Date(invoice.fechaServicio).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "-";
   const subtotal = lineas.reduce((s: number, l: any) => s + (l.precioFinal || 0) * (l.cantidad || 1), 0);
   const descuento = invoice.descuento || 0;
   const total = invoice.total || subtotal - descuento;
@@ -203,6 +205,12 @@ contact@ezentyprocare.com`;
     else error("No se pudo actualizar");
   }
 
+  async function generarYEnviar() {
+    await generarPDF();
+    // Open Gmail after short delay so PDF starts downloading
+    setTimeout(() => abrirEmailRecordatorio(), 1500);
+  }
+
   async function generarPDF() {
     setGenerando(true);
     try {
@@ -269,8 +277,15 @@ contact@ezentyprocare.com`;
         <button onClick={generarPDF} disabled={generando}
           className="btn-secondary flex items-center gap-2 text-sm !py-2">
           <Download className="w-4 h-4" />
-          {generando ? "Generando…" : "Descargar PDF"}
+          {generando ? "Generando..." : "Descargar PDF"}
         </button>
+        {invoice.contactoCorreo && (
+          <button onClick={generarYEnviar} disabled={generando}
+            className="btn-secondary flex items-center gap-2 text-sm !py-2">
+            <Send className="w-4 h-4" />
+            {generando ? "Generando..." : "PDF + Enviar"}
+          </button>
+        )}
         {invoice.contactoCorreo && estado !== "PAGADO" && (
           <button onClick={abrirEmailRecordatorio}
             className="btn-secondary text-sm !py-2 flex items-center gap-2">
