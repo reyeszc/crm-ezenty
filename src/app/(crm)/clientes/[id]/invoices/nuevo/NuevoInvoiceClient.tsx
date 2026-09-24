@@ -139,7 +139,7 @@ export function NuevoInvoiceClient({ cliente, cotizaciones, contactos, cotizacio
             <label className="label text-xs">Contacto</label>
             <select className="input text-sm" value={contactoId} onChange={e => setContactoId(e.target.value)}>
               {contactos.map((c: any) => (
-                <option key={c.id} value={c.id}>{c.nombre} {c.puesto ? `— ${c.puesto}` : ""}</option>
+                <option key={c.id} value={c.id}>{c.nombre} {c.puesto ? `- ${c.puesto}` : ""}</option>
               ))}
             </select>
           </div>

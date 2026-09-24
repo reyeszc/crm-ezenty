@@ -162,7 +162,7 @@ export function InvoiceDetalleClient({ invoice, cliente, lineas, vendedor }: any
     const dias = aging || 0;
     const vencStr = fechaVencimiento ? fechaVencimiento.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "";
     const to = invoice.contactoCorreo || "";
-    const subject = `Payment Reminder — ${invoice.numero} — ${dias} Days Past Due`;
+    const subject = `Payment Reminder - ${invoice.numero} - ${dias} Days Past Due`;
     const fechasStr = invoice.fechasServicio
       ? JSON.parse(invoice.fechasServicio).map((f: string) => new Date(f + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })).join(", ")
       : invoice.fechaServicio ? new Date(invoice.fechaServicio).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "";
@@ -171,12 +171,12 @@ export function InvoiceDetalleClient({ invoice, cliente, lineas, vendedor }: any
 I hope this message finds you well. This is a friendly reminder that Invoice ${invoice.numero} for services rendered on ${fechasStr} is currently past due.
 
 Invoice Details:
-• Invoice #: ${invoice.numero}
-• Service Date(s): ${fechasStr}
-• Due Date: ${vencStr}
-• Payment Terms: ${invoice.terminosPago}
-• Amount Due: $${(invoice.total || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}
-• Days Past Due: ${dias} day(s)
+- Invoice #: ${invoice.numero}
+- Service Date(s): ${fechasStr}
+- Due Date: ${vencStr}
+- Payment Terms: ${invoice.terminosPago}
+- Amount Due: $${(invoice.total || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+- Days Past Due: ${dias} day(s)
 
 We kindly ask that you process this payment at your earliest convenience. If you have already submitted payment, please disregard this notice.
 
