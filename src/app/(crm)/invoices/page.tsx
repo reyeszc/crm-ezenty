@@ -1,5 +1,16 @@
 "use client";
 import { useEffect, useState } from "react";
+
+function calcAging(inv: any): number | null {
+  if (inv.estado === "PAGADO") return null;
+  const base = inv.fechaServicio ? new Date(inv.fechaServicio) : null;
+  if (!base) return null;
+  const dias = inv.terminosPago === "Net 30" ? 30 : inv.terminosPago === "Net 15" ? 15 : 0;
+  const venc = new Date(base);
+  venc.setDate(venc.getDate() + dias);
+  const diff = Math.floor((new Date().getTime() - venc.getTime()) / 86400000);
+  return diff > 0 ? diff : null;
+}
 import Link from "next/link";
 import { FileCheck, DollarSign, Clock, CheckCircle } from "lucide-react";
 
@@ -21,9 +32,13 @@ export default function InvoicesPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const filtrados = filtro === "TODOS" ? invoices : invoices.filter(i => i.estado === filtro);
+  const filtrados = filtro === "VENCIDAS"
+    ? invoices.filter(i => calcAging(i) !== null)
+    : filtro === "TODOS" ? invoices : invoices.filter(i => i.estado === filtro);
   const totalPagado = invoices.filter(i => i.estado === "PAGADO").reduce((s, i) => s + (i.total || 0), 0);
   const totalPendiente = invoices.filter(i => i.estado !== "PAGADO").reduce((s, i) => s + (i.total || 0), 0);
+  const vencidas = invoices.filter(i => calcAging(i) !== null);
+  const totalVencido = vencidas.reduce((s, i) => s + (i.total || 0), 0);
 
   return (
     <div className="max-w-2xl mx-auto pb-20 space-y-4">
@@ -57,14 +72,23 @@ export default function InvoicesPage() {
             <p className="text-base font-bold text-amber-600">${totalPendiente.toLocaleString("en-US", { minimumFractionDigits: 2 })}</p>
           </div>
         </div>
+        <div className="card p-3 col-span-2 flex items-center gap-3 border-l-4 border-l-red-400">
+          <div className="w-9 h-9 rounded-xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+            <Clock className="w-4 h-4 text-red-600" />
+          </div>
+          <div>
+            <p className="text-xs text-[var(--text-muted)]">Vencido ({vencidas.length})</p>
+            <p className="text-base font-bold text-red-600">${totalVencido.toLocaleString("en-US", { minimumFractionDigits: 2 })}</p>
+          </div>
+        </div>
       </div>
 
       {/* Filter tabs */}
       <div className="flex gap-2">
-        {["TODOS", "BORRADOR", "ENVIADO", "PAGADO"].map(f => (
+        {["TODOS", "VENCIDAS", "BORRADOR", "ENVIADO", "PAGADO"].map(f => (
           <button key={f} onClick={() => setFiltro(f)}
             className={`text-xs px-3 py-1.5 rounded-full font-medium transition-colors ${filtro === f ? "bg-marca-300 text-white" : "bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]"}`}>
-            {f === "TODOS" ? "Todos" : ESTADO_CFG[f]?.label}
+            {f === "TODOS" ? "Todos" : f === "VENCIDAS" ? `⚠️ Vencidas` : ESTADO_CFG[f]?.label}
           </button>
         ))}
       </div>

@@ -1,8 +1,26 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, FileCheck, Download, CheckCircle, Clock, DollarSign } from "lucide-react";
+import { ArrowLeft, FileCheck, Download, CheckCircle, Clock, DollarSign, Send } from "lucide-react";
 import { useToast } from "@/components/providers/ToastProvider";
+
+function calcVencimiento(invoice: any): Date | null {
+  const base = invoice.fechaServicio ? new Date(invoice.fechaServicio) : null;
+  if (!base) return null;
+  const dias = invoice.terminosPago === "Net 30" ? 30 : invoice.terminosPago === "Net 15" ? 15 : 0;
+  const venc = new Date(base);
+  venc.setDate(venc.getDate() + dias);
+  return venc;
+}
+
+function calcAging(invoice: any): number | null {
+  if (invoice.estado === "PAGADO") return null;
+  const venc = calcVencimiento(invoice);
+  if (!venc) return null;
+  const hoy = new Date();
+  const diff = Math.floor((hoy.getTime() - venc.getTime()) / 86400000);
+  return diff > 0 ? diff : null;
+}
 
 const ESTADO_CFG: Record<string, { label: string; cls: string; icon: any }> = {
   BORRADOR:  { label: "Borrador",  cls: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300", icon: Clock },
@@ -137,6 +155,43 @@ export function InvoiceDetalleClient({ invoice, cliente, lineas, vendedor }: any
   const [generando, setGenerando] = useState(false);
 
   const cfg = ESTADO_CFG[estado] || ESTADO_CFG.BORRADOR;
+  const aging = calcAging({ ...invoice, estado });
+  const fechaVencimiento = calcVencimiento(invoice);
+
+  function abrirEmailRecordatorio() {
+    const dias = aging || 0;
+    const vencStr = fechaVencimiento ? fechaVencimiento.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "";
+    const to = invoice.contactoCorreo || "";
+    const subject = `Payment Reminder — ${invoice.numero} — ${dias} Days Past Due`;
+    const fechasStr = invoice.fechasServicio
+      ? JSON.parse(invoice.fechasServicio).map((f: string) => new Date(f + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })).join(", ")
+      : invoice.fechaServicio ? new Date(invoice.fechaServicio).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "";
+    const body = `Dear ${invoice.contactoNombre || "Valued Client"},
+
+I hope this message finds you well. This is a friendly reminder that Invoice ${invoice.numero} for services rendered on ${fechasStr} is currently past due.
+
+Invoice Details:
+• Invoice #: ${invoice.numero}
+• Service Date(s): ${fechasStr}
+• Due Date: ${vencStr}
+• Payment Terms: ${invoice.terminosPago}
+• Amount Due: $${(invoice.total || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+• Days Past Due: ${dias} day(s)
+
+We kindly ask that you process this payment at your earliest convenience. If you have already submitted payment, please disregard this notice.
+
+If you have any questions regarding this invoice, please don't hesitate to contact us.
+
+Thank you for your prompt attention to this matter. We appreciate your continued business.
+
+Best regards,
+${vendedor?.nombre || "Ezenty ProCare Team"}
+EZENTY ProCare LLC
+contact@ezentyprocare.com`;
+
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(to)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.open(gmailUrl, "_blank");
+  }
   const subtotal = lineas.reduce((s: number, l: any) => s + (l.precioFinal || 0) * (l.cantidad || 1), 0);
 
   async function cambiarEstado(nuevoEstado: string) {
@@ -192,6 +247,23 @@ export function InvoiceDetalleClient({ invoice, cliente, lineas, vendedor }: any
         </div>
       </div>
 
+      {/* Aging alert */}
+      {aging !== null && (
+        <div className={`card p-3 flex items-center gap-3 ${aging >= 30 ? "border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/10" : "border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/10"}`}>
+          <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${aging >= 30 ? "bg-red-100 dark:bg-red-900/30" : "bg-amber-100 dark:bg-amber-900/30"}`}>
+            <Clock className={`w-4 h-4 ${aging >= 30 ? "text-red-600" : "text-amber-600"}`} />
+          </div>
+          <div className="flex-1">
+            <p className={`text-sm font-bold ${aging >= 30 ? "text-red-700 dark:text-red-400" : "text-amber-700 dark:text-amber-400"}`}>
+              {aging} día{aging !== 1 ? "s" : ""} vencida
+            </p>
+            <p className="text-xs text-[var(--text-muted)]">
+              Venció el {fechaVencimiento?.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Actions */}
       <div className="flex gap-2 flex-wrap">
         <button onClick={generarPDF} disabled={generando}
@@ -199,6 +271,12 @@ export function InvoiceDetalleClient({ invoice, cliente, lineas, vendedor }: any
           <Download className="w-4 h-4" />
           {generando ? "Generando…" : "Descargar PDF"}
         </button>
+        {invoice.contactoCorreo && estado !== "PAGADO" && (
+          <button onClick={abrirEmailRecordatorio}
+            className="btn-secondary text-sm !py-2 flex items-center gap-2">
+            <Send className="w-4 h-4" /> Recordatorio de Pago
+          </button>
+        )}
         {estado !== "ENVIADO" && (
           <button onClick={() => cambiarEstado("ENVIADO")} className="btn-secondary text-sm !py-2 flex items-center gap-2">
             <FileCheck className="w-4 h-4" /> Marcar Enviado
