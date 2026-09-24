@@ -44,6 +44,16 @@ function buildInvoiceHTML({ invoice, cliente, lineas, vendedor }: any) {
   const fechaServicio = invoice.fechasServicio
     ? JSON.parse(invoice.fechasServicio).map((f: string) => new Date(f + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })).join(", ")
     : invoice.fechaServicio ? new Date(invoice.fechaServicio).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "-";
+  const remitAddress = isGA
+    ? "8735 Dunwoody Place, Suite #12459, Atlanta, GA 30350"
+    : "Nashville, TN";
+
+  const baseDate = invoice.fechaServicio ? new Date(invoice.fechaServicio) : new Date(invoice.creadoEn);
+  const diasTermino = invoice.terminosPago === "Net 30" ? 30 : invoice.terminosPago === "Net 15" ? 15 : 0;
+  const dueDate = new Date(baseDate);
+  dueDate.setDate(dueDate.getDate() + diasTermino);
+  const fechaVence = dueDate.toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" });
+
   const subtotal = lineas.reduce((s: number, l: any) => s + (l.precioFinal || 0) * (l.cantidad || 1), 0);
   const descuento = invoice.descuento || 0;
   const total = invoice.total || subtotal - descuento;
@@ -65,86 +75,175 @@ function buildInvoiceHTML({ invoice, cliente, lineas, vendedor }: any) {
 
   return `<!DOCTYPE html><html><head><meta charset="UTF-8">
   <style>
-    body { font-family: Arial, sans-serif; margin:0; padding:0; color:#333; font-size:11px; }
+    body { font-family: Arial, sans-serif; margin:0; padding:0; color:#222; font-size:10px; }
     * { -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; box-sizing:border-box; }
-    @media print { @page { size: Letter portrait; margin:0; } html,body { margin:0; padding:0; } .no-print { display:none; } }
+    @media print { @page { size: Letter portrait; margin:0; } html,body { margin:0; padding:0; } }
     table { width:100%; border-collapse:collapse; }
+    td,th { vertical-align:top; }
   </style>
   <script>
     window.addEventListener("load", function() {
       var el = document.getElementById("contenido");
       if (!el) return;
-      var scale = Math.min(816 / el.offsetWidth, 1056 / el.offsetHeight, 1);
-      if (scale < 1) { el.style.transform = "scale("+scale+")"; el.style.transformOrigin = "top left"; document.body.style.width = Math.round(el.offsetWidth*scale)+"px"; }
+      var scale = Math.min(816/el.offsetWidth, 1056/el.offsetHeight, 1);
+      if (scale < 1) { el.style.transform="scale("+scale+")"; el.style.transformOrigin="top left"; document.body.style.width=Math.round(el.offsetWidth*scale)+"px"; }
     });
   </script>
   </head><body>
-  <div id="contenido" style="max-width:750px;margin:0 auto;">
-    <!-- Header -->
-    <div style="background:#1B2A4A;padding:14px 24px;display:flex;align-items:center;justify-content:space-between">
-      <div>
-        <p style="color:#fff;font-size:22px;font-weight:900;margin:0;letter-spacing:1px">INVOICE</p>
-        <p style="color:#a5b4c8;font-size:11px;margin:4px 0 0">${invoice.numero}</p>
+  <div id="contenido" style="max-width:760px;margin:0 auto;background:#fff;">
+
+    <!-- Header: Logo left, Invoice info right -->
+    <div style="padding:16px 24px 12px;display:flex;align-items:flex-start;justify-content:space-between;border-bottom:1px solid #e5e7eb">
+      <!-- Logo -->
+      <div style="display:flex;flex-direction:column;align-items:flex-start">
+        <div style="display:flex;align-items:center;gap:8px">
+          <svg width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+            <rect width="48" height="48" rx="4" fill="#1B2A4A"/>
+            <text x="24" y="32" font-family="Arial" font-size="22" font-weight="900" fill="white" text-anchor="middle">ZE</text>
+          </svg>
+          <div>
+            <p style="margin:0;font-size:18px;font-weight:900;color:#1B2A4A;letter-spacing:2px">EZENTY</p>
+            <p style="margin:0;font-size:9px;color:#555;letter-spacing:3px">- PROCARE -</p>
+          </div>
+        </div>
       </div>
+      <!-- Invoice info top right -->
       <div style="text-align:right">
-        <p style="color:#fff;font-weight:700;font-size:13px;margin:0">EZENTY ProCare LLC</p>
-        <p style="color:#a5b4c8;font-size:10px;margin:2px 0 0">${isGA ? "Georgia" : "Tennessee"} · IICRC Certified</p>
+        <p style="margin:0;font-size:20px;font-weight:900;color:#1B2A4A;letter-spacing:1px">INVOICE</p>
+        <p style="margin:2px 0;font-size:12px;font-weight:700;color:#1B2A4A">${invoice.numero}</p>
+        <div style="display:inline-block;background:${invoice.estado === "PAGADO" ? "#dcfce7" : "#FFF3CD"};padding:2px 10px;border-radius:12px;margin-top:3px">
+          <p style="margin:0;font-size:9px;font-weight:700;color:${invoice.estado === "PAGADO" ? "#16a34a" : "#B45309"}">● ${invoice.estado}</p>
+        </div>
       </div>
     </div>
-    <!-- Bill To / Invoice Info -->
-    <div style="background:#FFF8E7;padding:10px 24px;display:grid;grid-template-columns:1fr 1fr;gap:16px">
+
+    <!-- Tagline -->
+    <div style="background:#f3f4f6;padding:5px 24px;border-bottom:1px solid #e5e7eb">
+      <p style="font-size:9px;color:#555;margin:0;font-style:italic">Premium Service Invoice &nbsp;·&nbsp; Floor &amp; Surface Care Aligned to Your Standards</p>
+    </div>
+
+    <!-- Bill To / Invoice Details -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;padding:12px 24px;border-bottom:1px solid #e5e7eb">
       <div>
-        <p style="font-size:9px;font-weight:900;color:#1B2A4A;letter-spacing:1px;margin:0 0 4px;text-transform:uppercase">Bill To</p>
-        <p style="font-weight:700;font-size:12px;color:#1B2A4A;margin:0">${cliente?.nombre || ""}</p>
-        ${invoice.contactoNombre ? `<p style="font-size:10px;color:#555;margin:2px 0 0">${invoice.contactoNombre}${invoice.contactoPuesto ? ` · ${invoice.contactoPuesto}` : ""}</p>` : ""}
-        ${cliente?.direccionPropiedad ? `<p style="font-size:10px;color:#555;margin:2px 0 0">${cliente.direccionPropiedad}</p>` : ""}
-        ${invoice.contactoCorreo ? `<p style="font-size:10px;color:#555;margin:2px 0 0">${invoice.contactoCorreo}</p>` : ""}
+        <p style="font-size:9px;font-weight:900;color:#1B2A4A;letter-spacing:1px;margin:0 0 6px;text-transform:uppercase">BILL TO</p>
+        <p style="font-size:9px;color:#444;margin:0 0 2px">Name: &nbsp;<b style="color:#1B2A4A;font-size:10px">${cliente?.nombre || ""}</b></p>
+        ${invoice.contactoNombre ? `<p style="font-size:9px;color:#444;margin:0 0 2px">Attn: &nbsp;<b>${invoice.contactoNombre}</b></p>` : ""}
+        ${cliente?.direccionPropiedad ? `<p style="font-size:9px;color:#444;margin:0 0 2px">Address: ${cliente.direccionPropiedad}</p>` : ""}
+        ${invoice.contactoCorreo ? `<p style="font-size:9px;color:#444;margin:0">Email: ${invoice.contactoCorreo}</p>` : ""}
       </div>
       <div style="text-align:right">
-        <table style="width:auto;margin-left:auto">
-          <tr><td style="font-size:10px;color:#666;padding:1px 6px 1px 0">Invoice #:</td><td style="font-size:10px;font-weight:700;color:#1B2A4A">${invoice.numero}</td></tr>
-          <tr><td style="font-size:10px;color:#666;padding:1px 6px 1px 0">Date:</td><td style="font-size:10px;color:#333">${fecha}</td></tr>
-          <tr><td style="font-size:10px;color:#666;padding:1px 6px 1px 0">Service Date(s):</td><td style="font-size:10px;color:#333">${
-        invoice.fechasServicio
-          ? JSON.parse(invoice.fechasServicio).map((f: string) => new Date(f + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })).join(" · ")
-          : fechaServicio
-      }</td></tr>
-          <tr><td style="font-size:10px;color:#666;padding:1px 6px 1px 0">Payment Terms:</td><td style="font-size:10px;font-weight:700;color:#1B2A4A">${invoice.terminosPago}</td></tr>
-          <tr><td style="font-size:10px;color:#666;padding:1px 6px 1px 0">Status:</td><td style="font-size:10px;font-weight:700;color:${invoice.estado === "PAGADO" ? "#16a34a" : "#1B2A4A"}">${invoice.estado}</td></tr>
+        <p style="font-size:9px;font-weight:900;color:#1B2A4A;letter-spacing:1px;margin:0 0 6px;text-transform:uppercase">INVOICE DETAILS</p>
+        <table style="width:100%">
+          <tr><td style="font-size:9px;color:#555;padding:1px 0">Invoice #:</td><td style="font-size:9px;font-weight:700;color:#1B2A4A;text-align:right">${invoice.numero}</td></tr>
+          <tr><td style="font-size:9px;color:#555;padding:1px 0">Invoice Date:</td><td style="font-size:9px;color:#333;text-align:right">${fecha}</td></tr>
+          <tr><td style="font-size:9px;color:#555;padding:1px 0">Service Date:</td><td style="font-size:9px;color:#333;text-align:right">${fechaServicio}</td></tr>
+          <tr><td style="font-size:9px;color:#555;padding:1px 0">Payment Terms:</td><td style="font-size:9px;font-weight:700;color:#1B2A4A;text-align:right">${invoice.terminosPago} days</td></tr>
+          <tr><td style="font-size:9px;color:#555;padding:1px 0">Due Date:</td><td style="font-size:9px;color:#333;text-align:right">${fechaVence}</td></tr>
         </table>
       </div>
     </div>
-    <!-- Table -->
-    <div style="padding:0 24px 10px">
+
+    <!-- Services Overview -->
+    <div style="padding:10px 24px;border-bottom:1px solid #e5e7eb">
+      <p style="font-size:9px;font-weight:900;color:#1B2A4A;margin:0 0 3px;text-transform:uppercase">SERVICES OVERVIEW</p>
+      <p style="font-size:9px;color:#444;margin:0;line-height:1.5;font-style:italic">${invoice.notas || "Professional floor and surface care services were completed to support brand standards, guest satisfaction, and long-term asset preservation. All work was executed using commercial-grade equipment and industry-certified processes."}</p>
+    </div>
+
+    <!-- Service Breakdown -->
+    <div style="padding:10px 24px 0">
+      <p style="font-size:9px;font-weight:900;color:#1B2A4A;margin:0 0 4px;text-transform:uppercase">SERVICE BREAKDOWN</p>
+      <p style="font-size:9px;font-weight:700;color:#1B2A4A;margin:0 0 4px">NON-TAXABLE ITEMS (Labor Only)</p>
       <table>
         <thead>
           <tr style="background:#1B2A4A">
-            <th style="padding:5px 8px;text-align:center;color:white;width:36px;font-size:10px">#</th>
-            <th style="padding:5px 8px;text-align:left;color:white;font-size:10px">Service Description</th>
-            <th style="padding:5px 8px;text-align:center;color:white;width:50px;font-size:10px">Qty</th>
-            <th style="padding:5px 8px;text-align:right;color:white;width:90px;font-size:10px">Unit Price</th>
-            <th style="padding:5px 8px;text-align:right;color:white;width:90px;font-size:10px">Total</th>
+            <th style="padding:4px 8px;text-align:center;color:white;width:32px;font-size:9px">#</th>
+            <th style="padding:4px 8px;text-align:left;color:white;font-size:9px">Description</th>
+            <th style="padding:4px 8px;text-align:center;color:white;width:36px;font-size:9px">Qty</th>
+            <th style="padding:4px 8px;text-align:right;color:white;width:75px;font-size:9px">Amount</th>
+            <th style="padding:4px 8px;text-align:right;color:white;width:75px;font-size:9px">Subtotal</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
-        <tfoot>
-          ${descuento > 0 ? `<tr><td colspan="4" style="text-align:right;padding:4px 8px;color:#c00;font-size:10px">Discount:</td><td style="text-align:right;padding:4px 8px;color:#c00;font-size:10px">-$${descuento.toLocaleString("en-US",{minimumFractionDigits:2})}</td></tr>` : ""}
-          <tr style="border-top:2px solid #1B2A4A">
-            <td colspan="4" style="text-align:right;padding:6px 8px;font-weight:900;font-size:13px;color:#1B2A4A">TOTAL DUE</td>
-            <td style="text-align:right;padding:6px 8px;font-weight:900;font-size:13px;color:#16a34a">$${total.toLocaleString("en-US",{minimumFractionDigits:2})}</td>
-          </tr>
-        </tfoot>
       </table>
+
+      <!-- Subtotal non-taxable -->
+      <div style="display:flex;justify-content:flex-end;padding:5px 0;border-top:1px solid #e5e7eb;margin-top:2px">
+        <span style="font-size:10px;font-weight:700;color:#1B2A4A;margin-right:12px">Subtotal (Non-Taxable)</span>
+        <span style="font-size:10px;font-weight:700;color:#1B2A4A;min-width:75px;text-align:right">$${subtotal.toLocaleString("en-US",{minimumFractionDigits:2})}</span>
+      </div>
+
+      <!-- Taxable items -->
+      <p style="font-size:9px;font-weight:700;color:#1B2A4A;margin:6px 0 4px">TAXABLE ITEMS &nbsp;<span style="font-weight:400;font-style:italic;color:#666">Products &amp; Materials</span></p>
+      <table>
+        <thead>
+          <tr style="background:#1B2A4A">
+            <th style="padding:4px 8px;text-align:center;color:white;width:32px;font-size:9px">#</th>
+            <th style="padding:4px 8px;text-align:left;color:white;font-size:9px">Description</th>
+            <th style="padding:4px 8px;text-align:center;color:white;width:36px;font-size:9px">Qty</th>
+            <th style="padding:4px 8px;text-align:right;color:white;width:75px;font-size:9px">Amount</th>
+            <th style="padding:4px 8px;text-align:right;color:white;width:75px;font-size:9px">Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="background:#fff"><td style="padding:5px 8px;text-align:center;font-size:9px;color:#999">01</td><td style="padding:5px 8px"></td><td></td><td></td><td style="padding:5px 8px;text-align:right;font-size:9px;color:#999">-</td></tr>
+          <tr style="background:#f8f9fa"><td style="padding:5px 8px;text-align:center;font-size:9px;color:#999">02</td><td style="padding:5px 8px"></td><td></td><td></td><td style="padding:5px 8px;text-align:right;font-size:9px;color:#999">-</td></tr>
+        </tbody>
+      </table>
+      <div style="display:flex;justify-content:flex-end;padding:5px 0;border-top:1px solid #e5e7eb;margin-top:2px">
+        <span style="font-size:10px;font-weight:700;color:#1B2A4A;margin-right:12px">Subtotal (Taxable)</span>
+        <span style="font-size:10px;font-weight:700;color:#1B2A4A;min-width:75px;text-align:right">$0.00</span>
+      </div>
     </div>
-    ${invoice.notas ? `<div style="padding:6px 24px 10px;border-top:1px solid #eee"><p style="font-size:10px;color:#555;font-style:italic">${invoice.notas}</p></div>` : ""}
-    <!-- Payment info -->
-    <div style="padding:8px 24px;background:#f0fdf4;border-top:1px solid #bbf7d0">
-      <p style="font-size:10px;font-weight:700;color:#15803d;margin:0 0 3px">Payment Information</p>
-      <p style="font-size:10px;color:#374151;margin:0">Please remit payment within the terms specified above. Make checks payable to <b>EZENTY ProCare LLC</b>.</p>
+
+    <!-- Notes + Financial Summary -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;padding:10px 24px;border-top:1px solid #e5e7eb;margin-top:6px">
+      <div style="padding-right:16px">
+        <p style="font-size:9px;font-weight:900;color:#1B2A4A;margin:0 0 4px;text-transform:uppercase">IMPORTANT NOTES:</p>
+        <p style="font-size:8.5px;color:#444;margin:0 0 2px;line-height:1.6">- Labor services are classified as non-taxable under ${isGA ? "Georgia" : "Tennessee"} law.</p>
+        <p style="font-size:8.5px;color:#444;margin:0 0 2px;line-height:1.6">- Sales tax applies only to materials and chemical applications.</p>
+        <p style="font-size:8.5px;color:#444;margin:0 0 2px;line-height:1.6">- This invoice reflects services completed per agreed scope.</p>
+        <p style="font-size:8.5px;color:#444;margin:0;line-height:1.6">- Payment terms ${invoice.terminosPago} days.</p>
+      </div>
+      <div>
+        <p style="font-size:9px;font-weight:900;color:#1B2A4A;margin:0 0 4px;text-transform:uppercase">FINANCIAL SUMMARY:</p>
+        <table style="width:100%">
+          <tr><td style="font-size:9px;color:#444;padding:2px 0">Labor (Non-Taxable):</td><td style="font-size:9px;font-weight:600;text-align:right;color:#1B2A4A">$${subtotal.toLocaleString("en-US",{minimumFractionDigits:2})}</td></tr>
+          <tr><td style="font-size:9px;color:#444;padding:2px 0">Products (Taxable):</td><td style="font-size:9px;text-align:right;color:#1B2A4A">$0.00</td></tr>
+          <tr><td style="font-size:9px;color:#444;padding:2px 0">Sales Tax (${isGA ? "GA" : "TN"}):</td><td style="font-size:9px;text-align:right;color:#1B2A4A">$0.00</td></tr>
+          ${descuento > 0 ? `<tr><td style="font-size:9px;color:#c00;padding:2px 0">Discount:</td><td style="font-size:9px;text-align:right;color:#c00">-$${descuento.toLocaleString("en-US",{minimumFractionDigits:2})}</td></tr>` : ""}
+          <tr style="border-top:2px solid #1B2A4A">
+            <td style="font-size:11px;font-weight:900;color:#1B2A4A;padding:4px 0">TOTAL DUE:</td>
+            <td style="font-size:11px;font-weight:900;text-align:right;color:#1B2A4A">$${total.toLocaleString("en-US",{minimumFractionDigits:2})}</td>
+          </tr>
+        </table>
+      </div>
     </div>
+
+    <!-- Payment Instructions -->
+    <div style="padding:10px 24px;border-top:2px solid #e5e7eb">
+      <p style="font-size:10px;font-weight:900;color:#1B2A4A;text-align:center;letter-spacing:1px;margin:0 0 8px;text-transform:uppercase">PAYMENT INSTRUCTIONS:</p>
+      <div style="display:flex;align-items:center;justify-content:center;gap:24px">
+        <!-- IICRC badge placeholder -->
+        <div style="border:2px solid #1B2A4A;border-radius:4px;padding:4px 8px;text-align:center;min-width:60px">
+          <p style="font-size:8px;font-weight:900;color:#1B2A4A;margin:0">IICRC</p>
+          <p style="font-size:7px;font-weight:700;color:#1B2A4A;margin:0">CERTIFIED</p>
+          <p style="font-size:7px;color:#1B2A4A;margin:0">FIRM</p>
+        </div>
+        <div>
+          <p style="font-size:9px;color:#444;margin:0 0 2px"><b style="color:#1B2A4A">Accepted Methods:</b> Check / ACH Transfer</p>
+          <p style="font-size:9px;color:#444;margin:0 0 2px"><b style="color:#1B2A4A">Payable To:</b> EZENTY PROCARE LLC</p>
+          <p style="font-size:9px;color:#444;margin:0"><b style="color:#1B2A4A">Remit To:</b> ${remitAddress}</p>
+        </div>
+      </div>
+    </div>
+
     <!-- Footer -->
-    <div style="background:#f8f9fa;padding:7px 24px;border-top:2px solid #1B2A4A;text-align:center">
-      <p style="font-size:9px;color:#666;margin:0">${footer}</p>
+    <div style="background:#1B2A4A;padding:8px 24px;display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <p style="font-size:9px;color:#fff;font-weight:700;margin:0">EZENTY PROCARE LLC | Floor &amp; Surface Care Aligned to Your Standards</p>
+        <p style="font-size:8px;color:#a5b4c8;font-style:italic;margin:1px 0 0">For billing inquiries or payment confirmation, contact: info@ezentyprocare.com</p>
+      </div>
+      <p style="font-size:9px;color:#a5b4c8;margin:0;flex-shrink:0">${invoice.numero}</p>
     </div>
   </div>
   </body></html>`;
