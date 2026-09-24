@@ -51,7 +51,8 @@ export function NuevoInvoiceClient({ cliente, cotizaciones, contactos, cotizacio
   const subtotal = lineasInvoice.reduce((s, l) => s + (l.precioFinal * l.cantidad), 0);
 
   async function guardar() {
-    if (lineasInvoice.length === 0) { error("Selecciona al menos un ítem"); return; }
+    if (lineasInvoice.length === 0) { error("Agrega al menos un servicio"); return; }
+    if (lineasInvoice.some(l => !l.descripcion.trim())) { error("Todas las líneas deben tener descripción"); return; }
     if (!fechaServicio) { error("Ingresa la fecha de servicio"); return; }
     setSaving(true);
     try {
@@ -179,16 +180,42 @@ export function NuevoInvoiceClient({ cliente, cotizaciones, contactos, cotizacio
         )}
       </div>
 
+      {/* Add manual line */}
+      <div className="card p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-[var(--text-primary)]">✏️ Agregar línea manual</h2>
+          <button onClick={() => setLineasInvoice(prev => [...prev, {
+            id: crypto.randomUUID(), descripcion: "", tipo: "", unidad: "flat_fee",
+            cantidad: 1, precioFinal: 0,
+          }])} className="btn-secondary !py-1.5 !px-3 text-xs flex items-center gap-1">
+            <Plus className="w-3 h-3" /> Agregar
+          </button>
+        </div>
+        <p className="text-xs text-[var(--text-muted)]">Para servicios de emergencia o trabajos sin cotización previa.</p>
+      </div>
+
       {/* Selected lines preview + edit */}
       {lineasInvoice.length > 0 && (
         <div className="card p-4">
           <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-3">📋 Ítems del Invoice</h2>
           <div className="space-y-2">
             {lineasInvoice.map(l => (
-              <div key={l.id} className="flex items-center gap-2 p-2 bg-[var(--bg-secondary)] rounded-lg">
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-[var(--text-primary)] truncate">{l.descripcion}</p>
+              <div key={l.id} className="p-2 bg-[var(--bg-secondary)] rounded-lg space-y-1.5">
+                <div className="flex items-center gap-2">
+                  {!l.cotizacionLineaId ? (
+                    <input className="input text-xs !py-1 flex-1" value={l.descripcion}
+                      onChange={e => updateLinea(l.id, "descripcion", e.target.value)}
+                      placeholder="Descripción del servicio..." />
+                  ) : (
+                    <p className="text-xs font-medium text-[var(--text-primary)] truncate flex-1">{l.descripcion}</p>
+                  )}
                 </div>
+                {!l.cotizacionLineaId && (
+                  <input className="input text-xs !py-1 w-full" value={l.tipo || ""}
+                    onChange={e => updateLinea(l.id, "tipo", e.target.value)}
+                    placeholder="Tipo (Carpet Cleaning, Tile & Grout...)" />
+                )}
+                <div className="flex items-center gap-2">
                 <input type="number" className="input text-xs !py-1 w-16 text-center" value={l.cantidad}
                   onChange={e => updateLinea(l.id, "cantidad", parseFloat(e.target.value) || 1)} min="1" step="1" />
                 <div className="relative w-24">
@@ -203,6 +230,7 @@ export function NuevoInvoiceClient({ cliente, cotizaciones, contactos, cotizacio
                 }} className="text-red-400 hover:text-red-500 flex-shrink-0">
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
+                </div>
               </div>
             ))}
           </div>
