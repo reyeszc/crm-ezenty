@@ -19,8 +19,8 @@ export function NuevoInvoiceClient({ cliente, cotizaciones, contactos, cotizacio
   const [lineasSeleccionadas, setLineasSeleccionadas] = useState<Set<string>>(new Set());
   const [lineasInvoice, setLineasInvoice] = useState<Linea[]>([]);
   const [expandidas, setExpandidas] = useState<Set<string>>(new Set([cotizacionIdInicial || cotizaciones[0]?.id || ""]));
-  const [fechaServicio, setFechaServicio] = useState("");
-  const [fechaServicioFin, setFechaServicioFin] = useState("");
+  const [fechasServicio, setFechasServicio] = useState<string[]>([]);
+  const [fechaTemp, setFechaTemp] = useState("");
   const [terminosPago, setTerminosPago] = useState("Net 30");
   const [notas, setNotas] = useState("");
   const [contactoId, setContactoId] = useState(contactos.find((c: any) => c.principal)?.id || contactos[0]?.id || "");
@@ -54,14 +54,17 @@ export function NuevoInvoiceClient({ cliente, cotizaciones, contactos, cotizacio
   async function guardar() {
     if (lineasInvoice.length === 0) { error("Agrega al menos un servicio"); return; }
     if (lineasInvoice.some(l => !l.descripcion.trim())) { error("Todas las líneas deben tener descripción"); return; }
-    if (!fechaServicio) { error("Ingresa la fecha de servicio"); return; }
+    if (fechasServicio.length === 0) { error("Agrega al menos una fecha de servicio"); return; }
     setSaving(true);
     try {
       const res = await fetch(`/api/clientes/${cliente.id}/invoices`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          fechaServicio, terminosPago, notas, subtotal, total: subtotal,
+          fechaServicio: fechasServicio[0] || null,
+          fechaServicioFin: fechasServicio[fechasServicio.length - 1] || null,
+          fechasServicio,
+          terminosPago, notas, subtotal, total: subtotal,
           cotizacionId: cotSeleccionada || null,
           contactoNombre: contacto?.nombre || null,
           contactoPuesto: contacto?.puesto || contacto?.cargo || null,
@@ -99,19 +102,29 @@ export function NuevoInvoiceClient({ cliente, cotizaciones, contactos, cotizacio
         <h2 className="text-sm font-semibold text-[var(--text-primary)]">Datos del Invoice</h2>
         <div className="grid grid-cols-2 gap-3">
           <div className="col-span-2">
-            <label className="label text-xs">Fecha de Servicio *</label>
-            <div className="flex items-center gap-2">
-              <input type="date" className="input text-sm flex-1" value={fechaServicio}
-                onChange={e => setFechaServicio(e.target.value)} />
-              <span className="text-xs text-[var(--text-muted)] flex-shrink-0">al</span>
-              <input type="date" className="input text-sm flex-1" value={fechaServicioFin}
-                onChange={e => setFechaServicioFin(e.target.value)}
-                min={fechaServicio} placeholder="Opcional" />
+            <label className="label text-xs">Fecha(s) de Servicio *</label>
+            <div className="flex gap-2">
+              <input type="date" className="input text-sm flex-1" value={fechaTemp}
+                onChange={e => setFechaTemp(e.target.value)} />
+              <button type="button" onClick={() => {
+                if (fechaTemp && !fechasServicio.includes(fechaTemp)) {
+                  setFechasServicio(prev => [...prev, fechaTemp].sort());
+                  setFechaTemp("");
+                }
+              }} className="btn-secondary !py-1.5 !px-3 text-xs flex-shrink-0">+ Agregar</button>
             </div>
-            {fechaServicioFin && fechaServicio && (
-              <p className="text-xs text-marca-500 mt-1">
-                {Math.round((new Date(fechaServicioFin).getTime() - new Date(fechaServicio).getTime()) / 86400000) + 1} día(s) de servicio
-              </p>
+            {fechasServicio.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {fechasServicio.map(f => (
+                  <span key={f} className="inline-flex items-center gap-1 bg-marca-50 dark:bg-marca-900/20 text-marca-600 dark:text-marca-300 text-xs px-2 py-1 rounded-full">
+                    {new Date(f + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                    <button onClick={() => setFechasServicio(prev => prev.filter(x => x !== f))} className="hover:text-red-500 ml-0.5">×</button>
+                  </span>
+                ))}
+              </div>
+            )}
+            {fechasServicio.length > 1 && (
+              <p className="text-xs text-[var(--text-muted)] mt-1">{fechasServicio.length} día(s) de servicio</p>
             )}
           </div>
           <div>
@@ -263,7 +276,7 @@ export function NuevoInvoiceClient({ cliente, cotizaciones, contactos, cotizacio
 
       {/* Save */}
       <div className="fixed bottom-16 lg:bottom-4 left-0 right-0 px-4 max-w-2xl mx-auto">
-        <button onClick={guardar} disabled={saving || lineasInvoice.length === 0 || !fechaServicio}
+        <button onClick={guardar} disabled={saving || lineasInvoice.length === 0 || fechasServicio.length === 0}
           className="btn-primary w-full justify-center disabled:opacity-40">
           {saving ? "Creando Invoice…" : `Crear Invoice · $${subtotal.toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
         </button>
