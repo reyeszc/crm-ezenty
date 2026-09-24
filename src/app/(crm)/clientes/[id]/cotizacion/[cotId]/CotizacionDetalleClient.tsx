@@ -253,6 +253,12 @@ export function CotizacionDetalleClient({ cotizacion, cliente, lineas, vendedor 
             </>
           )}
           {!editando && (
+            <a href={`/clientes/${cliente.id}/invoices/nuevo?cotizacionId=${cotizacion.id}`}
+              className="btn-secondary !py-2 !px-3 text-sm flex items-center gap-1.5">
+              <FileCheck className="w-3.5 h-3.5" /> Invoice
+            </a>
+          )}
+          {!editando && (
             <button onClick={generateAndPrintPDF} disabled={generatingPdf}
               className="btn-primary !py-2 !px-3 text-sm">
               {generatingPdf ? "Generando…" : <><Printer className="w-3.5 h-3.5" /> PDF / Imprimir</>}
